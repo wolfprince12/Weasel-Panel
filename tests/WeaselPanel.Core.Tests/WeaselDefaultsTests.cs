@@ -110,9 +110,16 @@ public class WeaselDefaultsTests
     // ── C++ 初值（weasel.yaml 里没有的键）──────────────────────────────
 
     [Fact]
-    public void enhanced_position取自C加加初值而非YAML()
+    public void enhanced_position的出厂默认是否定的()
     {
-        Assert.True(Defaults().Bool("style/enhanced_position", false));
+        // ⚠️ 此条曾误判为 true，原委见 WeaselDefaults.CxxFallbacks 的注释。
+        // 简言之：_RimeGetBool 的第 5 参是 trueValue（键为真时的映射），**不是默认值**；
+        // 键缺失时走 falseValue = false，与 UIStyle 构造函数的
+        // enhanced_position(false)（WeaselIPCData.h:308）一致。
+
+        // fallback 刻意传 true：若表里查不到这个键，Lookup 返回 null，
+        // Bool 会返回 fallback=true 从而使断言失败 —— 这样才真正锁住这条知识。
+        Assert.False(Defaults().Bool("style/enhanced_position", true));
     }
 
     // ── 出厂态判定（支撑「与出厂默认相同的值不落盘」）───────────────────

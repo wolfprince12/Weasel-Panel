@@ -63,19 +63,37 @@ public sealed class WeaselDefaults
         };
 
     /// <summary>
-    /// weasel.yaml 中没有、只能从 C++ 初值取得的默认值。
+    /// weasel.yaml 中没有、只能从 C++ 侧取得的默认值。
     /// 每条都标注了上游出处；**未经核实不得添加条目**。
     /// </summary>
+    /// <remarks>
+    /// ⚠️ 曾在此写错过一条，原委记录如下，改动前务必读完（RimeWithWeasel.cpp:1050）：
+    /// <code>
+    ///   void _RimeGetBool(cfg, key, cond, T&amp; value,
+    ///                     const T&amp; trueValue = true,
+    ///                     const T&amp; falseValue = false) {
+    ///     Bool tempb = False;
+    ///     if (config_get_bool(cfg, key, &amp;tempb) || cond)
+    ///       value = (!!tempb) ? trueValue : falseValue;
+    ///   }
+    /// </code>
+    /// 第 5 参是「键存在且为真时映射到的值」，**不是默认值**。
+    /// 键缺失时走的是 falseValue 分支：initialize=true 时写 falseValue，
+    /// initialize=false 时**完全不改**。
+    /// 因此 style/enhanced_position（调用点 trueValue=true, falseValue=false）
+    /// 在键缺失时的出厂默认 = falseValue = **false**，
+    /// 与 UIStyle 构造函数的 enhanced_position(false)（WeaselIPCData.h:308）一致。
+    /// </remarks>
     public static IReadOnlyDictionary<string, object?> CxxFallbacks { get; } =
         new Dictionary<string, object?>(StringComparer.Ordinal)
         {
             // RimeWithWeasel.cpp:1355
             //   _RimeGetBool(config, "style/enhanced_position", initialize,
             //                style.enhanced_position, true, false);
-            // 第 5、6 参是「键存在时的 true/false 映射」还是「缺省值」取决于 initialize，
-            // 但 UIStyle 构造函数未显式初始化该字段 → 零初始化 false，
-            // 而调用点传入的 true 是「首次初始化时的默认」。故取 true。
-            ["style/enhanced_position"] = true,
+            // 两个独立来源都是 false：
+            //   ① _RimeGetBool 键缺失 → falseValue = false
+            //   ② UIStyle 构造函数 enhanced_position(false)
+            ["style/enhanced_position"] = false,
         };
 
     /// <summary>从 weasel.yaml 文本解析。失败返回空表而非抛异常。</summary>

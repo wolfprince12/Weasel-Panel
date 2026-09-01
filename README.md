@@ -15,7 +15,8 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 | --- | --- | --- |
 | P0-0 | 建仓与隔离验证 | ✅ 完成 |
 | P1 | Core 内核（YAML 编辑器 / 补丁文件 / 路径探测 / 备份对比 / 自定义短语 / 镜像回退） | ✅ 完成 |
-| P1.5 | 外观内核（颜色字面量 / 配色回退链与 alpha 混合 / 内置配色目录 / 出厂默认值表） | ✅ 完成（**244 测试全绿**） |
+| P1.5 | 外观内核（颜色字面量 / 配色回退链与 alpha 混合 / 内置配色目录 / 出厂默认值表） | ✅ 完成 |
+| P1.6 | 布局派生（配置深度合并 / 布局类型覆盖链 / 全屏副作用 / 内边距修正 / 全局与方案两层） | ✅ 完成（**279 测试全绿**） |
 | P0 | Windows 侧接入面探针（路径定位 / 命名管道 / 部署日志） | ⬜ 待开始（需在 Windows 虚拟机人工验证） |
 | P2–P7 | 界面 → 方案与雾凇 → 词库 → 备份 → 紫毫 → 打包发布 | ⬜ 待开始 |
 
@@ -24,7 +25,7 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 | 模块 | 内容 |
 | --- | --- |
 | `Yaml/` | 逐行手术式编辑器（保注释/引号风格/行尾注释）、最小发射器、缩进归一化、`0x` 颜色保护、只读加载器 |
-| `Rime/` | 补丁文件读写（解析失败拒写 / 写前 `.bak` / 写后回读校验）、自定义短语（tabledb）、**颜色字面量解析**、**配色回退链与 alpha 混合**、**内置配色目录**、**出厂默认值表** |
+| `Rime/` | 补丁文件读写（解析失败拒写 / 写前 `.bak` / 写后回读校验）、自定义短语（tabledb）、颜色字面量解析、配色回退链与 alpha 混合、内置配色目录、出厂默认值表、**配置深度合并**、**布局派生状态** |
 | `Backup/` | 快照备份 / 整量与部分恢复 / LCS 行级 diff（单列 + 左右双栏） |
 | `Platform/` | 小狼毫路径探测（注册表 + 环境变量回退），非 Windows 上自动降级不抛异常 |
 | `Net/` | GitHub 请求镜像 fallback（Release / Commit / 下载 + zip 签名校验） |
@@ -48,6 +49,28 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
    面板按 UIStyle 字段名去写 `border` 会让用户的 `border_width` 静默失效。
 
 已以上游原始 `weasel.yaml` 全量验证：36 套内置配色全部解析成功、0 异常。
+
+#### 布局派生的四条上游事实
+
+小狼毫渲染用的不是配置里写的原值，而是**派生后的值**。这四条是读
+`RimeWithWeasel.cpp:1164-1361` 逐行核实得来的，缺一条预览就会失真：
+
+1. **布局类型是一条 5 步覆盖链**，后写的键覆盖先写的，且 `fullscreen` 的分支
+   依赖上一步 `horizontal` 的结果。链尾 `style/layout/type` 优先级最高。
+   ⚠️ 反直觉：`vertical_text: true` 能压掉 `fullscreen`，但 `vertical_text: false`
+   **无法**取消全屏 —— 因为 `false` 的映射值就是「当前值」，等于什么都没做。
+2. **全屏有三处副作用** —— `max_width = 0`、`inline_preedit = false`、`shadow_radius = 0`。
+   前两处都有历史教训（全屏被最大宽度卡住、无候选时死锁）。
+3. **内边距会把间距顶上去**（`max` 修正），且横排与竖排文字看的轴相反：
+   横排 `spacing ← y`、竖排文字 `spacing ← x`；`hilite_spacing` 更是横排看 x、竖排文字看 y。
+   `margin_x` 会被 `max(hilite_padding_x, |margin_x|)` 顶高，但**负号保持** ——
+   用户设 `margin_x: -3` 而 `hilite_padding: 5`，实际生效的是 `-5`。
+4. **样式分两层** —— 全局层（`weasel.yaml` + 用户 patch，键缺失填出厂默认）
+   与**方案层**（输入方案自己的 `style` 段，只覆盖显式存在的键）。
+   方案层能覆盖全局外观，面板不区分这两层就会出现「改了半天没反应」。
+
+已以上游原始 `weasel.yaml` 验证：三组别键回退（`border_width` / `round_corner` /
+`hilite_padding`）全部命中，派生值与预期逐项一致。
 
 ---
 
