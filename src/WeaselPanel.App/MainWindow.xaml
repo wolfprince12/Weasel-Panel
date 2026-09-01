@@ -4,8 +4,9 @@
         Title="小狼毫控制面板"
         Width="960" Height="640" MinWidth="780" MinHeight="540"
         WindowStartupLocation="CenterScreen"
-        Icon="pack://application:,,,/Resources/app.ico"
         Background="{StaticResource WindowBgBrush}">
+    <!-- 窗口标题栏 / 任务栏图标由 csproj 的 <ApplicationIcon> 单独管。
+         XAML 上不要写 Icon="pack://..." —— single-file 发布下会 NullReference。 -->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="188"/>

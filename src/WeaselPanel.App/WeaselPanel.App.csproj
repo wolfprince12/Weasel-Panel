@@ -38,10 +38,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- WPF 默认把 Resources/ 当 Content；这里显式声明为 Resource（嵌入程序集），
-         使 pack://application:,,,/Resources/app.ico 之类的 URI 能解析到。 -->
-    <Resource Include="Resources/app.ico" />
-    <Resource Include="Resources/logo.png" />
+    <!-- logo 走 EmbeddedResource 而不是 WPF Resource，原因：
+         .NET 8 self-contained + PublishSingleFile 下 pack://application:,,,/... URI
+         会触发 NullReference（已知 WPF 打包 bug）。EmbeddedResource 走 Assembly
+         GetManifestResourceStream，跟包内 WPF 资源解析器无关，single-file 下稳。
+
+         APP 图标 Resources/app.ico 仍用 ApplicationIcon + 它自己的 Resource 项，
+         二者各管一摊：app.ico → 任务栏 / 资源管理器；logo.png → 关于页内显示。 -->
+    <EmbeddedResource Include="Resources\logo.png" />
+    <Resource Include="Resources\app.ico" />
   </ItemGroup>
 
 </Project>

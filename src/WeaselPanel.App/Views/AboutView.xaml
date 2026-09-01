@@ -9,9 +9,21 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Image Grid.Column="0" Source="pack://application:,,,/Resources/logo.png"
-                           Width="88" Height="88" Stretch="Uniform" Margin="0,0,14,0"
-                           RenderOptions.BitmapScalingMode="HighQuality" SnapsToDevicePixels="True"/>
+
+                    <!-- Logo：从嵌入式资源初始化（详见 AboutView.xaml.cs 的 LoadLogo）。
+                         不要写 Source="pack://..." —— single-file 下 pack URI 会 NRE。
+                         加载失败时由代码侧把 LogoImage.Visibility 设为 Collapsed，
+                         FallbackText 显示纯文字占位。 -->
+                    <Grid Grid.Column="0" Width="88" Height="88" Margin="0,0,14,0">
+                        <Image x:Name="LogoImage" Stretch="Uniform"
+                               RenderOptions.BitmapScalingMode="HighQuality"
+                               SnapsToDevicePixels="True"/>
+                        <TextBlock x:Name="FallbackText" Text="小狼毫"
+                                   FontSize="28" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   Visibility="Collapsed"/>
+                    </Grid>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Text="小狼毫控制面板" FontSize="20" FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimaryBrush}"/>
