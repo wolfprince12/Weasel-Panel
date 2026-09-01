@@ -166,6 +166,44 @@
                 </Setter>
             </Style>
 
+            <!-- ── 方案列表条目 ────────────────────────── -->
+            <Style x:Key="SchemaItem" TargetType="ListBoxItem">
+                <Setter Property="Padding" Value="10,8"/>
+                <Setter Property="Margin" Value="2,1"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Border x:Name="bd" Background="Transparent" CornerRadius="4"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentBrush}"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsSelected" Value="False"/>
+                                        <Condition Property="IsMouseOver" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="bd" Property="Background" Value="#FFEEF1F5"/>
+                                </MultiTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="OriginChip" TargetType="Border">
+                <Setter Property="Background" Value="#FFEEF1F5"/>
+                <Setter Property="CornerRadius" Value="3"/>
+                <Setter Property="Padding" Value="5,1"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

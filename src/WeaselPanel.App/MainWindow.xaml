@@ -34,6 +34,7 @@
                          SelectionChanged="Nav_SelectionChanged">
                     <ListBoxItem Content="环境诊断" IsSelected="True"/>
                     <ListBoxItem Content="外观"/>
+                    <ListBoxItem Content="方案"/>
                     <ListBoxItem Content="关于"/>
                 </ListBox>
 

@@ -11,6 +11,7 @@ public partial class MainWindow : Window
     private readonly WeaselEnvironment _environment;
     private readonly DiagnosticsView _diagnosticsView;
     private readonly AppearanceView _appearanceView;
+    private readonly SchemaView _schemaView;
     private readonly AboutView _aboutView;
 
     public MainWindow()
@@ -34,6 +35,7 @@ public partial class MainWindow : Window
         _environment = environment;
         _diagnosticsView = new DiagnosticsView(new DiagnosticsViewModel());
         _appearanceView = new AppearanceView(new AppearanceViewModel(environment));
+        _schemaView = new SchemaView(new SchemaViewModel(environment));
         _aboutView = new AboutView(environment);
 
         ContentHost.Content = _diagnosticsView;
@@ -44,7 +46,8 @@ public partial class MainWindow : Window
         ContentHost.Content = Nav.SelectedIndex switch
         {
             1 => _appearanceView,
-            2 => _aboutView,
+            2 => _schemaView,
+            3 => _aboutView,
             _ => _diagnosticsView,
         };
     }
