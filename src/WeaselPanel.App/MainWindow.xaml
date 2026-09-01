@@ -4,6 +4,7 @@
         Title="小狼毫控制面板"
         Width="960" Height="640" MinWidth="780" MinHeight="540"
         WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/Resources/app.ico"
         Background="{StaticResource WindowBgBrush}">
     <Grid>
         <Grid.ColumnDefinitions>

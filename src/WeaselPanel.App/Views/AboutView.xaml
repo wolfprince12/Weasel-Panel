@@ -4,10 +4,22 @@
     <StackPanel>
         <Border Style="{StaticResource Card}" Margin="0,0,0,14">
             <StackPanel>
-                <TextBlock Text="小狼毫控制面板" FontSize="20" FontWeight="SemiBold"
-                           Foreground="{StaticResource TextPrimaryBrush}"/>
-                <TextBlock Text="Weasel Panel — macOS「鼠须管控制面板」的 Windows 姊妹项目"
-                           FontSize="12.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,14"/>
+                <Grid HorizontalAlignment="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.Column="0" Source="pack://application:,,,/Resources/logo.png"
+                           Width="88" Height="88" Stretch="Uniform" Margin="0,0,14,0"
+                           RenderOptions.BitmapScalingMode="HighQuality" SnapsToDevicePixels="True"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="小狼毫控制面板" FontSize="20" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <TextBlock Text="Weasel Panel — macOS「鼠须管控制面板」的 Windows 姊妹项目"
+                                   FontSize="12.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Grid>
 
                 <Grid>
                     <Grid.ColumnDefinitions>

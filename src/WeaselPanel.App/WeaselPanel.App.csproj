@@ -23,6 +23,10 @@
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
     <DebugType>embedded</DebugType>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- 让 exe 在资源管理器 / 任务栏显示小狼毫 logo。
+         多尺寸 .ico 由 Pillow 从 Resources/logo.png 生成（16/24/32/48/64/128/256）。
+         运行时窗口图标见 MainWindow.xaml 的 Icon 属性 —— ApplicationIcon 单独不显示在窗口上。 -->
+    <ApplicationIcon>Resources/app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,6 +35,13 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="WeaselPanel.Core.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WPF 默认把 Resources/ 当 Content；这里显式声明为 Resource（嵌入程序集），
+         使 pack://application:,,,/Resources/app.ico 之类的 URI 能解析到。 -->
+    <Resource Include="Resources/app.ico" />
+    <Resource Include="Resources/logo.png" />
   </ItemGroup>
 
 </Project>
