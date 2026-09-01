@@ -1,0 +1,48 @@
+# .NET / MSBuild
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+*.binlog
+.vs/
+.vscode/
+Debug/
+Release/
+x64/
+x86/
+ARM64/
+ARM/
+[Bb]in/
+[Oo]bj/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+
+# 发布与打包产物
+dist/
+publish/
+publish-output/
+installer/Output/
+*.zip
+*.7z
+*.msi
+
+# 日志
+*.log
+*.tlog
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# WorkBuddy 工作区数据（本地记忆，不入库）
+.workbuddy/
+
+# 本机临时探针脚本（P0 阶段用）
+tools/_scratch/
