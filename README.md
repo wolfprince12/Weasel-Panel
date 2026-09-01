@@ -14,9 +14,20 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 | 阶段 | 内容 | 状态 |
 | --- | --- | --- |
 | P0-0 | 建仓与隔离验证 | ✅ 完成 |
-| P1 | Core 内核（YAML 编辑器 / 补丁文件 / 颜色 / 写后校验） | 🟡 进行中（已过半，66 测试全绿） |
+| P1 | Core 内核（YAML 编辑器 / 补丁文件 / 颜色 / 写后校验 / 路径探测 / 备份对比 / 自定义短语 / 镜像回退） | ✅ 完成（**173 测试全绿**） |
 | P0 | Windows 侧接入面探针（路径定位 / 命名管道 / 部署日志） | ⬜ 待开始（需在 Windows 虚拟机人工验证） |
 | P2–P7 | 界面 → 方案与雾凇 → 词库 → 备份 → 紫毫 → 打包发布 | ⬜ 待开始 |
+
+### Core 已完成的模块
+
+| 模块 | 内容 |
+| --- | --- |
+| `Yaml/` | 逐行手术式编辑器（保注释/引号风格/行尾注释）、最小发射器、缩进归一化、`0x` 颜色保护、只读加载器 |
+| `Rime/` | 补丁文件读写（解析失败拒写 / 写前 `.bak` / 写后回读校验）、配色与字节序、自定义短语（tabledb） |
+| `Backup/` | 快照备份 / 整量与部分恢复 / LCS 行级 diff（单列 + 左右双栏） |
+| `Platform/` | 小狼毫路径探测（注册表 + 环境变量回退），非 Windows 上自动降级不抛异常 |
+| `Net/` | GitHub 请求镜像 fallback（Release / Commit / 下载 + zip 签名校验） |
+| `IO/` | 写后回读校验 |
 
 ---
 
@@ -38,6 +49,7 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 | 语言 / 框架 | C# / .NET 8 / WPF（Windows 原生窗口） |
 | MVVM | CommunityToolkit.Mvvm（MIT） |
 | YAML | 只读解析用 YamlDotNet（MIT）；**写入用自研逐行编辑器**（YamlDotNet 不保证注释往返） |
+| 注册表 | Microsoft.Win32.Registry（MIT），调用置于平台守卫内，非 Windows 自动降级 |
 | 测试 | xunit（**不使用 FluentAssertions** —— 其 v8 起改为 Xceed 商业许可，与 GPL-3.0 冲突） |
 | 打包 | zip 绿色版为主（装至 `%LOCALAPPDATA%\Programs\WeaselPanel`） |
 
@@ -53,6 +65,25 @@ dotnet test  WeaselPanel.sln
 
 > 解决方案刻意使用传统 `.sln`（而非 .NET 10 引入的 `.slnx`）—— .NET 8 SDK 的 CLI 不识别 slnx。
 > 依赖 Windows 的 WPF 界面层与平台适配层（P2 起）只能在 Windows 上构建。
+
+## Windows 侧的三条反直觉事实
+
+以下均据 `rime/weasel` 源码核实，与「想当然」相反，改动前请先看 `src/WeaselPanel.Core/Platform/WeaselPaths.cs` 文件头：
+
+1. **`RimeUserDir` 注册表值不做环境变量展开。**
+   `RimeWithWeasel/WeaselUtility.cpp` 的 `WeaselUserDataPath()` 取到值后直接返回，
+   `ExpandEnvironmentStringsW` 只出现在回退分支里。本面板严格复刻——
+   若自作聪明去展开 `%AppData%`，当注册表里存的正是含 `%` 的字面值时，
+   面板与本体就会指向不同目录，比不展开严重得多。
+
+2. **`InstallDir` 实际写在 `WOW6432Node` 下。**
+   `output/install.nsi` 默认 `SetRegView 32`（脚本里有一行 `; recover back to 32bit view`），
+   因此 64 位系统上 `WriteRegStr HKLM SOFTWARE\Rime\Weasel "InstallDir"` 落到了
+   `HKLM\SOFTWARE\WOW6432Node\Rime\Weasel`——脚本第 208 行的注释正是这个意思。
+   故注册表读取 **32 与 64 两个视图都要试**，且优先 32 位视图。
+
+3. **共享数据目录是「模块同级 `data\`」，不是程序目录下的固定子目录。**
+   依据是 `WeaselSharedDataPath()` 里的 `GetModuleFileName(NULL)` → 去文件名 → 加 `data`。
 
 ## 与 squirrel-Panel 的关系
 
