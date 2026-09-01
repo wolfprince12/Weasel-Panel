@@ -17,6 +17,8 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 | P1 | Core 内核（YAML 编辑器 / 补丁文件 / 路径探测 / 备份对比 / 自定义短语 / 镜像回退） | ✅ 完成 |
 | P1.5 | 外观内核（颜色字面量 / 配色回退链与 alpha 混合 / 内置配色目录 / 出厂默认值表） | ✅ 完成 |
 | P1.6 | 布局派生（配置深度合并 / 布局类型覆盖链 / 全屏副作用 / 内边距修正 / 全局与方案两层） | ✅ 完成（**279 测试全绿**） |
+| **P2.0** | **首个可运行 exe**（WPF 骨架 + 环境诊断页 + P0 四项探针 + 外观页与配色预览） | ✅ **已出包，待真机验证** |
+| P2 | 完整界面（骨架 + 外观页定稿） | 🔶 进行中 |
 | P0 | Windows 侧接入面探针（路径定位 / 命名管道 / 部署日志） | ⬜ 待开始（需在 Windows 虚拟机人工验证） |
 | P2–P7 | 界面 → 方案与雾凇 → 词库 → 备份 → 紫毫 → 打包发布 | ⬜ 待开始 |
 
@@ -102,12 +104,42 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 不必先准备 Windows 环境：
 
 ```bash
-dotnet build WeaselPanel.sln
+dotnet build WeaselPanel.sln     # 含 WPF 界面层（见下）
 dotnet test  WeaselPanel.sln
 ```
 
 > 解决方案刻意使用传统 `.sln`（而非 .NET 10 引入的 `.slnx`）—— .NET 8 SDK 的 CLI 不识别 slnx。
-> 依赖 Windows 的 WPF 界面层与平台适配层（P2 起）只能在 Windows 上构建。
+
+### 在 macOS 上直接产出 Windows exe
+
+**这是本项目的一个关键前提突破**：WPF 界面层**不需要** Windows 机器来构建。
+
+只要在 csproj 里打开 `EnableWindowsTargeting`，.NET SDK 就会自动下载 Windows 桌面引用包，
+在 macOS / Linux 上完成 WPF 项目（含 XAML 编译）的完整构建与发布：
+
+```xml
+<TargetFramework>net8.0-windows</TargetFramework>
+<UseWPF>true</UseWPF>
+<EnableWindowsTargeting>true</EnableWindowsTargeting>
+```
+
+发布双架构自包含单文件：
+
+```bash
+dotnet publish src/WeaselPanel.App -c Release -r win-x64   -o dist/win-x64
+dotnet publish src/WeaselPanel.App -c Release -r win-arm64 -o dist/win-arm64
+```
+
+产物为 `WeaselPanel.exe`，自包含、免安装 .NET 运行时，双击即可运行：
+`dist/win-x64/` 为 x86-64，`dist/win-arm64/` 为 Aarch64（Apple Silicon 上的 Win11 用这个）。
+
+> `dist/` 已在 `.gitignore` 中排除 —— 单个 exe 约 150 MB，不可入库。
+> **Windows 机器仅用于运行验证，不用于构建。**
+
+### WPF 项目的一个坑
+
+`UseWPF=true` 会把隐式 using 集替换为 WPF 专用集（System.Windows 等），
+**不再包含 `System.IO` / `System.Linq`**，因此 App 项目有独立的 `GlobalUsings.cs` 补齐。
 
 ## Windows 侧的三条反直觉事实
 

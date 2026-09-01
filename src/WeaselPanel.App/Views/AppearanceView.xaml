@@ -1,0 +1,149 @@
+<UserControl x:Class="WeaselPanel.App.Views.AppearanceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="360"/>
+            <ColumnDefinition Width="18"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ── 预览 ─────────────────────────────────── -->
+        <Border Grid.Column="0" Style="{StaticResource Card}" VerticalAlignment="Top">
+            <StackPanel>
+                <TextBlock Text="候选窗预览" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="颜色取自 Core 的完整回退链与 alpha 混合结果，与小狼毫实际渲染一致。"
+                           FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" Margin="0,0,0,14"/>
+
+                <!-- 模拟候选窗 -->
+                <Border Background="{Binding BackBrush}" BorderBrush="{Binding BorderBrush}"
+                        BorderThickness="2" CornerRadius="4" Padding="10,8"
+                        HorizontalAlignment="Left" MinWidth="210">
+                    <StackPanel>
+                        <!-- 输入码 -->
+                        <TextBlock Text="wang" FontSize="{Binding FontPoint}"
+                                   FontFamily="{Binding FontFace}"
+                                   Foreground="{Binding TextBrush}" Margin="2,0,0,6"/>
+
+                        <!-- 高亮候选 -->
+                        <Border Background="{Binding HilitedBackBrush}" CornerRadius="2" Padding="6,3">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="1 " FontSize="{Binding FontPoint}"
+                                           FontFamily="{Binding FontFace}"
+                                           Foreground="{Binding HilitedLabelBrush}"/>
+                                <TextBlock Grid.Column="1" Text="王" FontSize="{Binding FontPoint}"
+                                           FontFamily="{Binding FontFace}"
+                                           Foreground="{Binding HilitedTextBrush}"/>
+                                <TextBlock Grid.Column="2" Text="wáng" FontSize="11"
+                                           Foreground="{Binding HilitedTextBrush}" Opacity="0.75" Margin="10,0,0,0"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- 普通候选 -->
+                        <Grid Margin="6,3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="2 " FontSize="{Binding FontPoint}"
+                                       FontFamily="{Binding FontFace}" Foreground="{Binding LabelBrush}"/>
+                            <TextBlock Grid.Column="1" Text="往" FontSize="{Binding FontPoint}"
+                                       FontFamily="{Binding FontFace}" Foreground="{Binding CandidateTextBrush}"/>
+                        </Grid>
+                        <Grid Margin="6,3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="3 " FontSize="{Binding FontPoint}"
+                                       FontFamily="{Binding FontFace}" Foreground="{Binding LabelBrush}"/>
+                            <TextBlock Grid.Column="1" Text="网" FontSize="{Binding FontPoint}"
+                                       FontFamily="{Binding FontFace}" Foreground="{Binding CandidateTextBrush}"/>
+                        </Grid>
+
+                        <!-- 注释行 -->
+                        <TextBlock Text="〔，。〕 0 分" FontSize="11" Margin="6,6,0,0"
+                                   Foreground="{Binding CommentBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{Binding CatalogSource}" FontSize="10.5"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" Margin="0,14,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ── 设置 ─────────────────────────────────── -->
+        <StackPanel Grid.Column="2">
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="配色与字体" Style="{StaticResource SectionTitle}"/>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="88"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="配色方案" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding SchemeNames}"
+                                  SelectedItem="{Binding SelectedScheme}"/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="88"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="字体" Style="{StaticResource FieldLabel}"/>
+                        <TextBox Grid.Column="1" Text="{Binding FontFace, UpdateSourceTrigger=PropertyChanged}"/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="88"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="46"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="字号" Style="{StaticResource FieldLabel}"/>
+                        <Slider Grid.Column="1" Minimum="8" Maximum="48" TickFrequency="1"
+                                IsSnapToTickEnabled="True" Value="{Binding FontPoint}"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding FontPoint}" FontSize="13"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <CheckBox Content="编码行内显示（inline_preedit）" IsChecked="{Binding InlinePreedit}"
+                              FontSize="13" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="应用" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="写入 weasel.custom.yaml 后需执行部署才会生效。"
+                               FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
+                               TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <Button Content="应用设置" Style="{StaticResource PrimaryButton}"
+                                Command="{Binding ApplyCommand}" Margin="0,0,10,0"/>
+                        <Button Content="重新部署" Style="{StaticResource SecondaryButton}"
+                                Command="{Binding DeployCommand}" Margin="0,0,10,0"/>
+                        <Button Content="重新加载" Style="{StaticResource SecondaryButton}"
+                                Command="{Binding ReloadCommand}"/>
+                    </StackPanel>
+
+                    <Border Background="#FFF0F2F5" CornerRadius="6" Padding="10,8">
+                        <TextBlock Text="{Binding StatusText}" FontSize="12.5" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- 允许在非 Windows 主机上构建 Windows 桌面应用。
+         这是本项目能在 macOS 上直接产出 exe 的关键开关，不要删除。 -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>WeaselPanel</AssemblyName>
+    <RootNamespace>WeaselPanel.App</RootNamespace>
+    <Version>0.1.0</Version>
+    <InformationalVersion>0.1.0-preview</InformationalVersion>
+    <Company>大狼导演工作室</Company>
+    <Product>小狼毫控制面板</Product>
+    <Copyright>GPL-3.0</Copyright>
+    <!-- 单文件发布需要 -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+    <DebugType>embedded</DebugType>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WeaselPanel.Core\WeaselPanel.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="WeaselPanel.Core.Tests" />
+  </ItemGroup>
+
+</Project>
