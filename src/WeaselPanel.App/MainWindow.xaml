@@ -33,7 +33,12 @@
                 <ListBox Grid.Row="1" x:Name="Nav" Background="Transparent" BorderThickness="0"
                          ItemContainerStyle="{StaticResource NavItem}"
                          SelectionChanged="Nav_SelectionChanged">
-                    <ListBoxItem Content="环境诊断" IsSelected="True"/>
+                    <!-- 不要在这里写 IsSelected="True"。InitializeComponent 解析到这个
+                         ListBoxItem 时会立刻同步触发 SelectionChanged，但 _diagnosticsView
+                         等字段在 ctor 体里还要一会儿才 new 好，回调里 _appearanceView 还是
+                         null，直接 NRE。改由 ctor 末尾在所有 view 就绪后手动设
+                         Nav.SelectedIndex = 0 触发首次切换。 -->
+                    <ListBoxItem Content="环境诊断"/>
                     <ListBoxItem Content="外观"/>
                     <ListBoxItem Content="方案"/>
                     <ListBoxItem Content="关于"/>

@@ -27,7 +27,8 @@ public partial class MainWindow : Window
         {
             // 探测本身失败不应导致窗口打不开 —— 退化为空环境，由诊断页呈现错误
             environment = WeaselEnvironment.WithUserDirectory(
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Rime"));
+                System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Rime"));
             MessageBox.Show("环境探测失败：\n" + ex.Message, "小狼毫控制面板",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
@@ -38,11 +39,21 @@ public partial class MainWindow : Window
         _schemaView = new SchemaView(new SchemaViewModel(environment));
         _aboutView = new AboutView(environment);
 
+        // ⚠️ 不要在 XAML 里写 ListBoxItem.IsSelected="True"，会在 InitializeComponent
+        // 阶段触发 SelectionChanged，此时 4 个 view 字段还没就绪 → NRE。
+        // 也不要 Nav.SelectedIndex = 0 来"显式首次切换"，那同样会触发回调。
+        // 直接在 ctor 末尾赋 ContentHost.Content 给默认页，不经过事件 —— 用户
+        // 启动即看「环境诊断」，后续点击 ListBoxItem 才进入正常的 SelectionChanged 路径。
         ContentHost.Content = _diagnosticsView;
     }
 
     private void Nav_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        // 兜底：如果将来发生 ctor 阶段回调（极端改造），所有 4 个 view 字段都非空就放行，
+        // 否则 return —— 永远不让 Nav_SelectionChanged 因为字段未就绪而 NRE。
+        if (_diagnosticsView is null || _appearanceView is null
+            || _schemaView is null || _aboutView is null) return;
+
         ContentHost.Content = Nav.SelectedIndex switch
         {
             1 => _appearanceView,
