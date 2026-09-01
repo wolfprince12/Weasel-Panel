@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      开发机（macOS）仅装有 .NET 10 运行时，故测试宿主目标 net10.0。
+      被测试的 WeaselPanel.Core 仍是 net8.0 —— 编译期已按 net8.0 校验，
+      此处只是用更高版本的 BCL 跑同一份 IL，行为一致。
+      后续搭 GitHub Actions 时会补 net8.0 目标，让 CI 在真实目标框架上再跑一遍。
+    -->
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <!--
+      刻意不引入 FluentAssertions：其 v8 起改为 Xceed 商业许可，
+      对本 GPL-3.0 开源项目存在许可风险。统一使用 xunit 自带 Assert。
+    -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\WeaselPanel.Core\WeaselPanel.Core.csproj" />
+  </ItemGroup>
+
+</Project>

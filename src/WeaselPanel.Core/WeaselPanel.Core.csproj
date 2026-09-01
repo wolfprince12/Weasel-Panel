@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>WeaselPanel.Core</RootNamespace>
+    <AssemblyName>WeaselPanel.Core</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
+  </ItemGroup>
+
+  <!--
+    铁律：本项目为跨平台纯逻辑层，禁止引用任何 Windows / WPF 专有程序集。
+    这是「fixture 注入测试」成立的前提 —— 全部单元测试必须能在
+    未安装小狼毫的干净机器（含 macOS 开发机与 GitHub Actions Linux/Windows runner）上全绿。
+  -->
+
+</Project>
