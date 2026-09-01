@@ -14,7 +14,8 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 | 阶段 | 内容 | 状态 |
 | --- | --- | --- |
 | P0-0 | 建仓与隔离验证 | ✅ 完成 |
-| P1 | Core 内核（YAML 编辑器 / 补丁文件 / 颜色 / 写后校验 / 路径探测 / 备份对比 / 自定义短语 / 镜像回退） | ✅ 完成（**173 测试全绿**） |
+| P1 | Core 内核（YAML 编辑器 / 补丁文件 / 路径探测 / 备份对比 / 自定义短语 / 镜像回退） | ✅ 完成 |
+| P1.5 | 外观内核（颜色字面量 / 配色回退链与 alpha 混合 / 内置配色目录 / 出厂默认值表） | ✅ 完成（**244 测试全绿**） |
 | P0 | Windows 侧接入面探针（路径定位 / 命名管道 / 部署日志） | ⬜ 待开始（需在 Windows 虚拟机人工验证） |
 | P2–P7 | 界面 → 方案与雾凇 → 词库 → 备份 → 紫毫 → 打包发布 | ⬜ 待开始 |
 
@@ -23,11 +24,30 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 | 模块 | 内容 |
 | --- | --- |
 | `Yaml/` | 逐行手术式编辑器（保注释/引号风格/行尾注释）、最小发射器、缩进归一化、`0x` 颜色保护、只读加载器 |
-| `Rime/` | 补丁文件读写（解析失败拒写 / 写前 `.bak` / 写后回读校验）、配色与字节序、自定义短语（tabledb） |
+| `Rime/` | 补丁文件读写（解析失败拒写 / 写前 `.bak` / 写后回读校验）、自定义短语（tabledb）、**颜色字面量解析**、**配色回退链与 alpha 混合**、**内置配色目录**、**出厂默认值表** |
 | `Backup/` | 快照备份 / 整量与部分恢复 / LCS 行级 diff（单列 + 左右双栏） |
 | `Platform/` | 小狼毫路径探测（注册表 + 环境变量回退），非 Windows 上自动降级不抛异常 |
 | `Net/` | GitHub 请求镜像 fallback（Release / Commit / 下载 + zip 签名校验） |
 | `IO/` | 写后回读校验 |
+
+#### 外观内核的三条上游事实
+
+这三点是读上游 `RimeWithWeasel/RimeWithWeasel.cpp` 逐行核实得来的，任何一条搞错，
+面板预览就会和真实候选窗对不上：
+
+1. **颜色字面量支持 4 种长度，不只是 6/8 位** —— `#` 或 `0x` 开头 + 3/4/6/8 位十六进制；
+   3、4 位按「每位重复两次」扩展成 6、8 位（`0xabc` → `0xaabbcc`）。
+   字节序开关是 **per-scheme** 的 `preset_color_schemes/<scheme>/color_format`
+   （`argb` / `rgba` / `abgr`，默认 abgr），不是全局键。
+2. **绝大多数配色只写 6–10 个键，其余全靠回退链补齐**，且回退链有**顺序依赖** ——
+   `comment_text_color` 回退的是 `label_text_color`（前一步的结果），不是 `candidate_text_color`。
+   其中序号色与注释色不是简单继承，而是 `blend_colors(前景, 背景)` 的 alpha 混合。
+3. **存在别名回退，`border` 会覆盖 `border_width`** ——
+   `style/layout/border` ← `border_width`、`corner_radius` ← `round_corner`、
+   `hilite_padding_x/y` ← `hilite_padding`。而 weasel.yaml 出厂写的正是 `border_width`，
+   面板按 UIStyle 字段名去写 `border` 会让用户的 `border_width` 静默失效。
+
+已以上游原始 `weasel.yaml` 全量验证：36 套内置配色全部解析成功、0 异常。
 
 ---
 
