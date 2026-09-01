@@ -12,7 +12,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
+  </ItemGroup>
+
+  <!--
+    允许测试项目访问 internal 成員（如排除规则、默认文件头等纯逻辑）。
+    这样就不必为了可测性把这些内部实现细节暴露成 public API。
+  -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="WeaselPanel.Core.Tests" />
   </ItemGroup>
 
   <!--
