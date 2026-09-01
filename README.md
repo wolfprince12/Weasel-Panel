@@ -9,13 +9,14 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 
 ## 当前状态
 
-🚧 **规划 / 开发初期（P0）** —— 尚无可用版本，请勿期待下载。
+🚧 **开发初期** —— 尚无可用版本，请勿期待下载。
 
 | 阶段 | 内容 | 状态 |
 | --- | --- | --- |
 | P0-0 | 建仓与隔离验证 | ✅ 完成 |
-| P0 | Windows 侧接入面探针（路径定位 / 命名管道 / 部署日志） | ⬜ 待开始 |
-| P1–P7 | 内核 → 面板 → 打包发布 | ⬜ 待开始 |
+| P1 | Core 内核（YAML 编辑器 / 补丁文件 / 颜色 / 写后校验） | 🟡 进行中（已过半，66 测试全绿） |
+| P0 | Windows 侧接入面探针（路径定位 / 命名管道 / 部署日志） | ⬜ 待开始（需在 Windows 虚拟机人工验证） |
+| P2–P7 | 界面 → 方案与雾凇 → 词库 → 备份 → 紫毫 → 打包发布 | ⬜ 待开始 |
 
 ---
 
@@ -37,8 +38,21 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 | 语言 / 框架 | C# / .NET 8 / WPF（Windows 原生窗口） |
 | MVVM | CommunityToolkit.Mvvm（MIT） |
 | YAML | 只读解析用 YamlDotNet（MIT）；**写入用自研逐行编辑器**（YamlDotNet 不保证注释往返） |
-| 测试 | xunit + FluentAssertions |
+| 测试 | xunit（**不使用 FluentAssertions** —— 其 v8 起改为 Xceed 商业许可，与 GPL-3.0 冲突） |
 | 打包 | zip 绿色版为主（装至 `%LOCALAPPDATA%\Programs\WeaselPanel`） |
+
+## 构建与测试
+
+`WeaselPanel.Core` 是 **net8.0 纯类库、零 Windows 依赖**，因此 macOS / Linux 上也能直接编译并跑测试，
+不必先准备 Windows 环境：
+
+```bash
+dotnet build WeaselPanel.sln
+dotnet test  WeaselPanel.sln
+```
+
+> 解决方案刻意使用传统 `.sln`（而非 .NET 10 引入的 `.slnx`）—— .NET 8 SDK 的 CLI 不识别 slnx。
+> 依赖 Windows 的 WPF 界面层与平台适配层（P2 起）只能在 Windows 上构建。
 
 ## 与 squirrel-Panel 的关系
 
