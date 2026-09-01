@@ -48,12 +48,59 @@ public static class WeaselStyleResolver
 
     private static WeaselStyle Resolve(RimeConfigView cfg, WeaselStyle s, bool initialize)
     {
+        // ── 0. 字体（RimeWithWeasel.cpp:1171-1191）—— 必须最先执行 ────────
+        // label/comment 字体要回退到主字体，主字体必须先读出来。
+
+        // font_face 走 rmspace 转换器：移除逗号、冒号、串首尾周围的空白。
+        // 上游正则 \s*(,|:|^|$)\s* → $1（RimeWithWeasel.cpp:1166-1168）。
+        // 用途是规整 "Microsoft YaHei , SimSun" 这类多字体列表的分隔符。
+        if (cfg.TryGetString("style/font_face", out var fontFace))
+            s.FontFace = RemoveSpaces(fontFace);
+
+        // ⚠️ 空值回退（第 1178-1181 行）在读取之后**无条件**执行，
+        //    因此在方案层（initialize=false）同样生效 —— 即使上层传入了
+        //    pFallbackFontFace = NULL，空字符串仍会被主字体顶替。
+        if (cfg.TryGetString("style/label_font_face", out var labelFontFace) && labelFontFace.Length > 0)
+            s.LabelFontFace = RemoveSpaces(labelFontFace);
+        if (s.LabelFontFace.Length == 0) s.LabelFontFace = s.FontFace;
+
+        if (cfg.TryGetString("style/comment_font_face", out var commentFontFace) && commentFontFace.Length > 0)
+            s.CommentFontFace = RemoveSpaces(commentFontFace);
+        if (s.CommentFontFace.Length == 0) s.CommentFontFace = s.FontFace;
+
+        // font_point：`if (style.font_point <= 0) style.font_point = 12;`（第 1184-1185）
+        // ⚠️ 12 是硬编码兜底，**不是**出厂默认值（weasel.yaml 里出厂写的是 14）。
+        GetInt(cfg, "style/font_point", () => s.FontPoint, v => s.FontPoint = v);
+        if (s.FontPoint <= 0) s.FontPoint = 12;
+
+        // label/comment 字号：主键取不到则回退 style/font_point，并取绝对值
+        GetInt(cfg, "style/label_font_point", () => s.LabelFontPoint,
+            v => s.LabelFontPoint = v, aliasKey: "style/font_point", abs: true);
+        GetInt(cfg, "style/comment_font_point", () => s.CommentFontPoint,
+            v => s.CommentFontPoint = v, aliasKey: "style/font_point", abs: true);
+
+        GetInt(cfg, "style/candidate_abbreviate_length", () => s.CandidateAbbreviateLength,
+            v => s.CandidateAbbreviateLength = v, abs: true);
+
         // ── 1. 行内编码（hilite_spacing 的修正依赖它，必须早于修正段）──────
         // RimeWithWeasel.cpp:1192
         GetBool(cfg, "style/inline_preedit", initialize, v => s.InlinePreedit = v);
 
         // RimeWithWeasel.cpp:1194
         GetBool(cfg, "style/vertical_auto_reverse", initialize, v => s.VerticalAutoReverse = v);
+
+        // ── 1b. 三个枚举（第 1197-1216 行）—— fallback 均传当前值 ──────────
+        // 键缺失或值非法 → 保持原值（等于没写）。
+        ParseStringOpt(cfg, "style/preedit_type", PreeditTypes, s.PreeditType,
+            v => s.PreeditType = v);
+        ParseStringOpt(cfg, "style/antialias_mode", AntiAliasModes, s.AntiAliasMode,
+            v => s.AntiAliasMode = v);
+        ParseStringOpt(cfg, "style/hover_type", HoverTypes, s.HoverType,
+            v => s.HoverType = v);
+
+        // ── 1c. 杂项开关（第 1218-1228 行）───────────────────────────────
+        GetBool(cfg, "style/display_tray_icon", initialize, v => s.DisplayTrayIcon = v);
+        GetBool(cfg, "style/ascii_tip_follow_cursor", initialize, v => s.AsciiTipFollowCursor = v);
 
         // ── 2. 对齐方式 ──────────────────────────────────────────────────
         // RimeWithWeasel.cpp:1222。fallback 是当前值 → 非法值等于没写。
@@ -104,6 +151,17 @@ public static class WeaselStyleResolver
 
         // ⑥ style/layout/type（第 1268-1274 行）—— 链中优先级最高
         ParseStringOpt(cfg, "style/layout/type", LayoutTypes, s.LayoutType, v => s.LayoutType = v);
+
+        // ── 4b. 序号格式与高亮标记（第 1254-1255 行）─────────────────────
+        // ⚠️ 序号格式的**配置键是 label_format**，不是字段名 label_text_format。
+        //    面板若按字段名写键，配置会静默失效 —— 这是极易踩的坑。
+        if (cfg.TryGetString("style/label_format", out var labelFormat))
+            s.LabelTextFormat = labelFormat;
+        if (cfg.TryGetString("style/mark_text", out var markText))
+            s.MarkText = markText;
+        // ⚠️ mark_text 的空值兜底在上游是**使用处**而非解析处
+        //    （第 848-851 行 `mark_text.empty() ? L"*" : mark_text`），
+        //    故此处原样保存空串，由 EffectiveMarkText 对外提供兜底值。
 
         // ── 5. fullscreen 三处副作用（第 1276-1280 行）───────────────────
         //    ⚠️ 必须在 max_width 读取之后、shadow_radius 修正之前
@@ -281,4 +339,44 @@ public static class WeaselStyleResolver
             ["horizontal"] = false,
             ["vertical"] = true,
         };
+
+    /// <summary>style/preedit_type（第 1197-1200 行）。</summary>
+    private static readonly Dictionary<string, WeaselPreeditType> PreeditTypes =
+        new(StringComparer.Ordinal)
+        {
+            ["composition"] = WeaselPreeditType.Composition,
+            ["preview"] = WeaselPreeditType.Preview,
+            ["preview_all"] = WeaselPreeditType.PreviewAll,
+        };
+
+    /// <summary>
+    /// style/antialias_mode（第 1202-1206 行）。
+    /// ⚠️ 表的书写顺序（force_dword 打头）与枚举数值顺序无关，
+    /// 数值以 WeaselIPCData.h:196-202 为准，见 WeaselAntiAliasMode 的注释。
+    /// </summary>
+    private static readonly Dictionary<string, WeaselAntiAliasMode> AntiAliasModes =
+        new(StringComparer.Ordinal)
+        {
+            ["force_dword"] = WeaselAntiAliasMode.ForceDword,
+            ["cleartype"] = WeaselAntiAliasMode.ClearType,
+            ["grayscale"] = WeaselAntiAliasMode.Grayscale,
+            ["aliased"] = WeaselAntiAliasMode.Aliased,
+            ["default"] = WeaselAntiAliasMode.Default,
+        };
+
+    /// <summary>style/hover_type（第 1213-1216 行）。</summary>
+    private static readonly Dictionary<string, WeaselHoverType> HoverTypes =
+        new(StringComparer.Ordinal)
+        {
+            ["none"] = WeaselHoverType.None,
+            ["semi_hilite"] = WeaselHoverType.SemiHilite,
+            ["hilite"] = WeaselHoverType.Hilite,
+        };
+
+    /// <summary>
+    /// 上游 rmspace（RimeWithWeasel.cpp:1166-1168）：移除逗号、冒号、串首尾周围的空白。
+    /// 等价于 C++ 的 `std::regex_replace(str, std::wregex(L"\\s*(,|:|^|$)\\s*"), L"$1")`。
+    /// </summary>
+    private static string RemoveSpaces(string value) =>
+        System.Text.RegularExpressions.Regex.Replace(value, @"\s*(,|:|^|$)\s*", "$1");
 }

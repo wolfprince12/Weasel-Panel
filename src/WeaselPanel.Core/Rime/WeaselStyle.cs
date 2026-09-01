@@ -40,8 +40,88 @@ public enum WeaselLayoutAlignType
     Top,
 }
 
+/// <summary>
+/// 编码区显示方式（style/preedit_type）。上游 PreeditType { COMPOSITION, PREVIEW, PREVIEW_ALL }。
+/// </summary>
+public enum WeaselPreeditType
+{
+    Composition = 0,
+    Preview,
+    PreviewAll,
+}
+
+/// <summary>
+/// 抗锯齿模式（style/antialias_mode）。
+///
+/// ⚠️ **枚举数值不可按上游查表数组的顺序推导** —— 数组里 force_dword 排第一，
+/// 但真实枚举（WeaselIPCData.h:196-202）是 `DEFAULT = 0`，FORCE_DWORD 反而是
+/// 0xffffffff。若按数组顺序定义，默认值会从 default 变成 force_dword，
+/// 属于「编译通过但行为全错」的那类问题。
+/// </summary>
+public enum WeaselAntiAliasMode
+{
+    Default = 0,
+    ClearType = 1,
+    Grayscale = 2,
+    Aliased = 3,
+    ForceDword = unchecked((int)0xFFFFFFFF),
+}
+
+/// <summary>鼠标悬停高亮方式（style/hover_type）。上游 HoverType { NONE, SEMI_HILITE, HILITE }。</summary>
+public enum WeaselHoverType
+{
+    None = 0,
+    SemiHilite,
+    Hilite,
+}
+
 public sealed class WeaselStyle
 {
+    // ── 字体与文本 ──────────────────────────────────────────────────────
+    // 上游 _UpdateUIStyle 里这一段最先执行（RimeWithWeasel.cpp:1171-1191），
+    // 因为 label/comment 字体要回退到主字体，必须先把主字体读出来。
+    public string FontFace { get; set; } = "";
+    public string LabelFontFace { get; set; } = "";
+    public string CommentFontFace { get; set; } = "";
+
+    /// <summary>
+    /// 主字号。⚠️ 上游在读取后有修正：`if (font_point &lt;= 0) font_point = 12;`
+    /// （RimeWithWeasel.cpp:1184-1185）。即 **12 是硬编码兜底，不是出厂默认值** ——
+    /// 出厂 weasel.yaml 里写的是 14，两者含义不同，面板不要混用。
+    /// </summary>
+    public int FontPoint { get; set; }
+
+    public int LabelFontPoint { get; set; }
+    public int CommentFontPoint { get; set; }
+
+    /// <summary>候选词过长时的截断长度。上游对其取绝对值（_abs）。</summary>
+    public int CandidateAbbreviateLength { get; set; }
+
+    /// <summary>
+    /// 序号格式（printf 风格，如 "%s."）。
+    /// ⚠️ **配置键是 `style/label_format`，而非字段名 label_text_format**
+    /// （RimeWithWeasel.cpp:1254）。面板若按字段名写键，配置会静默失效。
+    /// </summary>
+    public string LabelTextFormat { get; set; } = "";
+
+    /// <summary>
+    /// 高亮候选前的标记符。⚠️ 上游在使用处兜底：`mark_text.empty() ? L"*" : mark_text`
+    /// （RimeWithWeasel.cpp:848-851），即**空值等价于 "*"**，而不是空字符串。
+    /// </summary>
+    public string MarkText { get; set; } = "";
+
+    /// <summary>
+    /// 对外使用的高亮标记符。空串等价于 "*"，与上游使用处的兜底保持一致
+    /// （RimeWithWeasel.cpp:848-851）。
+    /// </summary>
+    public string EffectiveMarkText => MarkText.Length == 0 ? "*" : MarkText;
+
+    public WeaselPreeditType PreeditType { get; set; }
+    public WeaselAntiAliasMode AntiAliasMode { get; set; }
+    public WeaselHoverType HoverType { get; set; }
+    public bool DisplayTrayIcon { get; set; }
+    public bool AsciiTipFollowCursor { get; set; }
+
     // ── 布局类型与方向 ──────────────────────────────────────────────────
     public WeaselLayoutType LayoutType { get; set; }
     public WeaselLayoutAlignType AlignType { get; set; }
@@ -85,6 +165,22 @@ public sealed class WeaselStyle
     /// </summary>
     public static WeaselStyle CreateInitial() => new()
     {
+        // 字体与文本（WeaselIPCData.h:296-316 构造初值）
+        FontFace = "",
+        LabelFontFace = "",
+        CommentFontFace = "",
+        FontPoint = 0,
+        LabelFontPoint = 0,
+        CommentFontPoint = 0,
+        CandidateAbbreviateLength = 0,
+        LabelTextFormat = "%s.",
+        MarkText = "",
+        PreeditType = WeaselPreeditType.Composition,
+        AntiAliasMode = WeaselAntiAliasMode.Default,
+        HoverType = WeaselHoverType.None,
+        DisplayTrayIcon = false,
+        AsciiTipFollowCursor = false,
+
         LayoutType = WeaselLayoutType.Vertical,
         AlignType = WeaselLayoutAlignType.Bottom,
         VerticalTextLeftToRight = false,
@@ -121,6 +217,22 @@ public sealed class WeaselStyle
     public IReadOnlyList<string> Differences(WeaselStyle other)
     {
         var diff = new List<string>();
+        // 字体与文本
+        if (!string.Equals(FontFace, other.FontFace, StringComparison.Ordinal)) diff.Add(nameof(FontFace));
+        if (!string.Equals(LabelFontFace, other.LabelFontFace, StringComparison.Ordinal)) diff.Add(nameof(LabelFontFace));
+        if (!string.Equals(CommentFontFace, other.CommentFontFace, StringComparison.Ordinal)) diff.Add(nameof(CommentFontFace));
+        if (FontPoint != other.FontPoint) diff.Add(nameof(FontPoint));
+        if (LabelFontPoint != other.LabelFontPoint) diff.Add(nameof(LabelFontPoint));
+        if (CommentFontPoint != other.CommentFontPoint) diff.Add(nameof(CommentFontPoint));
+        if (CandidateAbbreviateLength != other.CandidateAbbreviateLength) diff.Add(nameof(CandidateAbbreviateLength));
+        if (!string.Equals(LabelTextFormat, other.LabelTextFormat, StringComparison.Ordinal)) diff.Add(nameof(LabelTextFormat));
+        if (!string.Equals(MarkText, other.MarkText, StringComparison.Ordinal)) diff.Add(nameof(MarkText));
+        if (PreeditType != other.PreeditType) diff.Add(nameof(PreeditType));
+        if (AntiAliasMode != other.AntiAliasMode) diff.Add(nameof(AntiAliasMode));
+        if (HoverType != other.HoverType) diff.Add(nameof(HoverType));
+        if (DisplayTrayIcon != other.DisplayTrayIcon) diff.Add(nameof(DisplayTrayIcon));
+        if (AsciiTipFollowCursor != other.AsciiTipFollowCursor) diff.Add(nameof(AsciiTipFollowCursor));
+
         if (LayoutType != other.LayoutType) diff.Add(nameof(LayoutType));
         if (AlignType != other.AlignType) diff.Add(nameof(AlignType));
         if (VerticalTextLeftToRight != other.VerticalTextLeftToRight) diff.Add(nameof(VerticalTextLeftToRight));

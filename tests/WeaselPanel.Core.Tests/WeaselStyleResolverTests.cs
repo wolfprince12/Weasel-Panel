@@ -431,10 +431,35 @@ public class WeaselStyleResolverTests
     {
         var global = Resolve(GlobalYaml);
 
+        // 写一个与布局/字体无关的键（color_scheme 不属于 WeaselStyle 的字段）
+        var schema = WeaselStyleResolver.ResolveSchemaOverlay(
+            global, RimeConfigView.FromYaml("style:\n  color_scheme: aqua\n"));
+
+        Assert.Empty(global.Differences(schema));
+    }
+
+    [Fact]
+    public void 方案只写主字号会连带改变序号与注释字号()
+    {
+        // 全局没写 font_point → 硬编码兜底 12（**不是**出厂 weasel.yaml 的 14）
+        var global = Resolve(GlobalYaml);
+        Assert.Equal(12, global.FontPoint);
+        Assert.Equal(0, global.LabelFontPoint);
+        Assert.Equal(0, global.CommentFontPoint);
+
         var schema = WeaselStyleResolver.ResolveSchemaOverlay(
             global, RimeConfigView.FromYaml("style:\n  font_point: 20\n"));
 
-        Assert.Empty(global.Differences(schema));
+        Assert.Equal(20, schema.FontPoint);
+        // ⚠️ 反直觉但正确：label/comment 字号主键缺失时会别键回退到
+        //    style/font_point（RimeWithWeasel.cpp:1186-1189），
+        //    故只改主字号会连带改掉序号与注释的字号。
+        Assert.Equal(20, schema.LabelFontPoint);
+        Assert.Equal(20, schema.CommentFontPoint);
+
+        Assert.Contains("FontPoint", global.Differences(schema));
+        Assert.Contains("LabelFontPoint", global.Differences(schema));
+        Assert.Contains("CommentFontPoint", global.Differences(schema));
     }
 
     [Fact]
