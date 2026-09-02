@@ -49,20 +49,32 @@
                          ListBoxItem 时会立刻同步触发 SelectionChanged，但 _diagnosticsView
                          等字段在 ctor 体里还要一会儿才 new 好，回调里 _appearanceView 还是
                          null，直接 NRE。改由 ctor 末尾在所有 view 就绪后直接赋首屏。 -->
+                    <!-- ⚠️ Tag = 组标题，由 NavItem 模板在该项上方渲染一行小字。
+                         组标题**不是**独立条目 —— 导航按 SelectedIndex 派发，
+                         多插一项就会「点维护跳出词典」，所以分组只能挂 Tag。
+                         只有「组内第一项」带 Tag，其余不带。
+                         首项「环境诊断」紧贴品牌区，不需要再压一行标题。 -->
                     <ListBoxItem Content="{l10n:L Nav.Diagnostics}"/>
-                    <ListBoxItem Content="{l10n:L Nav.Appearance}"/>
+
+                    <ListBoxItem Content="{l10n:L Nav.Appearance}" Tag="{l10n:L NavGroup.Appearance}"/>
                     <!-- 自定义配色紧挨「外观」：两页都管配色，
                          外观是「选哪一套」，这里是「造一套」。 -->
                     <ListBoxItem Content="{l10n:L Nav.ColorSchemes}"/>
-                    <ListBoxItem Content="{l10n:L Nav.Schema}"/>
+
+                    <ListBoxItem Content="{l10n:L Nav.Schema}" Tag="{l10n:L NavGroup.Input}"/>
+                    <!-- 雾凇拼音紧挨「输入方案」：rime_ice 本身是一个拼音方案，
+                         方案页管「装哪些、谁在前」，这里管「这一套内部的词库/模糊音/繁简」。 -->
+                    <ListBoxItem Content="{l10n:L Nav.RimeIce}"/>
                     <ListBoxItem Content="{l10n:L Nav.Input}"/>
                     <ListBoxItem Content="{l10n:L Nav.Behavior}"/>
                     <ListBoxItem Content="{l10n:L Nav.AppOptions}"/>
-                    <ListBoxItem Content="{l10n:L Nav.Dictionary}"/>
+
+                    <ListBoxItem Content="{l10n:L Nav.Dictionary}" Tag="{l10n:L NavGroup.Data}"/>
                     <ListBoxItem Content="{l10n:L Nav.Maintenance}"/>
                     <ListBoxItem Content="{l10n:L Nav.Inspector}"/>
                     <ListBoxItem Content="{l10n:L Nav.Backup}"/>
-                    <ListBoxItem Content="{l10n:L Nav.About}"/>
+
+                    <ListBoxItem Content="{l10n:L Nav.About}" Tag="{l10n:L NavGroup.Meta}"/>
                 </ListBox>
 
                 <TextBlock Grid.Row="2" x:Name="VersionLabel" Text=""
@@ -72,11 +84,31 @@
             </Grid>
         </Border>
 
-        <!-- ── 内容区 ───────────────────────────────── -->
+        <!-- ── 内容区 ─────────────────────────────────
+             MaxWidth + 左对齐是本轮排版复审最关键的一处修正。原来是纯 `*`，
+             窗口最大化后内容区能有 2000+ 像素宽：说明文字一行 200 多字符、
+             「标签 : 控件」中间拉出一大片空白、复选框注释横贯整屏 ——
+             十三个页面**全部**受影响，这就是「各个页面排版很有问题」的总根源。
+             限宽到 920（见 App.xaml 的 ContentMaxWidth），窄窗口下不生效，
+             宽窗口下内容靠左维持与侧栏的阅读连续性（跟 Windows 11 设置一致，
+             不居中 —— 居中会让内容在超宽屏上飘到屏幕正中、与左侧导航断开）。 -->
         <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       Padding="0" Margin="0">
-            <ContentControl x:Name="ContentHost" Margin="24,22,24,28"/>
+            <!-- 为什么用「star 列 + MaxWidth」而不是给 ContentControl 直接写
+                 HorizontalAlignment=Left + MaxWidth：Left 对齐的元素宽度是**按内容收缩**的，
+                 于是每页宽度都不一样（哪页恰好有一行长文字，那页的卡片就更宽），
+                 页间切换时卡片右边缘会跳。而 Stretch + MaxWidth 在 WPF 里是**居中**，
+                 超宽屏上内容会飘到屏幕正中、和左侧导航断开。
+                 star 列受 MaxWidth 限制后停在 920 且靠左，右侧富余空间由 Auto 列吃掉，
+                 是唯一能同时满足「定宽 + 靠左」的写法。 -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MaxWidth="{StaticResource ContentMaxWidth}"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ContentControl x:Name="ContentHost" Grid.Column="0" Margin="24,22,24,28"/>
+            </Grid>
         </ScrollViewer>
     </Grid>
 </Window>

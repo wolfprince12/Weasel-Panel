@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private readonly AppearanceView _appearanceView;
     private readonly ColorSchemesView _colorSchemesView;
     private readonly SchemaView _schemaView;
+    private readonly RimeIceView _rimeIceView;
     private readonly InputView _inputView;
     private readonly BehaviorView _behaviorView;
     private readonly AppOptionsView _appOptionsView;
@@ -51,6 +52,7 @@ public partial class MainWindow : Window
         _appearanceView = new AppearanceView(new AppearanceViewModel(environment));
         _colorSchemesView = new ColorSchemesView(environment);
         _schemaView = new SchemaView(new SchemaViewModel(environment));
+        _rimeIceView = new RimeIceView(environment);
         _inputView = new InputView(new InputViewModel(environment));
         _behaviorView = new BehaviorView(new BehaviorViewModel(environment));
         _appOptionsView = new AppOptionsView(environment);
@@ -109,7 +111,7 @@ public partial class MainWindow : Window
         UserControl[] views =
         {
             _diagnosticsView, _appearanceView, _colorSchemesView, _schemaView,
-            _inputView, _behaviorView, _appOptionsView, _dictionaryView,
+            _rimeIceView, _inputView, _behaviorView, _appOptionsView, _dictionaryView,
             _maintenanceView, _inspectorView,
             _backupView, _aboutView,
         };
@@ -126,7 +128,8 @@ public partial class MainWindow : Window
         // 否则 return —— 永远不让 Nav_SelectionChanged 因为字段未就绪而 NRE。
         if (_diagnosticsView is null || _appearanceView is null
             || _colorSchemesView is null
-            || _schemaView is null || _inputView is null
+            || _schemaView is null || _rimeIceView is null
+            || _inputView is null
             || _behaviorView is null || _appOptionsView is null
             || _dictionaryView is null
             || _maintenanceView is null || _inspectorView is null
@@ -145,11 +148,13 @@ public partial class MainWindow : Window
     /// 而且既不报错也不崩，只能靠肉眼发现。改成顺序数组后，加页只要在
     /// XAML 和这里各插一行，索引由数组位置自己算出来，没有数字可漏。
     /// </remarks>
-    private UserControl ViewAtIndex(int index) => index switch
+    private UserControl ViewAtIndex(int index)
     {
-        >= 0 and < 12 => NavViews[index],
-        _ => _diagnosticsView,
-    };
+        // ⚠️ 边界用 views.Length，不要写死数字。之前是 `< 13`，加一页就得记着把
+        // 13 改成 14 —— 忘了改的后果是「最后一页点不开，静默退回诊断页」，不报错。
+        var views = NavViews;
+        return index >= 0 && index < views.Length ? views[index] : _diagnosticsView;
+    }
 
     private UserControl[] NavViews =>
     [
@@ -157,13 +162,14 @@ public partial class MainWindow : Window
         _appearanceView,    // 1 外观
         _colorSchemesView,  // 2 自定义配色
         _schemaView,        // 3 输入方案
-        _inputView,         // 4 按键与输入
-        _behaviorView,      // 5 行为
-        _appOptionsView,    // 6 应用选项
-        _dictionaryView,    // 7 词典
-        _maintenanceView,   // 8 维护
-        _inspectorView,     // 9 配置查看器
-        _backupView,        // 10 备份与恢复
-        _aboutView,         // 11 关于
+        _rimeIceView,       // 4 雾凇拼音
+        _inputView,         // 5 按键与输入
+        _behaviorView,      // 6 行为
+        _appOptionsView,    // 7 应用选项
+        _dictionaryView,    // 8 词典
+        _maintenanceView,   // 9 维护
+        _inspectorView,     // 10 配置查看器
+        _backupView,        // 11 备份与恢复
+        _aboutView,         // 12 关于
     ];
 }

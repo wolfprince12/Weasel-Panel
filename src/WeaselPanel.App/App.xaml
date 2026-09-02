@@ -105,6 +105,8 @@
                  这类显示与否的判断优先在 ViewModel 里算成 bool 属性，再由此转换器绑定。 -->
             <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
             <infra:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
+            <infra:ErrorBorderThicknessConverter x:Key="ErrThickness"/>
+            <infra:HasValueConverter x:Key="HasValue"/>
 
             <!-- ═══ 3. 字体 ════════════════════════════════════════════ -->
             <FontFamily x:Key="UIFont">Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI, Microsoft YaHei, PingFang SC</FontFamily>
@@ -158,6 +160,20 @@
                  时列会跳。统一一个值；取 150 是按最长的英文标签（
                  "Candidates per page"）留的余量，中文更不会换行。 -->
             <sys:Double x:Key="FieldLabelWidth">150</sys:Double>
+
+            <!-- 内容区可读宽度上限。
+                 这是本轮排版复审揪出的**最严重**的一处问题：内容区原来是 `*`，
+                 窗口一最大化（2560 宽的屏上内容区就有 2300+），于是
+                   · 说明文字一行 200 多个字符 —— 规范要求正文行长可控，
+                     眼睛读完一行找不回下一行的行首；
+                   · 「标签 : 控件」这种两列表单，标签固定 150，控件后面拖着
+                     2000px 空白，两者在视觉上失去关联；
+                   · 复选框的说明小字横跨整屏，像日志而不像界面。
+                 Windows 11 设置 / VS Code 设置都对内容区限宽，取值都在 1000 上下。
+                 这里取 920：够放「标签 150 + 控件 200 + 说明」而不散架，
+                 也不至于在 1366×768 的老笔记本上被截断（那时窗口本来就窄，
+                 MaxWidth 不起作用）。 -->
+            <sys:Double x:Key="ContentMaxWidth">920</sys:Double>
 
             <!-- ═══ 5. 圆角：全站只留 3 档 ════════════════════════════ -->
             <CornerRadius x:Key="RadiusSm">4</CornerRadius>          <!-- 按钮、输入框、徽标 -->
@@ -591,7 +607,22 @@
 
             <!-- 侧边导航。选中态改成「左侧 3px 主色条 + 主色 50 浅底 + 主色文字加粗」，
                  而不是整行填主色 —— 规范：主色用来点缀，不用来铺满。
-                 整行填色在 7 个条目时，一屏下来左半边是蓝的，很压。 -->
+                 整行填色在 7 个条目时，一屏下来左半边是蓝的，很压。
+
+                 ── 分组标题走 Tag，不新增 ListBoxItem ──────────────────
+                 13 个条目平铺成一长条，找页要从头扫到尾。分组是必须的，但
+                 **不能**为分组另插 ListBoxItem —— 导航派发是按 SelectedIndex
+                 取 NavViews[index]，多插一项就会全盘错位，而且既不报错也不崩。
+                 所以组标题挂在「组内第一项」的 Tag 上，由这里的模板在该项
+                 上方额外渲染一行小字：条目数不变、索引不变、分组白得。
+                 Tag 为 null 的条目（组内非首项）不渲染标题。 -->
+            <Style x:Key="NavGroupLabel" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="{StaticResource FontMicro}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                <Setter Property="Margin" Value="14,14,0,5"/>
+            </Style>
+
             <Style x:Key="NavItem" TargetType="ListBoxItem">
                 <Setter Property="Padding" Value="0"/>
                 <Setter Property="Margin" Value="8,1"/>
@@ -603,17 +634,30 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ListBoxItem">
-                            <Grid>
-                                <Border x:Name="bar" Width="3" HorizontalAlignment="Left"
-                                        CornerRadius="0,2,2,0"
-                                        Background="{StaticResource PrimaryBrush}" Opacity="0"/>
-                                <Border x:Name="bd" Margin="3,0,0,0" Background="Transparent"
-                                        CornerRadius="{StaticResource RadiusSm}"
-                                        Padding="11,0,8,0">
-                                    <ContentPresenter VerticalAlignment="Center"/>
-                                </Border>
-                            </Grid>
+                            <StackPanel>
+                                <!-- 组标题：不可点、不参与选中，只是这一项头顶的一行小字。
+                                     Height 未固定，Tag 为空时整块 Collapsed 不占位。 -->
+                                <TextBlock x:Name="grp" Style="{StaticResource NavGroupLabel}"
+                                           Text="{TemplateBinding Tag}"
+                                           IsHitTestVisible="False" Visibility="Collapsed"/>
+                                <Grid MinHeight="{TemplateBinding MinHeight}">
+                                    <Border x:Name="bar" Width="3" HorizontalAlignment="Left"
+                                            CornerRadius="0,2,2,0"
+                                            Background="{StaticResource PrimaryBrush}" Opacity="0"/>
+                                    <Border x:Name="bd" Margin="3,0,0,0" Background="Transparent"
+                                            CornerRadius="{StaticResource RadiusSm}"
+                                            Padding="11,0,8,0">
+                                        <ContentPresenter VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
                             <ControlTemplate.Triggers>
+                                <!-- 有 Tag 才显组标题。写成「不等于 null 时显示」在 XAML 里
+                                     没有直接语法，所以反过来：默认 Collapsed，
+                                     Tag 有值时由这条 DataTrigger 翻成 Visible。 -->
+                                <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}, Converter={StaticResource HasValue}}" Value="True">
+                                    <Setter TargetName="grp" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
                                 <Trigger Property="IsSelected" Value="True">
                                     <Setter TargetName="bd" Property="Background" Value="{StaticResource Primary50Brush}"/>
                                     <Setter TargetName="bar" Property="Opacity" Value="1"/>
