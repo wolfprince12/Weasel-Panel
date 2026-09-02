@@ -358,8 +358,13 @@ public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware
         try
         {
             Directory.CreateDirectory(_environment.UserDirectory);
-            ApplyWeasel();
-            ApplyRime();
+
+            // ⚠️ 必须检查每个文件的返回值：本页一次「应用」要写两个文件，
+            // 其中一个解析失败时若继续往下走，最后那句 "Written" 会把失败
+            // 状态盖掉 —— 用户看到「已写入」，实际一个字节都没落盘。
+            if (!ApplyWeasel()) return;
+            if (!ApplyRime()) return;
+
             StatusText = StatusFromKey("Behavior.Status.Written");
         }
         catch (Exception ex)
@@ -372,7 +377,8 @@ public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware
         }
     }
 
-    private void ApplyWeasel()
+    /// <returns>false = 文件解析失败、已拒绝写入（调用方须就此停下）。</returns>
+    private bool ApplyWeasel()
     {
         var path = Path.Combine(_environment.UserDirectory, "weasel.custom.yaml");
         var custom = new CustomYamlFile(path);
@@ -381,7 +387,7 @@ public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware
         if (!custom.IsWritable)
         {
             StatusText = StatusFromKey("Behavior.Status.ParseFailed", custom.LoadError);
-            return;
+            return false;
         }
 
         custom.Set("show_notifications", ShowNotifications);
@@ -394,9 +400,11 @@ public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware
         custom.Set("style/vertical_auto_reverse", VerticalAutoReverse);
 
         custom.Save();
+        return true;
     }
 
-    private void ApplyRime()
+    /// <returns>false = 文件解析失败、已拒绝写入（调用方须就此停下）。</returns>
+    private bool ApplyRime()
     {
         var path = Path.Combine(_environment.UserDirectory, "default.custom.yaml");
         var custom = new CustomYamlFile(path);
@@ -405,7 +413,7 @@ public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware
         if (!custom.IsWritable)
         {
             StatusText = StatusFromKey("Behavior.Status.ParseFailed", custom.LoadError);
-            return;
+            return false;
         }
 
         var set = new PatchSet();
@@ -429,6 +437,7 @@ public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware
         else set.Remove("ascii_composer/switch_key");
 
         custom.ApplyLineEdits(set);
+        return true;
     }
 
     // ── 本地化 ───────────────────────────────────────────────────────
