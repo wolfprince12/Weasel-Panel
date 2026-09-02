@@ -27,14 +27,18 @@ using WeaselPanel.Core.Yaml;
 
 namespace WeaselPanel.App.ViewModels;
 
-/// <summary>中英切换键模式。None = 不写 ascii_composer/switch_key（保持方案自带行为）。</summary>
-public enum SwitchKeyMode
-{
-    None,
-    Shift,
-    CapsLock,
-    Control,
-}
+//
+//  ⚠️ 本页不再碰 ascii_composer/switch_key —— 中英切换键已整体移到「行为」页。
+//
+//  原因：switch_key 是**整块替换**的字典。本页原来的四个预设
+//  （None / 左右Shift / CapsLock / 左右Control）写下去，会把行为页逐键设置的
+//  Caps_Lock=commit_code、Shift_L=inline_ascii 之类整块冲掉；反过来行为页也会
+//  把本页的预设冲掉。用户在两个页面来回改，表现就是「改了没生效」。
+//
+//  macOS 鼠须管面板里这一项本来就只挂在 BehaviorPage 一处（SettingsStore 里
+//  再无第二个写入点），而行为页的 5 键 × 6 动作是本页预设的严格超集，
+//  所以归行为页独占，本页只留一行指向提示（Input.Switch.MovedToBehavior）。
+//
 
 public sealed class InputViewModel : ViewModelBase
 {
@@ -48,7 +52,6 @@ public sealed class InputViewModel : ViewModelBase
     private bool _pagingCommaPeriod;
     private bool _pagingBrackets;
     private bool _pagingUpDown;
-    private SwitchKeyMode _switchKey;
     private bool _toggleFullShape;
     private bool _togglePunctuation;
 
@@ -93,12 +96,6 @@ public sealed class InputViewModel : ViewModelBase
     {
         get => _pagingUpDown;
         set => Set(ref _pagingUpDown, value);
-    }
-
-    public SwitchKeyMode SwitchKey
-    {
-        get => _switchKey;
-        set => Set(ref _switchKey, value);
     }
 
     public bool ToggleFullShape
@@ -167,8 +164,6 @@ public sealed class InputViewModel : ViewModelBase
             _toggleFullShape = bindings.Any(b => b.StartsWith("Shift+space|", StringComparison.OrdinalIgnoreCase));
             _togglePunctuation = bindings.Any(b => b.StartsWith("Control+period|", StringComparison.OrdinalIgnoreCase));
 
-            _switchKey = ReadSwitchKey(merged.Lookup("ascii_composer/switch_key"));
-
             HasLoaded = true;
             StatusText = File.Exists(customPath)
                 ? L10n.Instance.T("Input.Status.Loaded", customPath)
@@ -191,7 +186,6 @@ public sealed class InputViewModel : ViewModelBase
         OnPropertyChanged(nameof(PagingCommaPeriod));
         OnPropertyChanged(nameof(PagingBrackets));
         OnPropertyChanged(nameof(PagingUpDown));
-        OnPropertyChanged(nameof(SwitchKey));
         OnPropertyChanged(nameof(ToggleFullShape));
         OnPropertyChanged(nameof(TogglePunctuation));
     }
@@ -216,16 +210,6 @@ public sealed class InputViewModel : ViewModelBase
             result.Add(accept + "|" + action);
         }
         return result;
-    }
-
-    private static SwitchKeyMode ReadSwitchKey(object? value)
-    {
-        if (value is not IReadOnlyDictionary<string, object?> map) return SwitchKeyMode.None;
-
-        if (map.ContainsKey("Caps_Lock")) return SwitchKeyMode.CapsLock;
-        if (map.ContainsKey("Shift_L") || map.ContainsKey("Shift_R")) return SwitchKeyMode.Shift;
-        if (map.ContainsKey("Control_L") || map.ContainsKey("Control_R")) return SwitchKeyMode.Control;
-        return SwitchKeyMode.None;
     }
 
     // ── 预览 ────────────────────────────────────────────────────
@@ -316,9 +300,6 @@ public sealed class InputViewModel : ViewModelBase
                     ? PatchValue.KeyBindings(bindings)
                     : PatchValue.StringList(Array.Empty<string>()));
 
-            if (SwitchKey != SwitchKeyMode.None)
-                set.Set("ascii_composer/switch_key", PatchValue.Dictionary(SwitchKeyValue()));
-
             custom.ApplyLineEdits(set);
             StatusText = L10n.Instance.T("Input.Status.Written", path);
         }
@@ -331,29 +312,6 @@ public sealed class InputViewModel : ViewModelBase
             IsBusy = false;
         }
     }
-
-    /// <summary>
-    /// 中英切换键 → switch_key 映射。取值全部来自 librime 支持的
-    /// SwitcherCommand：inline_ascii / commit_code / clear / noop。
-    /// </summary>
-    private Dictionary<string, object?> SwitchKeyValue() => SwitchKey switch
-    {
-        SwitchKeyMode.Shift => new Dictionary<string, object?>
-        {
-            ["Shift_L"] = "inline_ascii",
-            ["Shift_R"] = "commit_code",
-        },
-        SwitchKeyMode.CapsLock => new Dictionary<string, object?>
-        {
-            ["Caps_Lock"] = "commit_code",
-        },
-        SwitchKeyMode.Control => new Dictionary<string, object?>
-        {
-            ["Control_L"] = "inline_ascii",
-            ["Control_R"] = "inline_ascii",
-        },
-        _ => new Dictionary<string, object?>(),
-    };
 
     /// <summary>语言切换后刷新所有静态文案（ViewModel 里拼出来的那部分）。</summary>
     public void RefreshTexts()

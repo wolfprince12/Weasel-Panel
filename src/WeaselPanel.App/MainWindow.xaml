@@ -48,6 +48,7 @@
                     <ListBoxItem Content="{l10n:L Nav.Appearance}"/>
                     <ListBoxItem Content="{l10n:L Nav.Schema}"/>
                     <ListBoxItem Content="{l10n:L Nav.Input}"/>
+                    <ListBoxItem Content="{l10n:L Nav.Behavior}"/>
                     <ListBoxItem Content="{l10n:L Nav.Backup}"/>
                     <ListBoxItem Content="{l10n:L Nav.About}"/>
                 </ListBox>

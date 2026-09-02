@@ -36,6 +36,7 @@ Nav.Diagnostics = Diagnostics
 Nav.Appearance = Appearance
 Nav.Schema = Schemas
 Nav.Input = Keys & Input
+Nav.Behavior = Behavior
 Nav.Backup = Backup
 Nav.About = About
 
@@ -256,7 +257,7 @@ Schema.Status.WriteFailed = Write failed: {0}
 
 # ── Input / keys page ───────────────────────────────────────────────────
 Input.Title = Keys & input
-Input.Intro = Page size, paging keys and the Chinese/English switch key. Written to default.custom.yaml; deploy afterwards.
+Input.Intro = Page size and paging keys. Written to default.custom.yaml; deploy afterwards.
 Input.PageSize = Candidates per page
 Input.PageSizeNote = Rime's own default is 5.
 Input.PagingKeys = Paging keys
@@ -266,12 +267,7 @@ Input.Paging.MinusEqual = - and = (minus / equal)
 Input.Paging.CommaPeriod = , and . (comma / period)
 Input.Paging.Brackets = [ and ] (brackets)
 Input.Paging.UpDown = ↑ and ↓ (arrow keys)
-Input.SwitchKey = Chinese / English switch
-Input.Switch.None = Do not change (keep scheme default)
-Input.Switch.Shift = Left & right Shift
-Input.Switch.CapsLock = Caps Lock
-Input.Switch.Control = Left & right Control
-Input.Switch.Note = Written to ascii_composer/switch_key. "Left & right Shift" is the Rime default (commit ascii while held).
+Input.Switch.MovedToBehavior = The Chinese/English switch key now lives on the Behavior page, where each of the five keys gets its own action. It cannot be set in two places at once: ascii_composer/switch_key is replaced as a whole, so a second editor would silently wipe the other's settings.
 Input.Punct = Extra toggles
 Input.Punct.FullShape = Shift+Space toggles full/half width
 Input.Punct.Punctuation = Ctrl+. toggles Chinese/Latin punctuation
@@ -286,6 +282,53 @@ Input.Status.WriteFailed = Write failed: {0}
 Input.Status.Loaded = Loaded current settings from {0}
 Input.Status.NoConfig = No default.custom.yaml yet — showing Rime defaults
 Input.Status.LoadFailed = Could not read {0}: {1}
+
+# ── Behavior page ───────────────────────────────────────────────────────
+Behavior.Switch.Title = Chinese / English switch
+Behavior.Switch.Intro = What each of these five keys does when pressed. Written to the ascii_composer section of default.custom.yaml.
+Behavior.GoodOldCapsLock = Caps Lock commits ASCII directly (good_old_caps_lock)
+Behavior.GoodOldCapsLock.Note = When on, letters typed while Caps Lock is lit go straight to the screen without passing through the candidate window. When off, each key follows the action picked below. This is Rime's factory default.
+Behavior.SwitchKey.CapsLock = Caps Lock
+Behavior.SwitchKey.ShiftL = Left Shift
+Behavior.SwitchKey.ShiftR = Right Shift
+Behavior.SwitchKey.ControlL = Left Control
+Behavior.SwitchKey.ControlR = Right Control
+Behavior.Switch.Note = "Not set" leaves that key out of the config, so the scheme's own default still applies. If every key is "Not set" the panel deletes the switch_key entry entirely rather than writing an empty map — an empty map tells Rime "the user explicitly declared there are no switch keys", which also disables the ones the scheme ships with.
+Behavior.SwitchAction.Unset = Not set (keep scheme default)
+Behavior.SwitchAction.inline_ascii = Type ASCII inline — letters show as you type and commit without the candidate window
+Behavior.SwitchAction.commit_code = Commit the raw code (the letters you typed)
+Behavior.SwitchAction.commit_text = Commit the raw candidate text (the pinyin string)
+Behavior.SwitchAction.clear = Clear the input buffer (throw away what you typed)
+Behavior.SwitchAction.noop = Do nothing (swallow the key)
+Behavior.Candidate.Title = Candidate window behavior
+Behavior.Candidate.Intro = Weasel-specific settings. Written to weasel.custom.yaml.
+Behavior.PagingOnScroll = Page with the mouse wheel
+Behavior.PagingOnScroll.Note = While candidates are on screen, the wheel pages through them instead of scrolling the page underneath.
+Behavior.ClickToCapture = Capture the mouse when clicking the candidate window
+Behavior.ClickToCapture.Note = Stops a click on a candidate from also reaching the window behind it.
+Behavior.VerticalAutoReverse = Auto-flip when vertical
+Behavior.VerticalAutoReverse.Note = In vertical layout, the window flips to the other side of the caret when it gets close to the screen edge.
+Behavior.Status.Title = Status & tips
+Behavior.GlobalAscii = Global ASCII mode (global_ascii)
+Behavior.GlobalAscii.Note = One shared Chinese/English state across all programs. Uncheck it and every window remembers its own state.
+Behavior.AsciiTipFollowCursor = ASCII tip follows the caret
+Behavior.AsciiTipFollowCursor.Note = Show a small hint next to the caret when you switch. Uncheck it to show the hint at a fixed spot on screen.
+Behavior.DisplayTrayIcon = Show the tray icon
+Behavior.DisplayTrayIcon.Note = Show the Weasel icon in the notification area. Requires a redeploy after changing.
+Behavior.Notify.Title = Notifications
+Behavior.ShowNotifications = Show notifications
+Behavior.NotifyTime = Duration
+Behavior.NotifyTime.Unit = ms
+Behavior.Notify.Note = The toast shown when switching schemes, finishing a deploy, and so on. 0 means use the system default.
+Behavior.Apply.Title = Apply
+Behavior.Apply.Note = Writes weasel.custom.yaml and default.custom.yaml. default.custom.yaml is edited line by line, so anything else you hand-wrote in that file — including comments — is preserved. Press "Deploy" on the Appearance page afterwards.
+Behavior.Status.Ready = Ready
+Behavior.Status.Loaded = Loaded current settings from weasel.custom.yaml and default.custom.yaml
+Behavior.Status.LoadFailed = Could not read the config: {0}
+Behavior.Status.Writing = Writing config…
+Behavior.Status.Written = Written to weasel.custom.yaml and default.custom.yaml — deploy to apply
+Behavior.Status.WriteFailed = Write failed: {0}
+Behavior.Status.ParseFailed = Config parse failed, write refused (would corrupt the file): {0}
 
 # ── Backup page ─────────────────────────────────────────────────────────
 Backup.Title = Backup & restore

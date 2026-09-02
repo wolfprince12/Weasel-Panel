@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private readonly AppearanceView _appearanceView;
     private readonly SchemaView _schemaView;
     private readonly InputView _inputView;
+    private readonly BehaviorView _behaviorView;
     private readonly BackupView _backupView;
     private readonly AboutView _aboutView;
 
@@ -45,6 +46,7 @@ public partial class MainWindow : Window
         _appearanceView = new AppearanceView(new AppearanceViewModel(environment));
         _schemaView = new SchemaView(new SchemaViewModel(environment));
         _inputView = new InputView(new InputViewModel(environment));
+        _behaviorView = new BehaviorView(new BehaviorViewModel(environment));
         _backupView = new BackupView(new BackupViewModel(environment));
         _aboutView = new AboutView(environment);
 
@@ -89,14 +91,14 @@ public partial class MainWindow : Window
     /// 把语言变更派发给各页的 ViewModel。
     /// XAML 里的 <c>{l10n:L Key}</c> 会自己刷新，但 ViewModel 里「赋值那一刻拼好的
     /// 字符串」不会 —— 那些由各自的 <see cref="ILanguageAware.RefreshTexts"/> 重建。
-    /// 诊断页/外观页/方案页/按键页/备份页都实现了该接口；关于页没有需要重建的文本。
+    /// 诊断页/外观页/方案页/按键页/行为页/备份页都实现了该接口；关于页没有需要重建的文本。
     /// </summary>
     private void RefreshViewTexts()
     {
         UserControl[] views =
         {
             _diagnosticsView, _appearanceView, _schemaView,
-            _inputView, _backupView, _aboutView,
+            _inputView, _behaviorView, _backupView, _aboutView,
         };
 
         foreach (var view in views)
@@ -111,15 +113,16 @@ public partial class MainWindow : Window
         // 否则 return —— 永远不让 Nav_SelectionChanged 因为字段未就绪而 NRE。
         if (_diagnosticsView is null || _appearanceView is null
             || _schemaView is null || _inputView is null
-            || _backupView is null || _aboutView is null) return;
+            || _behaviorView is null || _backupView is null || _aboutView is null) return;
 
         ContentHost.Content = Nav.SelectedIndex switch
         {
             1 => _appearanceView,
             2 => _schemaView,
             3 => _inputView,
-            4 => _backupView,
-            5 => _aboutView,
+            4 => _behaviorView,
+            5 => _backupView,
+            6 => _aboutView,
             _ => _diagnosticsView,
         };
     }

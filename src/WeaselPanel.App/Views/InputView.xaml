@@ -46,25 +46,15 @@
                 <CheckBox Content="{l10n:L Input.Paging.UpDown}" IsChecked="{Binding PagingUpDown}"
                           FontSize="13" Margin="0,3"/>
 
-                <!-- 中英切换 -->
-                <Grid Margin="0,16,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="110"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="{l10n:L Input.SwitchKey}" Style="{StaticResource FieldLabel}"/>
-                    <ComboBox Grid.Column="1" SelectedValuePath="Tag"
-                              SelectedValue="{Binding SwitchKey}" Width="220"
-                              HorizontalAlignment="Left">
-                        <ComboBoxItem Content="{l10n:L Input.Switch.None}" Tag="None"/>
-                        <ComboBoxItem Content="{l10n:L Input.Switch.Shift}" Tag="Shift"/>
-                        <ComboBoxItem Content="{l10n:L Input.Switch.CapsLock}" Tag="CapsLock"/>
-                        <ComboBoxItem Content="{l10n:L Input.Switch.Control}" Tag="Control"/>
-                    </ComboBox>
-                </Grid>
-                <TextBlock Text="{l10n:L Input.Switch.Note}" FontSize="11"
+                <!-- 中英切换键已移到「行为」页。
+                     为什么不能两处都放：ascii_composer/switch_key 是**整块替换**的，
+                     输入页这四个预设（None / Shift / CapsLock / Control）写下去会把
+                     行为页逐键设置的 Caps_Lock=commit_code 之类整块冲掉，反过来也一样。
+                     macOS 鼠须管面板里这一项本来就只在 BehaviorPage 一处，
+                     行为页是它的严格超集（5 个键 × 6 种动作），所以归行为页独占。 -->
+                <TextBlock Text="{l10n:L Input.Switch.MovedToBehavior}" FontSize="12"
                            Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="110,4,0,0"/>
+                           TextWrapping="Wrap" Margin="0,16,0,0"/>
 
                 <!-- 附加开关 -->
                 <TextBlock Text="{l10n:L Input.Punct}" FontSize="13" FontWeight="SemiBold"

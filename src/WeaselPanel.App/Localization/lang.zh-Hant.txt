@@ -21,6 +21,7 @@ Nav.Diagnostics = 環境診斷
 Nav.Appearance = 外觀
 Nav.Schema = 輸入方案
 Nav.Input = 按鍵與輸入
+Nav.Behavior = 行為
 Nav.Backup = 備份
 Nav.About = 關於
 
@@ -241,7 +242,7 @@ Schema.Status.WriteFailed = 寫入失敗：{0}
 
 # ── 按鍵與輸入頁 ────────────────────────────────────────────────────────
 Input.Title = 按鍵與輸入
-Input.Intro = 候選數、翻頁鍵、中英切換鍵。寫入 default.custom.yaml 後需執行部署。
+Input.Intro = 候選數與翻頁鍵。寫入 default.custom.yaml 後需執行部署。
 Input.PageSize = 每頁候選數
 Input.PageSizeNote = Rime 出廠預設為 5。
 Input.PagingKeys = 翻頁鍵
@@ -251,12 +252,7 @@ Input.Paging.MinusEqual = - 與 =（減號 / 等號）
 Input.Paging.CommaPeriod = , 與 .（逗號 / 句號）
 Input.Paging.Brackets = [ 與 ]（方括號）
 Input.Paging.UpDown = ↑ 與 ↓（方向鍵）
-Input.SwitchKey = 中英切換
-Input.Switch.None = 不變更（保持方案預設）
-Input.Switch.Shift = 左右 Shift
-Input.Switch.CapsLock = Caps Lock
-Input.Switch.Control = 左右 Control
-Input.Switch.Note = 寫入 ascii_composer/switch_key。「左右 Shift」是 Rime 默認（按住時上屏英文）。
+Input.Switch.MovedToBehavior = 中英切換鍵已移到「行為」頁 —— 那裏可以給五個鍵各指定一個動作。這一項不能兩處都放：ascii_composer/switch_key 是整塊替換的，第二個編輯器會把另一處的設定悄悄沖掉。
 Input.Punct = 附加開關
 Input.Punct.FullShape = Shift+空白鍵 切換全形 / 半形
 Input.Punct.Punctuation = Ctrl+. 切換中 / 西文標點
@@ -271,6 +267,53 @@ Input.Status.WriteFailed = 寫入失敗：{0}
 Input.Status.Loaded = 已從 {0} 載入當前設定
 Input.Status.NoConfig = 尚無 default.custom.yaml —— 顯示的是 Rime 預設值
 Input.Status.LoadFailed = 讀取 {0} 失敗：{1}
+
+# ── 行為頁 ──────────────────────────────────────────────────────────────
+Behavior.Switch.Title = 中英切換
+Behavior.Switch.Intro = 決定這五個鍵各自按下時做什麼。寫入 default.custom.yaml 的 ascii_composer 段。
+Behavior.GoodOldCapsLock = Caps Lock 直接上屏英文（good_old_caps_lock）
+Behavior.GoodOldCapsLock.Note = 勾選後，Caps Lock 燈亮時輸入的字母直接上屏，不再經過候選窗；不勾選則每個鍵按下面各自指定的動作處理。這是 Rime 的出廠預設。
+Behavior.SwitchKey.CapsLock = Caps Lock
+Behavior.SwitchKey.ShiftL = 左 Shift
+Behavior.SwitchKey.ShiftR = 右 Shift
+Behavior.SwitchKey.ControlL = 左 Control
+Behavior.SwitchKey.ControlR = 右 Control
+Behavior.Switch.Note = 「未設定」= 這一項不寫進設定，輸入方案自帶的預設值仍然生效。五個鍵全選「未設定」時，面板會整個刪掉 switch_key 鍵，而不是寫一個空字典 —— 空字典等於告訴 Rime「使用者顯式聲明沒有切換鍵」，連方案自帶的切換鍵也會被一併屏蔽。
+Behavior.SwitchAction.Unset = 未設定（保持方案預設）
+Behavior.SwitchAction.inline_ascii = 臨時輸入英文 —— 字母直接上屏，不經候選窗
+Behavior.SwitchAction.commit_code = 上屏當前輸入的編碼（你敲的原始字母）
+Behavior.SwitchAction.commit_text = 上屏候選的原始文本（拼音串）
+Behavior.SwitchAction.clear = 清空輸入串（丟棄已敲的內容）
+Behavior.SwitchAction.noop = 不響應（吞掉這次按鍵）
+Behavior.Candidate.Title = 候選窗行為
+Behavior.Candidate.Intro = 以下為小狼毫專有設定，寫入 weasel.custom.yaml。
+Behavior.PagingOnScroll = 滾輪翻頁
+Behavior.PagingOnScroll.Note = 候選窗有內容時，鼠標滾輪用於翻頁，而不是滾動下層的頁面。
+Behavior.ClickToCapture = 點選候選窗時捕獲鼠標
+Behavior.ClickToCapture.Note = 避免點選候選詞的那一下點選同時被背後的窗口接收到。
+Behavior.VerticalAutoReverse = 豎排時自動翻轉
+Behavior.VerticalAutoReverse.Note = 豎排顯示時，候選窗貼近屏幕邊緣會自動翻到光標的另一側。
+Behavior.Status.Title = 狀態與提示
+Behavior.GlobalAscii = 全局西文模式（global_ascii）
+Behavior.GlobalAscii.Note = 所有程序共用一箇中 / 英文狀態；取消勾選則每個窗口各自記住自己的狀態。
+Behavior.AsciiTipFollowCursor = 英文狀態提示跟隨光標
+Behavior.AsciiTipFollowCursor.Note = 切換中 / 英文時在光標旁顯示一個小提示；取消勾選則顯示在屏幕上的固定位置。
+Behavior.DisplayTrayIcon = 顯示托盤圖標
+Behavior.DisplayTrayIcon.Note = 在任務欄通知區顯示小狼毫圖標。改動後需重新部署才會生效。
+Behavior.Notify.Title = 通知
+Behavior.ShowNotifications = 顯示通知
+Behavior.NotifyTime = 顯示時長
+Behavior.NotifyTime.Unit = 毫秒
+Behavior.Notify.Note = 切換輸入方案、部署完成等時機彈出的提示條。設為 0 表示沿用系統默認時長。
+Behavior.Apply.Title = 應用
+Behavior.Apply.Note = 寫入 weasel.custom.yaml 與 default.custom.yaml。default.custom.yaml 走逐行改寫，你在同檔案裏手寫的其它條目與註釋都會保留。寫完後請到「外觀」頁點「部署」。
+Behavior.Status.Ready = 就緒
+Behavior.Status.Loaded = 已從 weasel.custom.yaml 與 default.custom.yaml 載入當前設定
+Behavior.Status.LoadFailed = 讀取設定失敗：{0}
+Behavior.Status.Writing = 正在寫入設定……
+Behavior.Status.Written = 已寫入 weasel.custom.yaml 與 default.custom.yaml（需執行部署後才會生效）
+Behavior.Status.WriteFailed = 寫入失敗：{0}
+Behavior.Status.ParseFailed = 設定解析失敗，已拒絕寫入（避免損毀使用者檔案）：{0}
 
 # ── 備份頁 ──────────────────────────────────────────────────────────────
 Backup.Title = 備份與還原
