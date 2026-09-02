@@ -46,3 +46,7 @@ desktop.ini
 
 # 本机临时探针脚本（P0 阶段用）
 tools/_scratch/
+
+# Python 工具（tools/*.py）的字节码缓存
+__pycache__/
+*.py[cod]

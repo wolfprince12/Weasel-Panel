@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
+using WeaselPanel.App.Localization;
 
 namespace WeaselPanel.App.Services;
 
@@ -21,10 +22,10 @@ public sealed class ProbeResult
 
     public string StatusText => Status switch
     {
-        ProbeStatus.Ok => "正常",
-        ProbeStatus.Warn => "警告",
-        ProbeStatus.Fail => "失败",
-        _ => "跳过",
+        ProbeStatus.Ok => L10n.Instance.T("Probe.Status.Ok"),
+        ProbeStatus.Warn => L10n.Instance.T("Probe.Status.Warn"),
+        ProbeStatus.Fail => L10n.Instance.T("Probe.Status.Fail"),
+        _ => L10n.Instance.T("Probe.Status.Skip"),
     };
 }
 
@@ -59,8 +60,8 @@ public static class ProbeService
     {
         var candidates = new List<(string Name, string Reason)>
         {
-            (ExpectedPipeName, "上游规则（含用户名前缀）"),
-            ($@"\\.\pipe\{PipeBaseName}", "无用户名前缀（早期版本格式）"),
+            (ExpectedPipeName, L10n.Instance.T("Probe.Pipe.ReasonUpstream")),
+            ($@"\\.\pipe\{PipeBaseName}", L10n.Instance.T("Probe.Pipe.ReasonNoPrefix")),
         };
 
         var tried = new List<string>();
@@ -72,22 +73,23 @@ public static class ProbeService
                 using var client = new NamedPipeClientStream(
                     ".", PipeNameWithoutPrefix(name), PipeDirection.InOut, PipeOptions.None);
                 client.Connect(timeoutMs);
-                outcome = client.IsConnected ? "已连接" : "未连接";
+                outcome = client.IsConnected ? L10n.Instance.T("Probe.Pipe.Connected")
+                                         : L10n.Instance.T("Probe.Pipe.NotConnected");
                 if (client.IsConnected)
                 {
                     tried.Add($"✅ {name}  [{reason}] → {outcome}");
                     return new ProbeResult
                     {
-                        Name = "命名管道",
+                        Name = L10n.Instance.T("Probe.Name.Pipe"),
                         Status = ProbeStatus.Ok,
-                        Summary = $"连通：{name}",
+                        Summary = L10n.Instance.T("Probe.Pipe.Ok", name),
                         Details = tried,
                     };
                 }
             }
-            catch (TimeoutException) { outcome = "超时（管道不存在或服务端未监听）"; }
-            catch (UnauthorizedAccessException) { outcome = "拒绝访问"; }
-            catch (Exception ex) { outcome = ex.GetType().Name + "：" + ex.Message; }
+            catch (TimeoutException) { outcome = L10n.Instance.T("Probe.Pipe.Timeout"); }
+            catch (UnauthorizedAccessException) { outcome = L10n.Instance.T("Probe.Pipe.Denied"); }
+            catch (Exception ex) { outcome = L10n.Instance.T("Probe.Exception", ex.GetType().Name, ex.Message); }
 
             tried.Add($"❌ {name}  [{reason}] → {outcome}");
         }
@@ -101,18 +103,18 @@ public static class ProbeService
         // 属成因 (a)。此前文案只说「可能未运行」，用户不知道该做什么。
         var serverRunning = IsProcessRunning("WeaselServer");
         var advice = serverRunning
-            ? "WeaselServer 进程在运行但管道连不上 —— 请检查是否以不同用户身份运行，或重启小狼毫后再测。"
-            : "WeaselServer 进程未运行。请先启动小狼毫（任务栏出现 Rime 图标 / 切换到小狼毫输入法），再重新诊断。";
+            ? L10n.Instance.T("Probe.Pipe.HintRunning")
+            : L10n.Instance.T("Probe.Pipe.HintNotRunning");
         tried.Add("→ " + advice);
 
         return new ProbeResult
         {
-            Name = "命名管道",
+            Name = L10n.Instance.T("Probe.Name.Pipe"),
             Status = ProbeStatus.Fail,
             Summary = asciiOnly
-                ? (serverRunning ? "管道无法连通（WeaselServer 在运行，属管道/权限问题）"
-                                 : "管道无法连通 —— 小狼毫未运行")
-                : $"全部候选均无法连通 —— 当前用户名「{CurrentUserName}」含非 ASCII 字符，重点怀疑编码问题",
+                ? (serverRunning ? L10n.Instance.T("Probe.Pipe.FailRunning")
+                                 : L10n.Instance.T("Probe.Pipe.FailNotRunning"))
+                : L10n.Instance.T("Probe.Pipe.FailNonAscii", CurrentUserName),
             Details = tried,
         };
     }
@@ -147,17 +149,17 @@ public static class ProbeService
         if (string.IsNullOrWhiteSpace(deployerPath))
             return new ProbeResult
             {
-                Name = "部署器 /deploy",
+                Name = L10n.Instance.T("Probe.Name.Deployer"),
                 Status = ProbeStatus.Skipped,
-                Summary = "未找到 WeaselDeployer.exe",
+                Summary = L10n.Instance.T("Probe.Deployer.NotFound"),
             };
 
         if (!File.Exists(deployerPath))
             return new ProbeResult
             {
-                Name = "部署器 /deploy",
+                Name = L10n.Instance.T("Probe.Name.Deployer"),
                 Status = ProbeStatus.Skipped,
-                Summary = "路径存在但文件不存在：" + deployerPath,
+                Summary = L10n.Instance.T("Probe.Deployer.PathMissing", deployerPath),
             };
 
         var sw = Stopwatch.StartNew();
@@ -183,9 +185,9 @@ public static class ProbeService
             if (!process.Start())
                 return new ProbeResult
                 {
-                    Name = "部署器 /deploy",
+                    Name = L10n.Instance.T("Probe.Name.Deployer"),
                     Status = ProbeStatus.Fail,
-                    Summary = "进程启动失败",
+                    Summary = L10n.Instance.T("Probe.Deployer.StartFailed"),
                 };
 
             process.BeginOutputReadLine();
@@ -198,33 +200,33 @@ public static class ProbeService
                 try { process.Kill(entireProcessTree: true); } catch { /* 已退出 */ }
                 return new ProbeResult
                 {
-                    Name = "部署器 /deploy",
+                    Name = L10n.Instance.T("Probe.Name.Deployer"),
                     Status = ProbeStatus.Fail,
-                    Summary = $"超时（{timeoutMs / 1000} 秒未完成）—— 可能卡在互斥体等待或弹出对话框",
-                    Details = new[] { $"已运行：{sw.Elapsed.TotalSeconds:F1} 秒" },
+                    Summary = L10n.Instance.T("Probe.Deployer.Timeout", timeoutMs / 1000),
+                    Details = new[] { L10n.Instance.T("Probe.Deployer.Elapsed", sw.Elapsed.TotalSeconds.ToString("F1")) },
                 };
             }
 
             var code = process.ExitCode;
             var details = new List<string>
             {
-                $"命令行：\"{deployerPath}\" /deploy",
-                $"退出码：{code}",
-                $"耗时：{sw.Elapsed.TotalSeconds:F1} 秒",
+                L10n.Instance.T("Probe.Deployer.CommandLine", deployerPath),
+                L10n.Instance.T("Probe.Deployer.ExitCodeLine", code),
+                L10n.Instance.T("Probe.Deployer.ElapsedSec", sw.Elapsed.TotalSeconds.ToString("F1")),
             };
             // 上游语义：0=成功，1=已有部署器实例在运行
             var text = stdout.ToString().Trim();
             var errText = stderr.ToString().Trim();
-            if (text.Length > 0) details.Add("标准输出：" + text);
-            if (errText.Length > 0) details.Add("标准错误：" + errText);
+            if (text.Length > 0) details.Add(L10n.Instance.T("Probe.Deployer.StdOut", text));
+            if (errText.Length > 0) details.Add(L10n.Instance.T("Probe.Deployer.StdErr", errText));
 
             return new ProbeResult
             {
-                Name = "部署器 /deploy",
+                Name = L10n.Instance.T("Probe.Name.Deployer"),
                 Status = code == 0 ? ProbeStatus.Ok : ProbeStatus.Warn,
                 Summary = code == 0
-                    ? $"成功（退出码 0，耗时 {sw.Elapsed.TotalSeconds:F1} 秒）"
-                    : $"退出码 {code} —— 按上游语义为「已有部署器实例在运行」或互斥体创建失败",
+                    ? L10n.Instance.T("Probe.Deployer.Ok", code, sw.Elapsed.TotalSeconds.ToString("F1"))
+                    : L10n.Instance.T("Probe.Deployer.Fail", code),
                 Details = details,
             };
         }
@@ -233,9 +235,9 @@ public static class ProbeService
             sw.Stop();
             return new ProbeResult
             {
-                Name = "部署器 /deploy",
+                Name = L10n.Instance.T("Probe.Name.Deployer"),
                 Status = ProbeStatus.Fail,
-                Summary = "调用异常：" + ex.Message,
+                Summary = L10n.Instance.T("Probe.Deployer.Exception", ex.Message),
                 Details = new[] { ex.GetType().FullName ?? ex.GetType().Name },
             };
         }
@@ -290,26 +292,26 @@ public static class ProbeService
             }
             catch (Exception ex)
             {
-                found.Add($"[{d}] 读取失败：{ex.Message}");
+                found.Add(L10n.Instance.T("Probe.Logs.ReadFailed", d, ex.Message));
             }
         }
 
         if (found.Count == 0)
             return new ProbeResult
             {
-                Name = "日志文件",
+                Name = L10n.Instance.T("Probe.Name.Logs"),
                 // 没有日志不是错误：librime 只在确有内容时才写文件，
                 // 全新部署且未出错时本就一个都没有。故降级为提示。
                 Status = ProbeStatus.Warn,
-                Summary = "未找到 rime.weasel 日志（无错误时属正常，不代表异常）",
-                Details = new[] { "已扫描：" + string.Join(" | ", scanned) },
+                Summary = L10n.Instance.T("Probe.Logs.None"),
+                Details = new[] { L10n.Instance.T("Probe.Logs.Scanned", string.Join(" | ", scanned)) },
             };
 
         return new ProbeResult
         {
-            Name = "日志文件",
+            Name = L10n.Instance.T("Probe.Name.Logs"),
             Status = ProbeStatus.Ok,
-            Summary = $"找到 {found.Count} 个 rime 日志",
+            Summary = L10n.Instance.T("Probe.Logs.Found", found.Count),
             Details = found,
         };
     }
@@ -354,7 +356,7 @@ public static class ProbeService
                 {
                     if (f.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ||
                         f.EndsWith(".lua", StringComparison.OrdinalIgnoreCase))
-                        found.Add(Path.GetFileName(f) + "    ← " + d);
+                        found.Add(L10n.Instance.T("Probe.Lua.FileAt", Path.GetFileName(f), d));
                 }
             }
             catch { /* 无权限则跳过 */ }
@@ -380,19 +382,20 @@ public static class ProbeService
         }
 
         var details = new List<string>();
-        details.Add("已扫描目录：" + (scanned.Count == 0 ? "（无有效目录）" : string.Join(" | ", scanned)));
+        details.Add(L10n.Instance.T("Probe.Lua.Scanned")
+                    + (scanned.Count == 0 ? L10n.Instance.T("Probe.Lua.NoDir") : string.Join(" | ", scanned)));
         if (found.Count > 0)
         {
-            details.Add("发现的 lua 相关文件：");
+            details.Add(L10n.Instance.T("Probe.Lua.FoundFiles"));
             details.AddRange(found);
         }
         else
         {
-            details.Add("未在候选目录发现 lua 插件文件。");
+            details.Add(L10n.Instance.T("Probe.Lua.NoneFound"));
         }
         if (luaRefs.Count > 0)
         {
-            details.Add($"配置中的 lua 引用（{luaRefs.Count} 处，前 8 条）：");
+            details.Add(L10n.Instance.T("Probe.Lua.Refs", luaRefs.Count));
             details.AddRange(luaRefs.Take(8));
         }
 
@@ -405,29 +408,28 @@ public static class ProbeService
 
         if (ok)
         {
-            details.Add("紫毫纠错等 lua 功能具备启用条件。");
+            details.Add(L10n.Instance.T("Probe.Lua.Ready"));
         }
         else if (configuredButMissing)
         {
-            details.Add("⚠️ 配置引用了 lua 但插件不在：部署会失败，需安装 librime-lua 或移除 lua 引用。");
+            details.Add(L10n.Instance.T("Probe.Lua.ConfiguredButMissing"));
         }
         else
         {
-            details.Add("说明：librime-lua 是可选插件，未安装不影响小狼毫本体与面板的正常使用。");
-            details.Add("只有需要「紫毫纠错」等 lua 功能时才需要它；届时应安装含 lua 的 librime 构建。");
+            details.Add(L10n.Instance.T("Probe.Lua.Explain"));
         }
 
         return new ProbeResult
         {
-            Name = "librime-lua 插件",
+            Name = L10n.Instance.T("Probe.Name.Lua"),
             Status = ok ? ProbeStatus.Ok
                         : configuredButMissing ? ProbeStatus.Fail
                         : ProbeStatus.Warn,
             Summary = ok
-                ? "发现 lua 插件文件，紫毫纠错具备启用条件"
+                ? L10n.Instance.T("Probe.Lua.SummaryOk")
                 : configuredButMissing
-                    ? "未发现插件文件，但配置中已有 lua 引用 —— 部署会失败"
-                    : "未安装 lua 插件（可选，不影响本体与面板使用）",
+                    ? L10n.Instance.T("Probe.Lua.SummaryMissing")
+                    : L10n.Instance.T("Probe.Lua.Missing"),
             Details = details,
         };
     }
@@ -447,9 +449,9 @@ public static class ProbeService
             ? ProbeDeployer(deployerPath)
             : new ProbeResult
             {
-                Name = "部署器 /deploy",
+                Name = L10n.Instance.T("Probe.Name.Deployer"),
                 Status = ProbeStatus.Skipped,
-                Summary = "已跳过（部署会修改用户数据，请手动点击）",
+                Summary = L10n.Instance.T("Probe.Deployer.Skipped"),
             });
 
         results.Add(ProbeLogFiles(logDirectory));

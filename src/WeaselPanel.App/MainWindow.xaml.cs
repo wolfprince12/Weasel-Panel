@@ -1,5 +1,9 @@
+using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using WeaselPanel.App.Infrastructure;
+using WeaselPanel.App.Localization;
 using WeaselPanel.App.ViewModels;
 using WeaselPanel.App.Views;
 using WeaselPanel.Core.Platform;
@@ -12,6 +16,7 @@ public partial class MainWindow : Window
     private readonly DiagnosticsView _diagnosticsView;
     private readonly AppearanceView _appearanceView;
     private readonly SchemaView _schemaView;
+    private readonly InputView _inputView;
     private readonly BackupView _backupView;
     private readonly AboutView _aboutView;
 
@@ -30,7 +35,8 @@ public partial class MainWindow : Window
             environment = WeaselEnvironment.WithUserDirectory(
                 System.IO.Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Rime"));
-            MessageBox.Show("环境探测失败：\n" + ex.Message, "小狼毫控制面板",
+            MessageBox.Show(L10n.Instance.T("App.DetectFailed", ex.Message),
+                L10n.Instance.T("App.Name"),
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
@@ -38,15 +44,18 @@ public partial class MainWindow : Window
         _diagnosticsView = new DiagnosticsView(new DiagnosticsViewModel());
         _appearanceView = new AppearanceView(new AppearanceViewModel(environment));
         _schemaView = new SchemaView(new SchemaViewModel(environment));
+        _inputView = new InputView(new InputViewModel(environment));
         _backupView = new BackupView(new BackupViewModel(environment));
         _aboutView = new AboutView(environment);
 
         // ⚠️ 不要在 XAML 里写 ListBoxItem.IsSelected="True"，会在 InitializeComponent
-        // 阶段触发 SelectionChanged，此时 4 个 view 字段还没就绪 → NRE。
-        // 也不要 Nav.SelectedIndex = 0 来"显式首次切换"，那同样会触发回调。
+        // 阶段触发 SelectionChanged，此时 6 个 view 字段还没就绪 → NRE。
         // 直接在 ctor 末尾赋 ContentHost.Content 给默认页，不经过事件 —— 用户
         // 启动即看「环境诊断」，后续点击 ListBoxItem 才进入正常的 SelectionChanged 路径。
         ContentHost.Content = _diagnosticsView;
+
+        // 语言可能在「关于」页被切换，标题与侧栏版本号要跟着变。
+        L10n.Instance.PropertyChanged += OnLanguageChanged;
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -54,12 +63,46 @@ public partial class MainWindow : Window
         // 首屏成功呈现。日志里出现 "main_window_ready" = 窗口已能正常显示；
         // 若崩溃但日志里没有这行，说明崩在 InitializeComponent / ctor 阶段。
         App.LogStartupReady();
+        App.Log($">>> language = {L10n.Instance.Language}");
 
-        // 标题栏带上版本号与构建时间 —— 让用户一眼确认自己跑的是哪一版，
-        // 不再出现「以为测的是新版、其实是旧 exe」的误判。
+        ApplyLocalizedText();
+    }
+
+    /// <summary>标题栏 + 侧栏版本号。语言切换时也会重跑（见 OnLanguageChanged）。</summary>
+    private void ApplyLocalizedText()
+    {
         var v = App.ExecutableVersion;
-        Title = $"小狼毫控制面板 — v{v.Major}.{v.Minor}.{v.Build} " +
-                $"(构建 {App.ExecutableBuildTime:MM-dd HH:mm})";
+        var version = $"{L10n.Instance.T("App.VersionPrefix")}{v.Major}.{v.Minor}.{v.Build}";
+        var build = $"{L10n.Instance.T("App.BuildPrefix")} {App.ExecutableBuildTime:MM-dd HH:mm}";
+
+        Title = $"{L10n.Instance.T("App.Name")} — {version} ({build})";
+        VersionLabel.Text = $"{version} {L10n.Instance.T("App.Preview")}";
+    }
+
+    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        ApplyLocalizedText();
+        RefreshViewTexts();
+    }
+
+    /// <summary>
+    /// 把语言变更派发给各页的 ViewModel。
+    /// XAML 里的 <c>{l10n:L Key}</c> 会自己刷新，但 ViewModel 里「赋值那一刻拼好的
+    /// 字符串」不会 —— 那些由各自的 <see cref="ILanguageAware.RefreshTexts"/> 重建。
+    /// 诊断页/外观页/方案页/按键页/备份页都实现了该接口；关于页没有需要重建的文本。
+    /// </summary>
+    private void RefreshViewTexts()
+    {
+        UserControl[] views =
+        {
+            _diagnosticsView, _appearanceView, _schemaView,
+            _inputView, _backupView, _aboutView,
+        };
+
+        foreach (var view in views)
+        {
+            if (view?.DataContext is ILanguageAware aware) aware.RefreshTexts();
+        }
     }
 
     private void Nav_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -67,14 +110,16 @@ public partial class MainWindow : Window
         // 兜底：如果将来发生 ctor 阶段回调（极端改造），所有 view 字段都非空就放行，
         // 否则 return —— 永远不让 Nav_SelectionChanged 因为字段未就绪而 NRE。
         if (_diagnosticsView is null || _appearanceView is null
-            || _schemaView is null || _backupView is null || _aboutView is null) return;
+            || _schemaView is null || _inputView is null
+            || _backupView is null || _aboutView is null) return;
 
         ContentHost.Content = Nav.SelectedIndex switch
         {
             1 => _appearanceView,
             2 => _schemaView,
-            3 => _backupView,
-            4 => _aboutView,
+            3 => _inputView,
+            4 => _backupView,
+            5 => _aboutView,
             _ => _diagnosticsView,
         };
     }

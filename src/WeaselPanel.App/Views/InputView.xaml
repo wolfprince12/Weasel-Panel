@@ -1,0 +1,111 @@
+<UserControl x:Class="WeaselPanel.App.Views.InputView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
+    <StackPanel>
+        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Input.Title}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Input.Intro}" FontSize="12"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap"/>
+
+                <!-- 候选数 -->
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="46"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{l10n:L Input.PageSize}" Style="{StaticResource FieldLabel}"/>
+                    <Slider Grid.Column="1" Minimum="3" Maximum="10" TickFrequency="1"
+                            IsSnapToTickEnabled="True" Value="{Binding PageSize}"
+                            VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="{Binding PageSize}" FontSize="13"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Grid>
+                <TextBlock Text="{l10n:L Input.PageSizeNote}" FontSize="11"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Margin="110,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Input.PagingKeys}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Input.PagingKeys.Note}" FontSize="12"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                <CheckBox Content="{l10n:L Input.Paging.MinusEqual}" IsChecked="{Binding PagingMinusEqual}"
+                          FontSize="13" Margin="0,3"/>
+                <CheckBox Content="{l10n:L Input.Paging.CommaPeriod}" IsChecked="{Binding PagingCommaPeriod}"
+                          FontSize="13" Margin="0,3"/>
+                <CheckBox Content="{l10n:L Input.Paging.Brackets}" IsChecked="{Binding PagingBrackets}"
+                          FontSize="13" Margin="0,3"/>
+                <CheckBox Content="{l10n:L Input.Paging.UpDown}" IsChecked="{Binding PagingUpDown}"
+                          FontSize="13" Margin="0,3"/>
+
+                <!-- 中英切换 -->
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{l10n:L Input.SwitchKey}" Style="{StaticResource FieldLabel}"/>
+                    <ComboBox Grid.Column="1" SelectedValuePath="Tag"
+                              SelectedValue="{Binding SwitchKey}" Width="220"
+                              HorizontalAlignment="Left">
+                        <ComboBoxItem Content="{l10n:L Input.Switch.None}" Tag="None"/>
+                        <ComboBoxItem Content="{l10n:L Input.Switch.Shift}" Tag="Shift"/>
+                        <ComboBoxItem Content="{l10n:L Input.Switch.CapsLock}" Tag="CapsLock"/>
+                        <ComboBoxItem Content="{l10n:L Input.Switch.Control}" Tag="Control"/>
+                    </ComboBox>
+                </Grid>
+                <TextBlock Text="{l10n:L Input.Switch.Note}" FontSize="11"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" Margin="110,4,0,0"/>
+
+                <!-- 附加开关 -->
+                <TextBlock Text="{l10n:L Input.Punct}" FontSize="13" FontWeight="SemiBold"
+                           Margin="0,16,0,6"/>
+                <CheckBox Content="{l10n:L Input.Punct.FullShape}" IsChecked="{Binding ToggleFullShape}"
+                          FontSize="13" Margin="0,3"/>
+                <CheckBox Content="{l10n:L Input.Punct.Punctuation}" IsChecked="{Binding TogglePunctuation}"
+                          FontSize="13" Margin="0,3"/>
+            </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Input.ApplyTitle}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Input.ApplyNote}" FontSize="12"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                <Border Background="#FFF0F2F5" CornerRadius="6" Padding="10,8" Margin="0,0,0,12">
+                    <ItemsControl ItemsSource="{Binding PreviewLines}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" FontSize="11.5"
+                                           FontFamily="Consolas, Cascadia Mono, monospace"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <Button Content="{l10n:L Input.ApplyBtn}" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding ApplyCommand}" Margin="0,0,10,0"/>
+                    <Button Content="{l10n:L Common.Reload}" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding ReloadCommand}"/>
+                </StackPanel>
+
+                <Border Background="#FFF0F2F5" CornerRadius="6" Padding="10,8">
+                    <TextBlock Text="{Binding StatusText}" FontSize="12.5" TextWrapping="Wrap"/>
+                </Border>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

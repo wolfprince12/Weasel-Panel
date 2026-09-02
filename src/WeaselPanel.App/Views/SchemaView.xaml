@@ -1,6 +1,7 @@
 <UserControl x:Class="WeaselPanel.App.Views.SchemaView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
     <Border Style="{StaticResource Card}">
         <Grid>
             <Grid.RowDefinitions>
@@ -12,8 +13,8 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0">
-                <TextBlock Text="输入方案" Style="{StaticResource SectionTitle}"/>
-                <TextBlock Text="列表顺序即为切换顺序 —— 第一个是默认方案。修改后点「应用」写入 default.custom.yaml 的 patch/schema_list，点「部署」即可在输入法中看到变化。"
+                <TextBlock Text="{l10n:L Schema.Title}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Schema.Intro}"
                            FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
                            TextWrapping="Wrap" Margin="0,0,0,12"/>
             </StackPanel>
@@ -21,15 +22,18 @@
             <Grid Grid.Row="1" Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="130"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Content="重新扫描" Click="Reload_Click" Height="32"
+                <Button Grid.Column="0" Content="{l10n:L Schema.Rescan}" Click="Reload_Click" Height="32"
                         HorizontalAlignment="Left" Padding="14,0" Margin="0,0,8,0"/>
-                <Button Grid.Column="1" Content="↑ 上移" Command="{Binding MoveUpCommand}" Height="32"
+                <Button Grid.Column="1" Content="{l10n:L Schema.MoveUp}" Command="{Binding MoveUpCommand}" Height="32"
                         Margin="0,0,4,0"/>
-                <Button Grid.Column="2" Content="↓ 下移" Command="{Binding MoveDownCommand}" Height="32"
+                <Button Grid.Column="2" Content="{l10n:L Schema.MoveDown}" Command="{Binding MoveDownCommand}" Height="32"
                         Margin="4,0,0,0"/>
+                <Button Grid.Column="3" Content="{l10n:L Schema.SetDefault}" Command="{Binding SetDefaultCommand}"
+                        Height="32" Margin="8,0,0,0" ToolTip="{l10n:L Schema.DefaultLabel}"/>
             </Grid>
 
             <Grid Grid.Row="2">
@@ -39,10 +43,13 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- 左侧：已启用 -->
+                <!-- 左侧：已启用（首位即默认方案） -->
                 <DockPanel Grid.Column="0">
-                    <TextBlock DockPanel.Dock="Top" Text="已启用" FontSize="13"
-                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                    <TextBlock DockPanel.Dock="Top" Text="{l10n:L Schema.Active}" FontSize="13"
+                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,2"/>
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding DefaultSummary}" FontSize="11.5"
+                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"
+                               TextTrimming="CharacterEllipsis"/>
                     <Border BorderBrush="{StaticResource BorderBrushKey}" BorderThickness="1">
                         <ListBox ItemsSource="{Binding ActiveSchemas}"
                                  SelectedItem="{Binding SelectedActive}"
@@ -53,6 +60,11 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="13"/>
+                                            <!-- 默认方案标记：由 ViewModel 的 SyncDefault 维护 IsDefault -->
+                                            <Border Style="{StaticResource OriginChip}" Margin="6,0,0,0"
+                                                    Visibility="{Binding IsDefault, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBlock Text="{l10n:L Schema.DefaultLabel}" FontSize="10"/>
+                                            </Border>
                                             <Border Style="{StaticResource OriginChip}" Margin="6,0,0,0">
                                                 <TextBlock Text="{Binding OriginLabel}" FontSize="10"/>
                                             </Border>
@@ -68,15 +80,15 @@
                 </DockPanel>
 
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="4,0">
-                    <Button Content="启用 ←" Command="{Binding AddCommand}"
+                    <Button Content="{l10n:L Schema.Enable}" Command="{Binding AddCommand}"
                             Padding="6,4" Margin="0,2"/>
-                    <Button Content="→ 移除" Command="{Binding RemoveCommand}"
+                    <Button Content="{l10n:L Schema.Remove}" Command="{Binding RemoveCommand}"
                             Padding="6,4" Margin="0,2"/>
                 </StackPanel>
 
                 <!-- 右侧：可启用 -->
                 <DockPanel Grid.Column="2">
-                    <TextBlock DockPanel.Dock="Top" Text="可启用" FontSize="13"
+                    <TextBlock DockPanel.Dock="Top" Text="{l10n:L Schema.Available}" FontSize="13"
                                Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
                     <Border BorderBrush="{StaticResource BorderBrushKey}" BorderThickness="1">
                         <ListBox ItemsSource="{Binding AvailableSchemas}"
@@ -108,7 +120,7 @@
                        TextWrapping="Wrap"/>
 
             <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,12,0,0">
-                <Button Content="应用（写入 default.custom.yaml）" Command="{Binding ApplyCommand}"
+                <Button Content="{l10n:L Schema.ApplyBtn}" Command="{Binding ApplyCommand}"
                         Height="34" Padding="16,0" FontWeight="SemiBold"/>
             </StackPanel>
         </Grid>

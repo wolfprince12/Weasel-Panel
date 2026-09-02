@@ -1,6 +1,7 @@
 <UserControl x:Class="WeaselPanel.App.Views.AppearanceView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="372"/>
@@ -11,11 +12,11 @@
         <!-- ── 预览 ─────────────────────────────────── -->
         <Border Grid.Column="0" Style="{StaticResource Card}" VerticalAlignment="Top">
             <StackPanel>
-                <TextBlock Text="候选窗预览" Style="{StaticResource SectionTitle}"/>
-                <TextBlock Text="显示的是派生后的生效值（而非配置原值）：颜色走完整回退链与 alpha 混合，"
+                <TextBlock Text="{l10n:L Appearance.PreviewTitle}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Appearance.PreviewNote1}"
                            FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}"
                            TextWrapping="Wrap"/>
-                <TextBlock Text="字号未配置时按上游规则兜底为 12，序号按 label_format 渲染。"
+                <TextBlock Text="{l10n:L Appearance.PreviewNote2}"
                            FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}"
                            TextWrapping="Wrap" Margin="0,0,0,14"/>
 
@@ -98,14 +99,14 @@
         <StackPanel Grid.Column="2">
             <Border Style="{StaticResource Card}" Margin="0,0,0,14">
                 <StackPanel>
-                    <TextBlock Text="配色与字体" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="{l10n:L Appearance.ColorFont}" Style="{StaticResource SectionTitle}"/>
 
                     <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="96"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="配色方案" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Scheme}" Style="{StaticResource FieldLabel}"/>
                         <ComboBox Grid.Column="1" ItemsSource="{Binding SchemeNames}"
                                   SelectedItem="{Binding SelectedScheme}"/>
                     </Grid>
@@ -115,7 +116,7 @@
                             <ColumnDefinition Width="96"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="字体" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.FontFace}" Style="{StaticResource FieldLabel}"/>
                         <TextBox Grid.Column="1" Text="{Binding FontFace, UpdateSourceTrigger=PropertyChanged}"/>
                     </Grid>
 
@@ -125,7 +126,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="46"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="字号" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.FontSize}" Style="{StaticResource FieldLabel}"/>
                         <Slider Grid.Column="1" Minimum="8" Maximum="48" TickFrequency="1"
                                 IsSnapToTickEnabled="True" Value="{Binding FontPoint}"
                                 VerticalAlignment="Center"/>
@@ -139,7 +140,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="46"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="注释字号" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.CommentSize}" Style="{StaticResource FieldLabel}"/>
                         <Slider Grid.Column="1" Minimum="0" Maximum="48" TickFrequency="1"
                                 IsSnapToTickEnabled="True" Value="{Binding CommentFontPoint}"
                                 VerticalAlignment="Center"/>
@@ -147,7 +148,7 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Grid>
 
-                    <TextBlock Text="注释字号为 0 表示未单独设置。序号与注释字号未设置时会跟随主字号 —— 这是上游的别键回退行为。"
+                    <TextBlock Text="{l10n:L Appearance.CommentSizeNote}"
                                FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
                                TextWrapping="Wrap"/>
                 </StackPanel>
@@ -155,21 +156,21 @@
 
             <Border Style="{StaticResource Card}" Margin="0,0,0,14">
                 <StackPanel>
-                    <TextBlock Text="候选与布局" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="{l10n:L Appearance.CandidateLayout}" Style="{StaticResource SectionTitle}"/>
 
                     <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="96"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="布局" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Layout}" Style="{StaticResource FieldLabel}"/>
                         <ComboBox Grid.Column="1" SelectedValuePath="Tag"
                                   SelectedValue="{Binding LayoutType}">
-                            <ComboBoxItem Content="竖排" Tag="Vertical"/>
-                            <ComboBoxItem Content="横排" Tag="Horizontal"/>
-                            <ComboBoxItem Content="竖排文字" Tag="VerticalText"/>
-                            <ComboBoxItem Content="竖排全屏" Tag="VerticalFullscreen"/>
-                            <ComboBoxItem Content="横排全屏" Tag="HorizontalFullscreen"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Layout.Vertical}" Tag="Vertical"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Layout.Horizontal}" Tag="Horizontal"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Layout.VerticalText}" Tag="VerticalText"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Layout.VerticalFullscreen}" Tag="VerticalFullscreen"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Layout.HorizontalFullscreen}" Tag="HorizontalFullscreen"/>
                         </ComboBox>
                     </Grid>
 
@@ -178,9 +179,9 @@
                             <ColumnDefinition Width="96"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="序号格式" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.LabelFormat}" Style="{StaticResource FieldLabel}"/>
                         <TextBox Grid.Column="1" Text="{Binding LabelTextFormat, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="printf 风格，%s 为序号占位符。例如 %s. 显示为 1."/>
+                                 ToolTip="{l10n:L Appearance.LabelFormatTip}"/>
                     </Grid>
 
                     <Grid Margin="0,0,0,10">
@@ -188,9 +189,9 @@
                             <ColumnDefinition Width="96"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="高亮标记" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.MarkText}" Style="{StaticResource FieldLabel}"/>
                         <TextBox Grid.Column="1" Text="{Binding MarkText, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="高亮候选词前的标记符。留空时小狼毫按 * 处理。"/>
+                                 ToolTip="{l10n:L Appearance.MarkTextTip}"/>
                     </Grid>
 
                     <Grid Margin="0,0,0,10">
@@ -198,12 +199,12 @@
                             <ColumnDefinition Width="96"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="编码显示" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Preedit}" Style="{StaticResource FieldLabel}"/>
                         <ComboBox Grid.Column="1" SelectedValuePath="Tag"
                                   SelectedValue="{Binding PreeditType}">
-                            <ComboBoxItem Content="composition（编码）" Tag="Composition"/>
-                            <ComboBoxItem Content="preview（预览）" Tag="Preview"/>
-                            <ComboBoxItem Content="preview_all（全部预览）" Tag="PreviewAll"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Preedit.Composition}" Tag="Composition"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Preedit.Preview}" Tag="Preview"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Preedit.PreviewAll}" Tag="PreviewAll"/>
                         </ComboBox>
                     </Grid>
 
@@ -212,7 +213,7 @@
                             <ColumnDefinition Width="96"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="抗锯齿" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Antialias}" Style="{StaticResource FieldLabel}"/>
                         <ComboBox Grid.Column="1" SelectedValuePath="Tag"
                                   SelectedValue="{Binding AntiAliasMode}">
                             <ComboBoxItem Content="default" Tag="Default"/>
@@ -228,33 +229,33 @@
                             <ColumnDefinition Width="96"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="悬停高亮" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Hover}" Style="{StaticResource FieldLabel}"/>
                         <ComboBox Grid.Column="1" SelectedValuePath="Tag"
                                   SelectedValue="{Binding HoverType}">
-                            <ComboBoxItem Content="none（不响应）" Tag="None"/>
-                            <ComboBoxItem Content="semi_hilite（半高亮）" Tag="SemiHilite"/>
-                            <ComboBoxItem Content="hilite（全高亮）" Tag="Hilite"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Hover.None}" Tag="None"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Hover.SemiHilite}" Tag="SemiHilite"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Hover.Hilite}" Tag="Hilite"/>
                         </ComboBox>
                     </Grid>
 
-                    <CheckBox Content="编码行内显示（inline_preedit）" IsChecked="{Binding InlinePreedit}"
+                    <CheckBox Content="{l10n:L Appearance.InlinePreedit}" IsChecked="{Binding InlinePreedit}"
                               FontSize="13" Margin="0,4,0,0"/>
                 </StackPanel>
             </Border>
 
             <Border Style="{StaticResource Card}">
                 <StackPanel>
-                    <TextBlock Text="应用" Style="{StaticResource SectionTitle}"/>
-                    <TextBlock Text="写入 weasel.custom.yaml 后需执行部署才会生效。布局类型统一写入 style/layout/type（覆盖链中优先级最高）。"
+                    <TextBlock Text="{l10n:L Appearance.ApplyTitle}" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="{l10n:L Appearance.ApplyNote}"
                                FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
                                TextWrapping="Wrap" Margin="0,0,0,12"/>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Button Content="应用设置" Style="{StaticResource PrimaryButton}"
+                        <Button Content="{l10n:L Appearance.ApplyBtn}" Style="{StaticResource PrimaryButton}"
                                 Command="{Binding ApplyCommand}" Margin="0,0,10,0"/>
-                        <Button Content="重新部署" Style="{StaticResource SecondaryButton}"
+                        <Button Content="{l10n:L Appearance.Redeploy}" Style="{StaticResource SecondaryButton}"
                                 Command="{Binding DeployCommand}" Margin="0,0,10,0"/>
-                        <Button Content="重新加载" Style="{StaticResource SecondaryButton}"
+                        <Button Content="{l10n:L Appearance.ReloadBtn}" Style="{StaticResource SecondaryButton}"
                                 Command="{Binding ReloadCommand}"/>
                     </StackPanel>
 

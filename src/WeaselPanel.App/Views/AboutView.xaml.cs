@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using WeaselPanel.App.Services;
+using WeaselPanel.App.ViewModels;
 using WeaselPanel.Core.Platform;
 
 namespace WeaselPanel.App.Views;
@@ -18,13 +18,11 @@ public partial class AboutView : UserControl
 
     public AboutView(WeaselEnvironment environment) : this()
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("程序目录：" + (environment.ProgramDirectory ?? "（未找到）"));
-        sb.AppendLine("共享数据：" + (environment.SharedDataDirectory ?? "（未找到）"));
-        sb.AppendLine("用户目录：" + environment.UserDirectory);
-        sb.AppendLine("部署器：" + (environment.DeployerPath ?? "（未找到）"));
-        DataContext = new { EnvironmentSummary = sb.ToString().TrimEnd() };
+        DataContext = new AboutViewModel(environment);
     }
+
+    /// <summary>当前页的 ViewModel。MainWindow 靠它把语言变更派发下来。</summary>
+    public AboutViewModel? ViewModel => DataContext as AboutViewModel;
 
     /// <summary>
     /// 从嵌入式资源加载 logo。失败时显示文字占位，不让 XAML 整块崩。

@@ -5,7 +5,15 @@
 #  用法：
 #    ./build.sh              跑测试，然后产出 dist/win-x64/WeaselPanel.exe
 #    ./build.sh --no-test    跳过测试（改文案/资源时的快速迭代）
+#    ./build.sh --no-verify  跳过「语言包是否真进了 exe」的出包验收（不建议）
 #    ./build.sh --clean      清空 dist 后重建
+#
+#  ── 出包验收：为什么最后还要搜一遍 exe ─────────────────────────────
+#  2026-09-02 出过一次事故：语言包漏声明 EmbeddedResource，一个字节都没进 exe，
+#  而肉眼自检时往 exe 里搜「小狼毫控制面板」还能搜到 —— 那是 csproj <Product>
+#  写进 PE 版本信息的假阳性。所以 tools/verify_lang_packs.py 改用每个语言包里
+#  最长的若干条 "Key = Value" 原文当哨兵去真搜，搜不到就让构建失败。
+#  这道关卡是「中文 Windows 上界面到底是中文还是裸键名」的最后一道保险，别关掉。
 #
 #  ── 为什么只出 x64 ────────────────────────────────────────────────
 #  2026-09-02 用户明确拍板：不做双架构，只交付 x64。
@@ -28,10 +36,12 @@ cd "$(dirname "$0")"
 RID="win-x64"
 OUT="dist/${RID}"
 RUN_TESTS=1
+RUN_VERIFY=1
 
 for arg in "$@"; do
   case "$arg" in
     --no-test) RUN_TESTS=0 ;;
+    --no-verify) RUN_VERIFY=0 ;;
     --clean)   rm -rf dist; echo "已清空 dist/" ;;
     -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "未知参数：$arg（用 --help 查看用法）" >&2; exit 1 ;;
@@ -56,6 +66,27 @@ EXE="${OUT}/WeaselPanel.exe"
 if [ ! -f "$EXE" ]; then
   echo "构建失败：未产出 $EXE" >&2
   exit 1
+fi
+
+# ── 出包验收：语言包必须真的在 exe 里 ────────────────────────────────
+# 缺省开启。缺 python3 时硬失败而不是静默跳过 —— 会静默跳过的关卡等于没有关卡。
+if [ "$RUN_VERIFY" -eq 1 ]; then
+  echo ""
+  echo "═══ 验收语言包是否嵌入 exe ═══"
+  PY=""
+  for cand in python3 /Users/wolfprince/.workbuddy/binaries/python/versions/3.13.12/bin/python3; do
+    if command -v "$cand" >/dev/null 2>&1; then PY="$cand"; break; fi
+    [ -x "$cand" ] && { PY="$cand"; break; }
+  done
+  if [ -z "$PY" ]; then
+    echo "找不到 python3，无法验收语言包。装好 python3 再跑，或用 --no-verify 显式跳过。" >&2
+    exit 1
+  fi
+  if ! "$PY" tools/verify_lang_packs.py "$EXE"; then
+    echo "" >&2
+    echo "出包验收未通过 —— 本次 exe 不可交付。" >&2
+    exit 1
+  fi
 fi
 
 echo ""

@@ -9,11 +9,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using WeaselPanel.App.Infrastructure;
+using WeaselPanel.App.Localization;
 using WeaselPanel.Core.Platform;
 using WeaselPanel.Core.Rime;
 using WeaselPanel.Core.Yaml;
@@ -21,27 +24,69 @@ using WeaselPanel.Core.Yaml;
 namespace WeaselPanel.App.ViewModels;
 
 /// <summary>方案列表里的一行（用于双向绑定 ObservableCollection&lt;SchemaRow&gt;）。</summary>
-public sealed class SchemaRow
+/// <remarks>
+/// 实现 INotifyPropertyChanged 只为两件事：
+///   1. <see cref="IsDefault"/> —— 列表首位即默认方案，上下移动时要能实时挪动「默认」标记，
+///      重建整个列表会丢选中态，代价更大。
+///   2. 语言切换时由 <see cref="RaiseLanguageChanged"/> 重新发出派生文本的通知。
+///      OriginLabel / Subtitle / 孤儿条目的显示名都是「取值那一刻拼好的字符串」，
+///      WPF 不会替我们重取。
+/// </remarks>
+public sealed class SchemaRow : INotifyPropertyChanged
 {
     public required string SchemaId { get; init; }
-    public required string DisplayName { get; init; }
+
+    /// <summary>方案自己的名字。孤儿条目（磁盘上找不到 schema.yaml）为 null，
+    /// 显示时由 <see cref="DisplayName"/> 用 id + 「（未安装）」兜底。</summary>
+    public string? Name { get; init; }
+
     public string? Version { get; init; }
     public string? Author { get; init; }
     public string? Description { get; init; }
     public required bool IsBuiltIn { get; init; }
+
     /// <summary>若被启用，但在磁盘上找不到对应 schema.yaml，标 true（孤儿条目）。</summary>
     public bool IsOrphan { get; init; }
 
-    public string OriginLabel => IsBuiltIn ? "内置" : "用户";
+    private bool _isDefault;
+
+    /// <summary>是否是默认方案（即「已启用」列表的第一项）。</summary>
+    public bool IsDefault
+    {
+        get => _isDefault;
+        set
+        {
+            if (_isDefault == value) return;
+            _isDefault = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string DisplayName => Name ?? SchemaId + L10n.Instance.T("Schema.NotInstalled");
+
+    public string OriginLabel => L10n.Instance.T(IsBuiltIn ? "Schema.OriginBuiltIn" : "Schema.OriginUser");
 
     public string Subtitle =>
         !string.IsNullOrWhiteSpace(Description) ? Description! :
         !string.IsNullOrWhiteSpace(Author) ? Author! :
-        IsOrphan ? "（未在磁盘找到对应方案文件）" :
+        IsOrphan ? L10n.Instance.T("Schema.OrphanDesc") :
         SchemaId;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    /// <summary>语言切换后：这三处文本都是在取值时才拼的，通知一次让绑定重取。</summary>
+    public void RaiseLanguageChanged()
+    {
+        OnPropertyChanged(nameof(DisplayName));
+        OnPropertyChanged(nameof(OriginLabel));
+        OnPropertyChanged(nameof(Subtitle));
+    }
 }
 
-public sealed class SchemaViewModel : ViewModelBase
+public sealed class SchemaViewModel : ViewModelBase, ILanguageAware
 {
     private readonly WeaselEnvironment _environment;
     private SchemaCatalog _catalog = SchemaCatalog.Empty;
@@ -81,7 +126,7 @@ public sealed class SchemaViewModel : ViewModelBase
         private set => Set(ref _isBusy, value);
     }
 
-    private string _statusText = "就绪";
+    private string _statusText = "";
     public string StatusText
     {
         get => _statusText;
@@ -99,6 +144,7 @@ public sealed class SchemaViewModel : ViewModelBase
     public ICommand RemoveCommand { get; }
     public ICommand MoveUpCommand { get; }
     public ICommand MoveDownCommand { get; }
+    public ICommand SetDefaultCommand { get; }
     public ICommand ApplyCommand { get; }
 
     public SchemaViewModel(WeaselEnvironment environment)
@@ -112,6 +158,9 @@ public sealed class SchemaViewModel : ViewModelBase
             () => SelectedActive is not null && ActiveSchemas.IndexOf(SelectedActive) > 0);
         MoveDownCommand = new DelegateCommand(() => Move(+1),
             () => SelectedActive is not null && ActiveSchemas.IndexOf(SelectedActive) < ActiveSchemas.Count - 1);
+        // 已在首位（或压根没选）时「设为默认」没有意义，直接禁用，省得用户点了没反应
+        SetDefaultCommand = new DelegateCommand(SetDefault,
+            () => SelectedActive is not null && ActiveSchemas.IndexOf(SelectedActive) > 0);
         ApplyCommand = new RelayCommand(ApplyAsync, () => ActiveSchemas.Count > 0);
 
         // ObservableCollection 不带 setter 触发的 CanExecute 通知，改写 ActiveSchemas 后统一刷一次。
@@ -124,19 +173,19 @@ public sealed class SchemaViewModel : ViewModelBase
     public void Load()
     {
         IsBusy = true;
-        StatusText = "正在扫描方案……";
+        StatusText = StatusFromKey("Schema.Status.Scanning");
         try
         {
             _catalog = SchemaCatalog.Build(_environment.UserDirectory, _environment.SharedDataDirectory);
             RebuildLists();
             HasLoaded = true;
             StatusText = _catalog.All.Count == 0
-                ? "未发现任何方案（请确认小狼毫已安装，且共享数据目录存在 *.schema.yaml）"
-                : $"已扫描 {_catalog.All.Count} 个方案，{ActiveSchemas.Count} 个已启用";
+                ? StatusFromKey("Schema.Status.None")
+                : StatusFromKey("Schema.Status.Scanned", _catalog.All.Count, ActiveSchemas.Count);
         }
         catch (Exception ex)
         {
-            StatusText = "扫描失败：" + ex.Message;
+            StatusText = StatusFromKey("Schema.Status.ScanFailed", ex.Message);
         }
         finally
         {
@@ -160,13 +209,7 @@ public sealed class SchemaViewModel : ViewModelBase
             }
             else
             {
-                ActiveSchemas.Add(new SchemaRow
-                {
-                    SchemaId = id,
-                    DisplayName = id + "（未安装）",
-                    IsBuiltIn = false,
-                    IsOrphan = true,
-                });
+                ActiveSchemas.Add(MakeOrphanRow(id));
             }
         }
 
@@ -179,20 +222,31 @@ public sealed class SchemaViewModel : ViewModelBase
         foreach (var id in orphan)
         {
             if (_catalog.All.ContainsKey(id)) continue;
-            AvailableSchemas.Add(new SchemaRow
-            {
-                SchemaId = id,
-                DisplayName = id + "（未安装）",
-                IsBuiltIn = false,
-                IsOrphan = true,
-            });
+            AvailableSchemas.Add(MakeOrphanRow(id));
         }
+
+        SyncDefault();
     }
+
+    /// <summary>默认方案是哪一行：ActiveSchemas 的首位即默认，靠 IsDefault 在界面上标出来。</summary>
+    private void SyncDefault()
+    {
+        for (var i = 0; i < ActiveSchemas.Count; i++)
+            ActiveSchemas[i].IsDefault = i == 0;
+
+        OnPropertyChanged(nameof(DefaultSummary));
+    }
+
+    /// <summary>「默认方案：X」那一行。没有启用任何方案时显示「（未启用任何方案）」。</summary>
+    public string DefaultSummary => ActiveSchemas.Count == 0
+        ? L10n.Instance.T("Schema.DefaultNone")
+        : L10n.Instance.T("Schema.DefaultSummary",
+            L10n.Instance.T("Schema.DefaultLabel"), ActiveSchemas[0].DisplayName);
 
     private static SchemaRow MakeRow(InputSchema s, bool isOrphan) => new()
     {
         SchemaId = s.SchemaId,
-        DisplayName = s.Name,
+        Name = s.Name,
         Version = s.Version,
         Author = s.Author,
         Description = s.Description,
@@ -200,7 +254,31 @@ public sealed class SchemaViewModel : ViewModelBase
         IsOrphan = isOrphan,
     };
 
+    /// <summary>孤儿条目：配置里启用了，磁盘上却没有对应的 schema.yaml。</summary>
+    private static SchemaRow MakeOrphanRow(string id) => new()
+    {
+        SchemaId = id,
+        Name = null,
+        IsBuiltIn = false,
+        IsOrphan = true,
+    };
+
     // ── 列表操作 ────────────────────────────────────────────────────────────
+
+    /// <summary>把选中的方案挪到首位 —— Rime 的 schema_list 顺序即切换顺序，首位就是默认。</summary>
+    public void SetDefault()
+    {
+        var src = SelectedActive;
+        if (src is null) return;
+
+        var idx = ActiveSchemas.IndexOf(src);
+        if (idx <= 0) return;
+
+        ActiveSchemas.Move(idx, 0);
+        SelectedActive = src;
+        SyncDefault();
+        StatusText = StatusFromKey("Schema.Status.DefaultSet", src.DisplayName);
+    }
 
     private void Add()
     {
@@ -215,7 +293,8 @@ public sealed class SchemaViewModel : ViewModelBase
         AvailableSchemas.Remove(src);
         SelectedActive = src;
         SelectedAvailable = null;
-        StatusText = $"已加入 {src.DisplayName}（尚未写入磁盘，请点「应用」）";
+        SyncDefault();
+        StatusText = StatusFromKey("Schema.Status.Added", src.DisplayName);
     }
 
     private void Remove()
@@ -230,7 +309,8 @@ public sealed class SchemaViewModel : ViewModelBase
         }
         ActiveSchemas.Remove(src);
         SelectedActive = null;
-        StatusText = $"已移除 {src.DisplayName}（尚未写入磁盘，请点「应用」）";
+        SyncDefault();
+        StatusText = StatusFromKey("Schema.Status.Removed", src.DisplayName);
     }
 
     private void Move(int delta)
@@ -244,14 +324,37 @@ public sealed class SchemaViewModel : ViewModelBase
 
         ActiveSchemas.Move(idx, target);
         SelectedActive = src;  // 选中态要保持，否则 MoveUp 后选中会跑到空
+
+        // 顺序变了，默认方案（首位）可能跟着变
+        SyncDefault();
     }
 
+    /// <summary>
+    /// 语言切换后重建本页文本。
+    /// 行内的 OriginLabel / Subtitle / 孤儿条目的显示名交给各自的 RaiseLanguageChanged
+    /// 通知重取，不重建列表 —— 重建会丢选中态，而选中态在方案页是有意义的上下文。
+    /// </summary>
+    public void RefreshTexts()
+    {
+        StatusText = Restatus();
+
+        if (!HasLoaded)
+        {
+            // 还没扫过盘（用户没点开这一页）—— 别为了切语言去做一次磁盘扫描
+            return;
+        }
+
+        foreach (var row in ActiveSchemas) row.RaiseLanguageChanged();
+        foreach (var row in AvailableSchemas) row.RaiseLanguageChanged();
+
+        OnPropertyChanged(nameof(DefaultSummary));
+    }
     // ── 应用 ────────────────────────────────────────────────────────────────
 
     private async System.Threading.Tasks.Task ApplyAsync()
     {
         IsBusy = true;
-        StatusText = "正在写入 default.custom.yaml……";
+        StatusText = StatusFromKey("Schema.Status.Writing");
         try
         {
             Directory.CreateDirectory(_environment.UserDirectory);
@@ -261,7 +364,7 @@ public sealed class SchemaViewModel : ViewModelBase
 
             if (!custom.IsWritable)
             {
-                StatusText = "配置文件解析失败，已拒绝写入（避免损坏）：" + custom.LoadError;
+                StatusText = StatusFromKey("Schema.Status.ParseFailed", custom.LoadError);
                 return;
             }
 
@@ -270,11 +373,11 @@ public sealed class SchemaViewModel : ViewModelBase
             set.Set("schema_list", PatchValue.SchemaList(ids));
             custom.ApplyLineEdits(set);
 
-            StatusText = $"已写入 {path}（{ids.Count} 个方案已写盘，需执行部署后生效）";
+            StatusText = StatusFromKey("Schema.Status.Written", path, ids.Count);
         }
         catch (Exception ex)
         {
-            StatusText = "写入失败：" + ex.Message;
+            StatusText = StatusFromKey("Schema.Status.WriteFailed", ex.Message);
         }
         finally
         {

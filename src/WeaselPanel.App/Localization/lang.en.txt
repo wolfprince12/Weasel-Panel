@@ -1,0 +1,345 @@
+# Weasel Panel — UI language pack (English / default)
+#
+# Format:
+#   Key = Value
+#   · Lines starting with '#' are comments.
+#   · Split happens on the FIRST " = " — a value may contain '=' itself.
+#   · Use \n for an explicit line break inside a value.
+#   · Keys missing here (and in the active language) fall back to the key name,
+#     so a typo shows up as "Nav.Apperance" on screen instead of an empty label.
+#
+# Why plain embedded .txt instead of .resx + satellite assemblies:
+#   .resx produces zh-Hans/WeaselPanel.App.resources.dll satellite assemblies.
+#   Whether those get bundled into a PublishSingleFile exe is not guaranteed,
+#   and a satellite assembly that silently fails to load degrades to English on
+#   a Chinese Windows — exactly the "why is it still English?" bug we are
+#   fixing here. These .txt files are EmbeddedResource inside the main
+#   assembly, so they always travel inside the exe. Verified on the Win11 VM.
+#
+# Language resolution order (see L10n.ResolveLanguage):
+#   1. user choice in %APPDATA%\WeaselPanel\settings.json ("auto" = follow OS)
+#   2. CultureInfo.CurrentUICulture (zh-CN → zh-Hans → zh → this file)
+#   3. this file
+
+# ── Application identity ────────────────────────────────────────────────
+App.Name = Weasel Panel
+App.NameShort = Weasel
+App.Subtitle = Panel
+App.Preview = Preview
+App.VersionPrefix = v
+App.BuildPrefix = Build
+App.CrashBody = An unhandled exception occurred:\n\n{0}\n\nLog written to:\n{1}
+App.DetectFailed = Environment detection failed:\n{0}
+
+# ── Sidebar navigation ──────────────────────────────────────────────────
+Nav.Diagnostics = Diagnostics
+Nav.Appearance = Appearance
+Nav.Schema = Schemas
+Nav.Input = Keys & Input
+Nav.Backup = Backup
+Nav.About = About
+
+# ── Generic buttons / labels ────────────────────────────────────────────
+Common.Ready = Ready
+Common.Apply = Apply
+Common.Reload = Reload
+Common.Refresh = Refresh
+Common.Deploy = Deploy
+Common.Delete = Delete
+Common.Create = Create
+Common.Restore = Restore
+Common.Save = Save
+Common.Cancel = Cancel
+Common.Copy = Copy
+Common.Files = files
+Common.NotFound = (not found)
+Common.Yes = Yes
+Common.No = No
+Common.Language = Language
+Common.Error = Error
+
+# ── Language selector ───────────────────────────────────────────────────
+Lang.Auto = Follow system
+Lang.zh-Hans = Simplified Chinese
+Lang.zh-Hant = Traditional Chinese
+Lang.en = English
+Lang.Note = Takes effect immediately. The choice is stored in %APPDATA%\WeaselPanel\settings.json — never in the Rime user directory, so it cannot pollute sync or backups.
+
+# ── Diagnostics page ────────────────────────────────────────────────────
+Diag.EnvTitle = Environment
+Diag.ProbeTitle = Environment probes
+Diag.ProbeIntro = Verifies the things that cannot be settled by reading source: named pipe reachability, deployer exit code, log file naming, librime-lua availability.
+Diag.RunProbe = Run probes
+Diag.RunDeploy = Run deployer /deploy
+Diag.CopyReport = Copy report
+Diag.HintClick = Click "Run probes" to verify this machine's Weasel setup
+Diag.Probing = Probing…
+Diag.Deploying = Deploying (may take tens of seconds)…
+Diag.ProbeDone = Done, {0} checks (deploy must be run manually)
+Diag.ProbeFailed = Done, {0} failed — please send me the report
+Diag.ProbeException = Probe error: {0}
+Diag.DeployDone = Deploy finished
+Diag.DeployResult = Deployer returned: {0}
+Diag.DeployException = Deploy error: {0}
+Diag.Copied = Report copied to clipboard
+Diag.CopyFailed = Copy failed: {0}
+Diag.DetectFailed = Detection failed
+Diag.ReportTitle = Weasel Panel — Diagnostics report
+Diag.ReportTime = Generated
+Diag.ReportEnv = ── Environment ──
+Diag.ReportProbe = ── Probe results ──
+
+Diag.RowFormat = {0}: {1}
+Diag.ProbeFormat = [{0}] {1}: {2}
+
+Diag.Row.Installed = Weasel installed
+Diag.Row.ProgramDir = Program directory
+Diag.Row.SharedDir = Shared data directory
+Diag.Row.UserDir = User directory
+Diag.Row.UserDirState = User directory state
+Diag.Row.SyncDir = Sync directory
+Diag.Row.BackupDir = Backup directory
+Diag.Row.LogDir = Log directory
+Diag.Row.Deployer = Deployer
+Diag.Row.UserName = Current user
+Diag.Row.PipeName = Expected pipe name
+Diag.Value.Yes = Yes
+Diag.Value.No = No
+Diag.Value.Ready = Ready
+Diag.Value.NotExist = Does not exist yet (deploy once first)
+
+# ── Probe status badges ─────────────────────────────────────────────────
+Probe.Status.Ok = OK
+Probe.Status.Warn = Warning
+Probe.Status.Fail = Failed
+Probe.Status.Skip = Skipped
+
+# ── Probe: named pipe ───────────────────────────────────────────────────
+Probe.Name.Pipe = Named pipe
+Probe.Pipe.Ok = Connected: {0}
+Probe.Pipe.Fail = Could not connect: {0}
+Probe.Pipe.HintNotRunning = The Weasel service is probably not running. Start Weasel (or switch to it once in any input box) and try again.
+Probe.Pipe.Candidate = candidate
+Probe.Pipe.ReasonUpstream = upstream rule (with user-name prefix)
+Probe.Pipe.ReasonNoPrefix = no user-name prefix (older format)
+
+# ── Probe: deployer ─────────────────────────────────────────────────────
+Probe.Name.Deployer = Deployer /deploy
+Probe.Deployer.Skipped = Skipped (deploying rewrites user data — run it manually)
+
+# ── Probe: log files ────────────────────────────────────────────────────
+Probe.Name.Logs = Log files
+Probe.Logs.Found = Found {0} rime log file(s)
+Probe.Logs.DirMissing = Log directory does not exist: {0}
+
+# ── Probe: librime-lua ──────────────────────────────────────────────────
+Probe.Name.Lua = librime-lua plugin
+Probe.Lua.Missing = lua plugin not installed (optional — Weasel and this panel work without it)
+Probe.Lua.Found = lua plugin found
+Probe.Lua.NoneFound = No lua plugin file found in the candidate directories.
+Probe.Lua.Explain = librime-lua is an optional plugin. Not having it does not affect Weasel or this panel.\nYou only need it for lua-based features ("Zihao" correction); install a librime build with lua in that case.
+Probe.Pipe.Connected = Connected
+Probe.Pipe.NotConnected = Not connected
+Probe.Pipe.Timeout = Timed out (pipe missing, or no server listening)
+Probe.Pipe.Denied = Access denied
+Probe.Pipe.HintRunning = WeaselServer is running but the pipe cannot be opened — check whether it runs under a different user, or restart Weasel and probe again.
+Probe.Pipe.FailRunning = Could not open the pipe (WeaselServer is running — a pipe/permission problem)
+Probe.Pipe.FailNotRunning = Could not open the pipe — Weasel is not running
+Probe.Pipe.FailNonAscii = No candidate could connect — the user name "{0}" contains non-ASCII characters, encoding is the prime suspect
+Probe.Deployer.PathMissing = Path is set but the file does not exist: {0}
+Probe.Deployer.StartFailed = Failed to start the process
+Probe.Deployer.Timeout = Timed out ({0}s) — likely blocked on the mutex or a modal dialog
+Probe.Deployer.Elapsed = Elapsed: {0}s
+Probe.Deployer.CommandLine = Command line: "{0}" /deploy
+Probe.Deployer.ExitCodeLine = Exit code: {0}
+Probe.Deployer.ElapsedSec = Elapsed: {0} s
+Probe.Deployer.StdOut = stdout: {0}
+Probe.Deployer.StdErr = stderr: {0}
+Probe.Exception = {0}: {1}
+Probe.Deployer.Ok = Success (exit code {0}, {1}s)
+Probe.Deployer.Fail = Exit code {0} — per upstream this means "another deployer instance is running" or mutex creation failed
+Probe.Deployer.Exception = Exception: {0}
+Probe.Deployer.NotFound = WeaselDeployer.exe not found
+Probe.Logs.None = No rime.weasel log found (normal when nothing went wrong)
+Probe.Logs.ReadFailed = [{0}] read failed: {1}
+Probe.Logs.Scanned = Scanned: {0}
+Probe.Lua.Scanned = Scanned directories: 
+Probe.Lua.NoDir = (no usable directory)
+Probe.Lua.FoundFiles = lua-related files found:
+Probe.Lua.FileAt = {0}    <- {1}
+Probe.Lua.Refs = lua references in config ({0} hits, first 8):
+Probe.Lua.Ready = lua features such as "Zihao" correction can be enabled.
+Probe.Lua.ConfiguredButMissing = ⚠️ The config references lua but the plugin is missing: deployment will fail. Install librime-lua or remove the lua references.
+Probe.Lua.SummaryOk = lua plugin files found — "Zihao" correction can be enabled
+Probe.Lua.SummaryMissing = No plugin files found, but the config already references lua — deployment will fail
+
+# ── Appearance page ─────────────────────────────────────────────────────
+Appearance.PreviewTitle = Candidate window preview
+Appearance.PreviewNote1 = Shows the resolved effective values (not the raw config): colours go through the full fallback chain and alpha blending,
+Appearance.PreviewNote2 = font sizes fall back to 12 when unset, labels render through label_format.
+Appearance.ColorFont = Colours & fonts
+Appearance.Scheme = Colour scheme
+Appearance.FontFace = Font
+Appearance.FontSize = Font size
+Appearance.CommentSize = Comment size
+Appearance.CommentSizeNote = A comment size of 0 means "not set separately". Label and comment sizes fall back to the main font size — that is upstream's fallback behaviour for those keys.
+Appearance.CandidateLayout = Candidates & layout
+Appearance.Layout = Layout
+Appearance.Layout.Vertical = Vertical
+Appearance.Layout.Horizontal = Horizontal
+Appearance.Layout.VerticalText = Vertical text
+Appearance.Layout.VerticalFullscreen = Vertical fullscreen
+Appearance.Layout.HorizontalFullscreen = Horizontal fullscreen
+Appearance.LabelFormat = Label format
+Appearance.LabelFormatTip = printf style, %s is the ordinal placeholder. e.g. %s. renders as 1.
+Appearance.MarkText = Highlight mark
+Appearance.MarkTextTip = Marker printed before the highlighted candidate. Weasel treats an empty value as *.
+Appearance.Preedit = Preedit
+Appearance.Preedit.Composition = composition
+Appearance.Preedit.Preview = preview
+Appearance.Preedit.PreviewAll = preview_all
+Appearance.Antialias = Anti-aliasing
+Appearance.Hover = Hover
+Appearance.Hover.None = none
+Appearance.Hover.SemiHilite = semi_hilite
+Appearance.Hover.Hilite = hilite
+Appearance.InlinePreedit = Preedit inline (inline_preedit)
+Appearance.ApplyTitle = Apply
+Appearance.ApplyNote = Changes are written to weasel.custom.yaml and take effect after a deploy. Layout is always written to style/layout/type (highest precedence in the override chain).
+Appearance.ApplyBtn = Apply settings
+Appearance.Redeploy = Deploy again
+Appearance.ReloadBtn = Reload
+Appearance.Status.Writing = Writing config…
+Appearance.Status.Written = Written to {0} (deploy to apply)
+Appearance.Status.ParseFailed = Config parse failed, write refused (would corrupt the file): {0}
+Appearance.Status.WriteFailed = Write failed: {0}
+Appearance.Status.Deploying = Deploying…
+Appearance.Status.DeployOk = Deploy finished — switch input method to see the new look
+Appearance.Status.DeployResult = Deployer returned: {0}
+Appearance.Status.DeployException = Deploy error: {0}
+Appearance.Status.LoadedSchemes = Loaded {0} built-in colour schemes
+Appearance.Status.NoCatalog = Could not load the colour scheme catalogue — check the shared data directory on the Diagnostics page
+Appearance.Status.Ready = Ready
+Appearance.CatalogMissing = (weasel.yaml not found — colour scheme catalogue is empty)
+
+# ── Schema page ─────────────────────────────────────────────────────────
+Schema.Title = Input schemas
+Schema.Intro = List order is the switch order — the first one is the default. Press "Apply" to write patch/schema_list into default.custom.yaml, then "Deploy".
+Schema.Rescan = Rescan
+Schema.MoveUp = ↑ Up
+Schema.MoveDown = ↓ Down
+Schema.Active = Enabled
+Schema.Available = Available
+Schema.Enable = Enable ←
+Schema.Remove = → Remove
+Schema.ApplyBtn = Apply (write default.custom.yaml)
+Schema.SetDefault = Set as default
+Schema.DefaultLabel = Default schema
+Schema.DefaultNone = (none enabled)
+Schema.DefaultSummary = {0}: {1}
+Schema.OriginBuiltIn = built-in
+Schema.OriginUser = user
+Schema.NotInstalled = (not installed)
+Schema.OrphanDesc = (no matching schema file on disk)
+Schema.Status.Ready = Ready
+Schema.Status.Scanning = Scanning schemas…
+Schema.Status.None = No schema found (check that Weasel is installed and that the shared data directory has *.schema.yaml)
+Schema.Status.Scanned = Scanned {0} schemas, {1} enabled
+Schema.Status.ScanFailed = Scan failed: {0}
+Schema.Status.Added = Added {0} (not written to disk yet — press "Apply")
+Schema.Status.Removed = Removed {0} (not written to disk yet — press "Apply")
+Schema.Status.Writing = Writing default.custom.yaml…
+Schema.Status.DefaultSet = "{0}" is now the default (not written to disk yet — press "Apply")
+Schema.Status.ParseFailed = Config parse failed, write refused (would corrupt the file): {0}
+Schema.Status.Written = Written to {0} ({1} schemas on disk — deploy to apply)
+Schema.Status.WriteFailed = Write failed: {0}
+
+# ── Input / keys page ───────────────────────────────────────────────────
+Input.Title = Keys & input
+Input.Intro = Page size, paging keys and the Chinese/English switch key. Written to default.custom.yaml; deploy afterwards.
+Input.PageSize = Candidates per page
+Input.PageSizeNote = Rime's own default is 5.
+Input.PagingKeys = Paging keys
+Input.PagingKeys.Note = Any checked pair is added to key_binder/bindings. Unchecking everything removes the key entirely and falls back to the scheme default.
+Input.PagingKeys.None = (no paging keys selected — falls back to the scheme default)
+Input.Paging.MinusEqual = - and = (minus / equal)
+Input.Paging.CommaPeriod = , and . (comma / period)
+Input.Paging.Brackets = [ and ] (brackets)
+Input.Paging.UpDown = ↑ and ↓ (arrow keys)
+Input.SwitchKey = Chinese / English switch
+Input.Switch.None = Do not change (keep scheme default)
+Input.Switch.Shift = Left & right Shift
+Input.Switch.CapsLock = Caps Lock
+Input.Switch.Control = Left & right Control
+Input.Switch.Note = Written to ascii_composer/switch_key. "Left & right Shift" is the Rime default (commit ascii while held).
+Input.Punct = Extra toggles
+Input.Punct.FullShape = Shift+Space toggles full/half width
+Input.Punct.Punctuation = Ctrl+. toggles Chinese/Latin punctuation
+Input.ApplyBtn = Apply (write default.custom.yaml)
+Input.ApplyTitle = Apply
+Input.ApplyNote = Written to default.custom.yaml; press "Deploy" on the Appearance page afterwards. key_binder/bindings is replaced as a whole, and only when you press "Apply".
+Input.Status.Ready = Ready
+Input.Status.Writing = Writing default.custom.yaml…
+Input.Status.Written = Written to {0} — deploy to apply
+Input.Status.ParseFailed = Config parse failed, write refused (would corrupt the file): {0}
+Input.Status.WriteFailed = Write failed: {0}
+Input.Status.Loaded = Loaded current settings from {0}
+Input.Status.NoConfig = No default.custom.yaml yet — showing Rime defaults
+Input.Status.LoadFailed = Could not read {0}: {1}
+
+# ── Backup page ─────────────────────────────────────────────────────────
+Backup.Title = Backup & restore
+Backup.Intro = Take a backup before touching the config so you can always come back. "Restore" first snapshots the current state, so a restore is itself undoable.
+Backup.Label = Label
+Backup.LabelTip = Optional; empty means "auto backup"
+Backup.Create = Create backup
+Backup.Records = Backups
+Backup.FilesInBackup = Config files in the backup (select one to diff against the current version)
+Backup.DiffTitle = Diff (left = backup, right = current)
+Backup.DiffIdentical = Both versions are identical
+Backup.RestoreAll = Restore whole backup
+Backup.RestoreFile = Restore selected file
+Backup.DeleteBackup = Delete this backup
+Backup.Status.Ready = Ready
+Backup.Status.None = No backups yet. Create one now so later edits have a way back.
+Backup.Status.Count = {0} backup(s) · stored in {1}
+Backup.Status.LoadFailed = Could not list backups: {0}
+Backup.Status.FilesFailed = Could not read backup contents: {0}
+Backup.Status.DiffSame = "{0}" is identical to the backup
+Backup.Status.DiffDiffers = "{0}" differs from the backup (left = backup, right = current)
+Backup.Status.DiffFailed = Diff failed: {0}
+Backup.Status.Created = Backup created: {0}　{1}　{2} files / {3}
+Backup.Status.CreateFailed = Backup failed: {0}
+Backup.Status.Restored = Restored. Press "Deploy" on the Appearance page for the change to take effect.
+Backup.Status.RestoreFailed = Restore failed: {0}
+Backup.Status.FileRestored = Restored "{0}". Press "Deploy" to apply.
+Backup.Status.Deleted = Backup deleted
+Backup.Status.DeleteFailed = Delete failed: {0}
+Backup.Confirm.RestoreAll.Title = Restore backup
+Backup.Confirm.RestoreAll.Body = This restores **every** config file in the user directory to:\n\n　{0}　{1}\n　{2} files / {3}\n\nCurrent files will be overwritten.\nA backup of the current state is taken first (labelled "Pre-restore auto backup"), so this can always be undone.\n\nContinue?
+Backup.Confirm.RestoreFile.Title = Restore single file
+Backup.Confirm.RestoreFile.Body = This restores "{0}" to the backup version:\n\n　{1}　{2}\n\nA backup of the current state is taken first, so this can always be undone.\n\nContinue?
+Backup.Confirm.Delete.Title = Delete backup
+Backup.Confirm.Delete.Body = Delete this backup?\n\n　{0}　{1}\n　{2} files\n\nThis cannot be undone.
+Backup.AutoLabel = Pre-restore auto backup
+Backup.Msg.Restored.Body = Restore finished.\n\nPress "Deploy" on the Appearance page for the change to take effect.
+
+# ── About page ──────────────────────────────────────────────────────────
+About.Tagline = Weasel Panel — the Windows sibling of macOS "Squirrel Panel"
+About.Version = Version
+About.VersionPreview = {0}.{1}.{2} preview
+About.Language = Language
+About.Tech = Stack
+About.TechValue = C# / WPF / .NET 8
+About.License = Licence
+About.LicenseValue = GPL-3.0
+About.Repo = Repository
+About.HowItWorks = How it works
+About.HowItWorksBody = This panel does not link against librime. It follows the same route as the macOS version: write a *.custom.yaml patch → call WeaselDeployer.exe → read the deployed result. Every appearance value is derived with the same rules as upstream RimeWithWeasel.cpp, so what you see here is what the candidate window renders.
+About.Env = Current environment
+About.ProgramDir = Program directory
+About.SharedDir = Shared data
+About.UserDir = User directory
+About.RowFormat = {0}: {1}
+About.Deployer = Deployer
+About.DeployHint = Deploy to apply changes — run it from the Appearance page after editing.

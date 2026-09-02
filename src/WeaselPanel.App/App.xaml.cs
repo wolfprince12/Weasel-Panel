@@ -5,6 +5,8 @@ using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Threading;
+using WeaselPanel.App.Localization;
+using WeaselPanel.Core.Config;
 
 namespace WeaselPanel.App;
 
@@ -40,6 +42,13 @@ public partial class App : Application
         Log($"exe_path = {Environment.ProcessPath}");
         Log($"os = {Environment.OSVersion} arch = {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}");
 
+        // 界面语言：用户在设置里选过就用选的，否则跟随系统（zh-CN → 简体中文）。
+        // 必须在任何窗口创建之前定好，否则首屏会先闪一下英文再变中文。
+        var settings = PanelSettings.Load();
+        L10n.Instance.SetLanguage(settings.Language);
+        Log($"ui_culture = {System.Globalization.CultureInfo.CurrentUICulture.Name} " +
+            $"selected = {settings.Language ?? "(auto)"} resolved = {L10n.Instance.Language}");
+
         // UI 线程未捕获异常 → 写日志 + 显示对话框，而不是让整个进程崩掉。
         DispatcherUnhandledException += (_, args) =>
         {
@@ -47,9 +56,8 @@ public partial class App : Application
             try
             {
                 MessageBox.Show(
-                    "发生未处理的异常：\n\n" + args.Exception +
-                    $"\n\n日志已写入：\n{LogFilePath}",
-                    "小狼毫控制面板 — 预览版",
+                    L10n.Instance.T("App.CrashBody", args.Exception, LogFilePath),
+                    L10n.Instance.T("App.Name"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }

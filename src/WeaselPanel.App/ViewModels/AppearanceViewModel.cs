@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Media;
 using WeaselPanel.App.Infrastructure;
+using WeaselPanel.App.Localization;
 using WeaselPanel.App.Services;
 using WeaselPanel.Core.Platform;
 using WeaselPanel.Core.Rime;
@@ -11,7 +12,7 @@ namespace WeaselPanel.App.ViewModels;
 /// 外观页。预览用的颜色一律走 Core 的 <see cref="ColorSchemeResolver"/>，
 /// 即套用上游完整回退链与 alpha 混合 —— 保证「面板所见」=「候选窗所得」。
 /// </summary>
-public sealed class AppearanceViewModel : ViewModelBase
+public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware
 {
     private readonly string _userDirectory;
     private string? _selectedScheme;
@@ -27,8 +28,10 @@ public sealed class AppearanceViewModel : ViewModelBase
     private WeaselAntiAliasMode _antiAliasMode;
     private WeaselHoverType _hoverType;
     private bool _isBusy;
-    private string _statusText = "就绪";
+    private string _statusText = "";
     private bool _catalogLoaded;
+    private string _catalogSourcePath = "";
+    private bool _catalogFound;
 
     public AppearanceViewModel(WeaselEnvironment environment)
     {
@@ -39,6 +42,7 @@ public sealed class AppearanceViewModel : ViewModelBase
         ReloadCommand = new DelegateCommand(LoadAll);
         DeployCommand = new RelayCommand(DeployAsync, () => !IsBusy && environment.DeployerPath is not null);
 
+        StatusText = StatusFromKey("Appearance.Status.Ready");
         LoadAll();
     }
 
@@ -212,7 +216,21 @@ public sealed class AppearanceViewModel : ViewModelBase
     private SolidColorBrush _borderBrush = Brushes.LightGray;
     public SolidColorBrush BorderBrush { get => _borderBrush; private set => Set(ref _borderBrush, value); }
 
-    public string CatalogSource { get; private set; } = "（未加载）";
+    /// <summary>
+    /// 内置配色目录的来源文件路径。
+    /// 做成计算属性而不是一次性拼好的字符串：找不到文件时要显示的那句提示是本地化的，
+    /// 切语言后必须能重取（否则中文界面上会一直留着上一句英文）。
+    /// </summary>
+    public string CatalogSource =>
+        _catalogFound ? _catalogSourcePath : L10n.Instance.T("Appearance.CatalogMissing");
+
+    public void RefreshTexts()
+    {
+        // 状态栏是「赋值那一刻拼好的 string」，靠 ViewModelBase 记下的 key 重建；
+        // 配色目录那句同理，重发一次通知让绑定重取。
+        StatusText = Restatus();
+        OnPropertyChanged(nameof(CatalogSource));
+    }
 
     // ── 加载 ──────────────────────────────────────────────────
     public void LoadAll()
@@ -251,7 +269,8 @@ public sealed class AppearanceViewModel : ViewModelBase
 
         foreach (var n in catalog.Names) SchemeNames.Add(n);
         _catalog = catalog;
-        CatalogSource = source ?? "（未找到 weasel.yaml，配色目录为空）";
+        _catalogSourcePath = source ?? "";
+        _catalogFound = source is not null;
         OnPropertyChanged(nameof(CatalogSource));
         _catalogLoaded = catalog.Names.Count > 0;
 
@@ -319,8 +338,8 @@ public sealed class AppearanceViewModel : ViewModelBase
         RefreshPreview();
 
         StatusText = _catalogLoaded
-            ? $"已加载 {SchemeNames.Count} 套内置配色"
-            : "未能加载内置配色目录 —— 请到「诊断」页检查共享数据目录";
+            ? StatusFromKey("Appearance.Status.LoadedSchemes", SchemeNames.Count)
+            : StatusFromKey("Appearance.Status.NoCatalog");
     }
 
     private ColorSchemeCatalog _catalog = ColorSchemeCatalog.Empty;
@@ -404,7 +423,7 @@ public sealed class AppearanceViewModel : ViewModelBase
     private async Task ApplyAsync()
     {
         IsBusy = true;
-        StatusText = "正在写入配置……";
+        StatusText = StatusFromKey("Appearance.Status.Writing");
         try
         {
             Directory.CreateDirectory(_userDirectory);
@@ -414,7 +433,7 @@ public sealed class AppearanceViewModel : ViewModelBase
 
             if (!custom.IsWritable)
             {
-                StatusText = "配置解析失败，已拒绝写入（避免损坏用户文件）：" + custom.LoadError;
+                StatusText = StatusFromKey("Appearance.Status.ParseFailed", custom.LoadError);
                 return;
             }
 
@@ -438,11 +457,11 @@ public sealed class AppearanceViewModel : ViewModelBase
             custom.Set("style/layout/type", LayoutTypeToConfig(LayoutType));
 
             custom.Save();
-            StatusText = "已写入 " + path + "（需执行部署后生效）";
+            StatusText = StatusFromKey("Appearance.Status.Written", path);
         }
         catch (Exception ex)
         {
-            StatusText = "写入失败：" + ex.Message;
+            StatusText = StatusFromKey("Appearance.Status.WriteFailed", ex.Message);
         }
         finally
         {
@@ -453,17 +472,17 @@ public sealed class AppearanceViewModel : ViewModelBase
     private async Task DeployAsync()
     {
         IsBusy = true;
-        StatusText = "正在部署……";
+        StatusText = StatusFromKey("Appearance.Status.Deploying");
         try
         {
             var result = await Task.Run(() => ProbeService.ProbeDeployer(Environment.DeployerPath));
             StatusText = result.Status == ProbeStatus.Ok
-                ? "部署完成，切换输入法即可看到新外观"
-                : "部署返回：" + result.Summary;
+                ? StatusFromKey("Appearance.Status.DeployOk")
+                : StatusFromKey("Appearance.Status.DeployResult", result.Summary);
         }
         catch (Exception ex)
         {
-            StatusText = "部署异常：" + ex.Message;
+            StatusText = StatusFromKey("Appearance.Status.DeployException", ex.Message);
         }
         finally
         {

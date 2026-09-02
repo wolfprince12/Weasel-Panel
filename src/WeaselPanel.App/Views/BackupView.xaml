@@ -1,6 +1,7 @@
 <UserControl x:Class="WeaselPanel.App.Views.BackupView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
     <Border Style="{StaticResource Card}">
         <Grid>
             <Grid.RowDefinitions>
@@ -12,8 +13,8 @@
 
             <!-- ── 标题 ── -->
             <StackPanel Grid.Row="0">
-                <TextBlock Text="备份与恢复" Style="{StaticResource SectionTitle}"/>
-                <TextBlock Text="改配置前先建一次备份，改坏了随时能退回来。「恢复」会先自动给当前状态留一份快照，所以恢复本身也是可撤销的。"
+                <TextBlock Text="{l10n:L Backup.Title}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Backup.Intro}"
                            FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
                            TextWrapping="Wrap" Margin="0,0,0,12"/>
             </StackPanel>
@@ -28,14 +29,14 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="标签" Style="{StaticResource FieldLabel}"
+                <TextBlock Grid.Column="0" Text="{l10n:L Backup.Label}" Style="{StaticResource FieldLabel}"
                            VerticalAlignment="Center" Margin="0,0,8,0"/>
                 <TextBox Grid.Column="1" Text="{Binding NewLabel, UpdateSourceTrigger=PropertyChanged}"
                          Height="32" VerticalContentAlignment="Center" Padding="8,0"
-                         ToolTip="可留空，留空记为「自动备份」"/>
-                <Button Grid.Column="2" Content="创建备份" Command="{Binding CreateCommand}"
+                         ToolTip="{l10n:L Backup.LabelTip}"/>
+                <Button Grid.Column="2" Content="{l10n:L Backup.Create}" Command="{Binding CreateCommand}"
                         Style="{StaticResource PrimaryButton}" Height="32" Padding="16,0" Margin="8,0,0,0"/>
-                <Button Grid.Column="4" Content="刷新" Command="{Binding RefreshCommand}"
+                <Button Grid.Column="4" Content="{l10n:L Common.Refresh}" Command="{Binding RefreshCommand}"
                         Height="32" Padding="14,0"/>
             </Grid>
 
@@ -49,7 +50,7 @@
 
                 <!-- 左：备份列表 -->
                 <DockPanel Grid.Column="0">
-                    <TextBlock DockPanel.Dock="Top" Text="备份记录" FontSize="13"
+                    <TextBlock DockPanel.Dock="Top" Text="{l10n:L Backup.Records}" FontSize="13"
                                Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
                     <Border BorderBrush="{StaticResource BorderBrushKey}" BorderThickness="1">
                         <ListBox ItemsSource="{Binding Backups}"
@@ -64,7 +65,7 @@
                                         <TextBlock FontSize="11"
                                                    Foreground="{StaticResource TextSecondaryBrush}">
                                             <Run Text="{Binding FileCount, Mode=OneWay}"/>
-                                            <Run Text=" 个文件　"/>
+                                            <Run Text=" "/><Run Text="{l10n:L Common.Files}"/><Run Text="　"/>
                                             <Run Text="{Binding SizeText, Mode=OneWay}"/>
                                         </TextBlock>
                                     </StackPanel>
@@ -84,7 +85,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="备份内的配置文件（选中可查看与当前版本的差异）"
+                    <TextBlock Grid.Row="0" Text="{l10n:L Backup.FilesInBackup}"
                                FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"
                                Margin="0,0,0,6"/>
 
@@ -100,11 +101,11 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="差异对比（左＝备份版，右＝当前版）"
+                        <TextBlock Grid.Column="0" Text="{l10n:L Backup.DiffTitle}"
                                    FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"
                                    VerticalAlignment="Center"/>
                         <!-- 由 ViewModel 的 ShowNoDiffNotice 控制：已选中文件且对比无差异时才显示 -->
-                        <TextBlock Grid.Column="1" Text="两版完全一致"
+                        <TextBlock Grid.Column="1" Text="{l10n:L Backup.DiffIdentical}"
                                    FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
                                    VerticalAlignment="Center"
                                    Visibility="{Binding ShowNoDiffNotice, Converter={StaticResource BoolToVisibility}}"/>
@@ -153,11 +154,11 @@
 
                     <!-- 恢复 / 删除 -->
                     <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,10,0,0">
-                        <Button Content="恢复整个备份" Command="{Binding RestoreAllCommand}"
+                        <Button Content="{l10n:L Backup.RestoreAll}" Command="{Binding RestoreAllCommand}"
                                 Height="32" Padding="14,0" Margin="0,0,8,0"/>
-                        <Button Content="只恢复选中文件" Command="{Binding RestoreFileCommand}"
+                        <Button Content="{l10n:L Backup.RestoreFile}" Command="{Binding RestoreFileCommand}"
                                 Height="32" Padding="14,0" Margin="0,0,8,0"/>
-                        <Button Content="删除此备份" Command="{Binding DeleteCommand}"
+                        <Button Content="{l10n:L Backup.DeleteBackup}" Command="{Binding DeleteCommand}"
                                 Height="32" Padding="14,0"/>
                     </StackPanel>
                 </Grid>

@@ -1,6 +1,7 @@
 <UserControl x:Class="WeaselPanel.App.Views.AboutView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
     <StackPanel>
         <Border Style="{StaticResource Card}" Margin="0,0,0,14">
             <StackPanel>
@@ -18,16 +19,16 @@
                         <Image x:Name="LogoImage" Stretch="Uniform"
                                RenderOptions.BitmapScalingMode="HighQuality"
                                SnapsToDevicePixels="True"/>
-                        <TextBlock x:Name="FallbackText" Text="小狼毫"
+                        <TextBlock x:Name="FallbackText" Text="{l10n:L App.NameShort}"
                                    FontSize="28" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"
                                    Foreground="{StaticResource AccentBrush}"
                                    Visibility="Collapsed"/>
                     </Grid>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="小狼毫控制面板" FontSize="20" FontWeight="SemiBold"
+                        <TextBlock Text="{l10n:L App.Name}" FontSize="20" FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimaryBrush}"/>
-                        <TextBlock Text="Weasel Panel — macOS「鼠须管控制面板」的 Windows 姊妹项目"
+                        <TextBlock Text="{l10n:L About.Tagline}"
                                    FontSize="12.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"
                                    TextWrapping="Wrap"/>
                     </StackPanel>
@@ -45,44 +46,63 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="版本" Style="{StaticResource FieldLabel}" Margin="0,3"/>
-                    <TextBlock Grid.Row="0" Grid.Column="1" Text="0.1.0 preview" FontSize="12.5" Margin="0,3"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{l10n:L About.Version}"
+                               Style="{StaticResource FieldLabel}" Margin="0,3"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding VersionText}"
+                               FontSize="12.5" Margin="0,3"/>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="技术栈" Style="{StaticResource FieldLabel}" Margin="0,3"/>
-                    <TextBlock Grid.Row="1" Grid.Column="1" Text="C# / WPF / .NET 8" FontSize="12.5" Margin="0,3"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{l10n:L About.Tech}"
+                               Style="{StaticResource FieldLabel}" Margin="0,3"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TechValue}"
+                               FontSize="12.5" Margin="0,3"/>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="开源许可" Style="{StaticResource FieldLabel}" Margin="0,3"/>
-                    <TextBlock Grid.Row="2" Grid.Column="1" Text="GPL-3.0" FontSize="12.5" Margin="0,3"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{l10n:L About.License}"
+                               Style="{StaticResource FieldLabel}" Margin="0,3"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LicenseValue}"
+                               FontSize="12.5" Margin="0,3"/>
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="仓库" Style="{StaticResource FieldLabel}" Margin="0,3"/>
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{l10n:L About.Repo}"
+                               Style="{StaticResource FieldLabel}" Margin="0,3"/>
                     <TextBlock Grid.Row="3" Grid.Column="1" FontSize="12.5" Margin="0,3">
-                        <Hyperlink NavigateUri="https://github.com/wolfprince12/Weasel-Panel"
+                        <Hyperlink NavigateUri="{Binding RepoUrl}"
                                    RequestNavigate="Hyperlink_RequestNavigate">
-                            github.com/wolfprince12/Weasel-Panel
+                            <TextBlock Text="{Binding RepoDisplay}"/>
                         </Hyperlink>
                     </TextBlock>
                 </Grid>
             </StackPanel>
         </Border>
 
+        <!-- 语言选择。存 %APPDATA%\WeaselPanel\settings.json，不碰 Rime 用户目录。 -->
         <Border Style="{StaticResource Card}" Margin="0,0,0,14">
             <StackPanel>
-                <TextBlock Text="工作方式" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L About.Language}" Style="{StaticResource SectionTitle}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <ComboBox ItemsSource="{Binding LanguageOptions}"
+                              SelectedValue="{Binding SelectedLanguage}"
+                              SelectedValuePath="Code"
+                              DisplayMemberPath="DisplayName"
+                              Width="180" Height="32"
+                              VerticalContentAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Text="{Binding LanguageNote}" FontSize="12"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+            <StackPanel>
+                <TextBlock Text="{l10n:L About.HowItWorks}" Style="{StaticResource SectionTitle}"/>
                 <TextBlock FontSize="12.5" TextWrapping="Wrap" LineHeight="20"
-                           Foreground="{StaticResource TextPrimaryBrush}">
-                    本面板不链接 librime，而是走与 macOS 版相同的路线：
-                    写入 <Run FontWeight="SemiBold">*.custom.yaml</Run> 补丁 →
-                    调用 <Run FontWeight="SemiBold">WeaselDeployer.exe</Run> 部署 →
-                    读取部署产物。
-                    所有外观数值均按上游 RimeWithWeasel.cpp 的派生规则计算，
-                    保证「面板所见」与「候选窗所得」一致。
-                </TextBlock>
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           Text="{l10n:L About.HowItWorksBody}"/>
             </StackPanel>
         </Border>
 
         <Border Style="{StaticResource Card}">
             <StackPanel>
-                <TextBlock Text="当前环境" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L About.Env}" Style="{StaticResource SectionTitle}"/>
                 <TextBlock Text="{Binding EnvironmentSummary}" FontSize="12"
                            FontFamily="Consolas" TextWrapping="Wrap"
                            Foreground="{StaticResource TextSecondaryBrush}"/>

@@ -15,15 +15,17 @@
 //
 
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using WeaselPanel.App.Infrastructure;
+using WeaselPanel.App.Localization;
 using WeaselPanel.Core.Backup;
 using WeaselPanel.Core.Platform;
 
 namespace WeaselPanel.App.ViewModels;
 
-public sealed class BackupViewModel : ViewModelBase
+public sealed class BackupViewModel : ViewModelBase, ILanguageAware
 {
     private readonly WeaselEnvironment _environment;
     private readonly BackupManager _manager;
@@ -107,7 +109,8 @@ public sealed class BackupViewModel : ViewModelBase
     /// <summary>是否显示「两版完全一致」提示：已选中文件，且对比结果为无差异。</summary>
     public bool ShowNoDiffNotice => _diffIdentical && _selectedFile is not null;
 
-    private string _status = "就绪";
+    // 初值留空：真正的「就绪」由 Load() 走 StatusFromKey 取，这样切语言时能重建。
+    private string _status = "";
     public string Status
     {
         get => _status;
@@ -127,12 +130,12 @@ public sealed class BackupViewModel : ViewModelBase
             foreach (var b in list) Backups.Add(b);
 
             Status = list.Count == 0
-                ? "暂无备份。建议先创建一次，之后改配置就有退路了。"
-                : $"共 {list.Count} 个备份　·　存放于 {BackupsDirectory}";
+                ? StatusFromKey("Backup.Status.None")
+                : StatusFromKey("Backup.Status.Count", list.Count, BackupsDirectory);
         }
         catch (Exception ex)
         {
-            Status = "读取备份失败：" + ex.Message;
+            Status = StatusFromKey("Backup.Status.LoadFailed", ex.Message);
         }
     }
 
@@ -152,7 +155,7 @@ public sealed class BackupViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Status = "读取备份内容失败：" + ex.Message;
+            Status = StatusFromKey("Backup.Status.FilesFailed", ex.Message);
         }
     }
 
@@ -172,13 +175,13 @@ public sealed class BackupViewModel : ViewModelBase
             foreach (var l in lines) DiffLines.Add(l);
 
             Status = identical
-                ? $"「{_selectedFile}」与该备份完全一致"
-                : $"「{_selectedFile}」与备份存在差异（左＝备份版，右＝当前版）";
+                ? StatusFromKey("Backup.Status.DiffSame", _selectedFile)
+                : StatusFromKey("Backup.Status.DiffDiffers", _selectedFile);
         }
         catch (Exception ex)
         {
             DiffIdentical = true;
-            Status = "对比失败：" + ex.Message;
+            Status = StatusFromKey("Backup.Status.DiffFailed", ex.Message);
         }
     }
 
@@ -197,13 +200,14 @@ public sealed class BackupViewModel : ViewModelBase
             // 新建的备份排在最前（时间倒序），直接选中它，省得用户再点一次
             SelectedBackup = Backups.FirstOrDefault(b => b.DirName == info.DirName);
 
-            Status = $"已创建备份：{info.LabelText}　{info.CreatedText}　{info.FileCount} 个文件 / {info.SizeText}";
+            Status = StatusFromKey("Backup.Status.Created",
+                info.LabelText, info.CreatedText, info.FileCount, info.SizeText);
         }
         catch (Exception ex)
         {
-            MessageBox.Show("创建备份失败：\n" + ex.Message, "小狼毫控制面板",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-            Status = "创建备份失败：" + ex.Message;
+            MessageBox.Show(L10n.Instance.T("Backup.Status.CreateFailed", ex.Message),
+                L10n.Instance.T("Common.Error"), MessageBoxButton.OK, MessageBoxImage.Error);
+            Status = StatusFromKey("Backup.Status.CreateFailed", ex.Message);
         }
         return Task.CompletedTask;
     }
@@ -221,13 +225,9 @@ public sealed class BackupViewModel : ViewModelBase
 
         var target = _selectedBackup;
         var answer = MessageBox.Show(
-            $"即将把用户目录下的配置**全部**恢复到：\n\n" +
-            $"　{target.LabelText}　{target.CreatedText}\n" +
-            $"　{target.FileCount} 个文件 / {target.SizeText}\n\n" +
-            $"当前的配置将被覆盖。\n" +
-            $"恢复前会自动为当前状态创建一个备份（标签「恢复前自动备份」），可以随时撤销本次操作。\n\n" +
-            $"确定要恢复吗？",
-            "恢复备份",
+            L10n.Instance.T("Backup.Confirm.RestoreAll.Body",
+                target.LabelText, target.CreatedText, target.FileCount, target.SizeText),
+            L10n.Instance.T("Backup.Confirm.RestoreAll.Title"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
@@ -235,20 +235,21 @@ public sealed class BackupViewModel : ViewModelBase
 
         try
         {
-            _manager.CreateBackup("恢复前自动备份");
+            _manager.CreateBackup(L10n.Instance.T("Backup.AutoLabel"));
             _manager.RestoreBackup(target.DirName);
 
             Load();
-            Status = "已恢复。请到「外观」页点「部署」，改动才会在输入法中生效。";
+            Status = StatusFromKey("Backup.Status.Restored");
             MessageBox.Show(
-                "恢复完成。\n\n请到「外观」页点「部署」，改动才会在输入法中生效。",
-                "恢复备份", MessageBoxButton.OK, MessageBoxImage.Information);
+                L10n.Instance.T("Backup.Msg.Restored.Body"),
+                L10n.Instance.T("Backup.Confirm.RestoreAll.Title"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show("恢复失败：\n" + ex.Message, "小狼毫控制面板",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-            Status = "恢复失败：" + ex.Message;
+            MessageBox.Show(L10n.Instance.T("Backup.Status.RestoreFailed", ex.Message),
+                L10n.Instance.T("Common.Error"), MessageBoxButton.OK, MessageBoxImage.Error);
+            Status = StatusFromKey("Backup.Status.RestoreFailed", ex.Message);
         }
         return Task.CompletedTask;
     }
@@ -262,11 +263,9 @@ public sealed class BackupViewModel : ViewModelBase
         var file = _selectedFile;
 
         var answer = MessageBox.Show(
-            $"即将把文件「{file}」恢复到备份版本：\n\n" +
-            $"　{target.LabelText}　{target.CreatedText}\n\n" +
-            $"恢复前会自动为当前状态创建一个备份，可以随时撤销。\n\n" +
-            $"确定吗？",
-            "恢复单个文件",
+            L10n.Instance.T("Backup.Confirm.RestoreFile.Body",
+                file, target.LabelText, target.CreatedText),
+            L10n.Instance.T("Backup.Confirm.RestoreFile.Title"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
@@ -274,17 +273,17 @@ public sealed class BackupViewModel : ViewModelBase
 
         try
         {
-            _manager.CreateBackup("恢复前自动备份");
+            _manager.CreateBackup(L10n.Instance.T("Backup.AutoLabel"));
             _manager.RestoreBackup(target.DirName, new[] { file });
 
             LoadDiffForSelection();
-            Status = $"已恢复「{file}」。请点「部署」使改动生效。";
+            Status = StatusFromKey("Backup.Status.FileRestored", file);
         }
         catch (Exception ex)
         {
-            MessageBox.Show("恢复失败：\n" + ex.Message, "小狼毫控制面板",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-            Status = "恢复失败：" + ex.Message;
+            MessageBox.Show(L10n.Instance.T("Backup.Status.RestoreFailed", ex.Message),
+                L10n.Instance.T("Common.Error"), MessageBoxButton.OK, MessageBoxImage.Error);
+            Status = StatusFromKey("Backup.Status.RestoreFailed", ex.Message);
         }
         return Task.CompletedTask;
     }
@@ -295,9 +294,9 @@ public sealed class BackupViewModel : ViewModelBase
 
         var target = _selectedBackup;
         var answer = MessageBox.Show(
-            $"确定删除这个备份吗？\n\n　{target.LabelText}　{target.CreatedText}\n" +
-            $"　{target.FileCount} 个文件\n\n删除后无法找回。",
-            "删除备份",
+            L10n.Instance.T("Backup.Confirm.Delete.Body",
+                target.LabelText, target.CreatedText, target.FileCount),
+            L10n.Instance.T("Backup.Confirm.Delete.Title"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
@@ -309,15 +308,18 @@ public sealed class BackupViewModel : ViewModelBase
             _selectedBackup = null;
             OnPropertyChanged(nameof(SelectedBackup));
             Load();
-            Status = "已删除备份";
+            Status = StatusFromKey("Backup.Status.Deleted");
         }
         catch (Exception ex)
         {
-            MessageBox.Show("删除失败：\n" + ex.Message, "小狼毫控制面板",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-            Status = "删除失败：" + ex.Message;
+            MessageBox.Show(L10n.Instance.T("Backup.Status.DeleteFailed", ex.Message),
+                L10n.Instance.T("Common.Error"), MessageBoxButton.OK, MessageBoxImage.Error);
+            Status = StatusFromKey("Backup.Status.DeleteFailed", ex.Message);
         }
     }
+
+    /// <summary>语言切换后重建状态栏那句话（其余文案都在 XAML 里走 {l10n:L}，会自动刷新）。</summary>
+    public void RefreshTexts() => Status = Restatus();
 
     private void RaiseCanExecuteChanged()
     {

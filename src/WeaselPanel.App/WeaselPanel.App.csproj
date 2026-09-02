@@ -14,8 +14,8 @@
     <RootNamespace>WeaselPanel.App</RootNamespace>
     <!-- ⚠️ 每次重新发 exe 都 +1。标题栏显示这个版本号，是判断「VM 上跑的是哪一版」
          的最快凭据 —— 之前连续两轮修复都栽在「以为测的是新版、其实是旧 exe」。 -->
-    <Version>0.1.5</Version>
-    <InformationalVersion>0.1.5-preview</InformationalVersion>
+    <Version>0.1.6</Version>
+    <InformationalVersion>0.1.6-preview</InformationalVersion>
     <Company>大狼导演工作室</Company>
     <Product>小狼毫控制面板</Product>
     <Copyright>GPL-3.0</Copyright>
@@ -51,6 +51,15 @@
          APP 图标 Resources/app.ico 仍用 ApplicationIcon + 它自己的 Resource 项，
          二者各管一摊：app.ico → 任务栏 / 资源管理器；logo.png → 关于页内显示。 -->
     <EmbeddedResource Include="Resources\logo.png" />
+
+    <!-- ⚠️ 语言包必须显式声明。.NET SDK 的默认 EmbeddedResource glob 只收 **/*.resx，
+         .txt 一律归到 None —— 不写这一行，三个 lang.*.txt 根本不会进程序集，
+         L10n.LoadAllPacks() 的 GetManifestResourceNames() 只会看到 logo.png，
+         于是 _packs 为空、T(key) 原样返回键名，整个界面变成 "App.Name" "Nav.Diagnostics"。
+         这个坑 2026-09-02 踩过一次：exe 里能搜到「小狼毫控制面板」，但那是 csproj
+         <Product> 写进 PE 版本信息的假阳性，语言包其实一个字节都没进去。
+         防复发靠 build.sh 的 verify_language_packs()，出包时会拿每包的哨兵串真搜 exe。 -->
+    <EmbeddedResource Include="Localization\lang.*.txt" />
     <!-- app.ico 不再声明为 <Resource>：<ApplicationIcon> 已经足够让图标进 PE 资源
          （任务栏 / 资源管理器读的就是它）。多声明一个 WPF Resource 反而会在
          single-file 下多出一条 pack 解析路径，是已知的 NRE 风险源。 -->

@@ -1,0 +1,330 @@
+# Weasel Panel — UI language pack (Traditional Chinese)
+#
+# 由 lang.zh-Hans.txt 简繁转换而来（tools/make_zh_hant.py）：
+#   术语表（界面惯例）→ OpenCC s2t（字符级）→ 个别词覆写。
+# 键与简体包一一对应。之后两边各自手工维护：新增键时先改
+# lang.en.txt 与 lang.zh-Hans.txt，再同步到这里。
+#
+# 格式见 lang.en.txt 顶部注释。
+# ── 程序名 ──────────────────────────────────────────────────────────────
+App.Name = 小狼毫控制面板
+App.NameShort = 小狼毫
+App.Subtitle = 控制面板
+App.Preview = 預覽版
+App.VersionPrefix = v
+App.BuildPrefix = 建置
+App.CrashBody = 發生未處理的異常：\n\n{0}\n\n記錄檔已寫入：\n{1}
+App.DetectFailed = 環境探測失敗：\n{0}
+
+# ── 側邊導航 ────────────────────────────────────────────────────────────
+Nav.Diagnostics = 環境診斷
+Nav.Appearance = 外觀
+Nav.Schema = 輸入方案
+Nav.Input = 按鍵與輸入
+Nav.Backup = 備份
+Nav.About = 關於
+
+# ── 通用按鈕 / 標籤 ─────────────────────────────────────────────────────
+Common.Ready = 就緒
+Common.Apply = 應用
+Common.Reload = 重新載入
+Common.Refresh = 重新整理
+Common.Deploy = 部署
+Common.Delete = 刪除
+Common.Create = 建立
+Common.Restore = 還原
+Common.Save = 儲存
+Common.Cancel = 取消
+Common.Copy = 複製
+Common.Files = 個檔案
+Common.NotFound = （未找到）
+Common.Yes = 是
+Common.No = 否
+Common.Language = 語言
+Common.Error = 錯誤
+
+# ── 語言選擇 ────────────────────────────────────────────────────────────
+Lang.Auto = 跟隨系統
+Lang.zh-Hans = 簡體中文
+Lang.zh-Hant = 繁體中文
+Lang.en = English
+Lang.Note = 切換後立即生效。選擇儲存在 %APPDATA%\WeaselPanel\settings.json，不寫入 Rime 使用者目錄（避免汙染同步與備份）。
+
+# ── 診斷頁 ──────────────────────────────────────────────────────────────
+Diag.EnvTitle = 環境
+Diag.ProbeTitle = 環境探測
+Diag.ProbeIntro = 驗證那些無法靠讀原始碼確定的行為：命名管道連通性、部署程式結束碼、記錄檔檔名格式、librime-lua 可用性。
+Diag.RunProbe = 開始探測
+Diag.RunDeploy = 執行部署 /deploy
+Diag.CopyReport = 複製報告
+Diag.HintClick = 點選「開始探測」以驗證本機小狼毫環境
+Diag.Probing = 探測中……
+Diag.Deploying = 正在執行部署（可能耗時數十秒）……
+Diag.ProbeDone = 探測完成，共 {0} 項（部署項需手動執行）
+Diag.ProbeFailed = 探測完成，{0} 項失敗 —— 請把報告發給我
+Diag.ProbeException = 探測異常：{0}
+Diag.DeployDone = 部署完成
+Diag.DeployResult = 部署程式返回：{0}
+Diag.DeployException = 部署異常：{0}
+Diag.Copied = 報告已複製到剪貼簿
+Diag.CopyFailed = 複製失敗：{0}
+Diag.DetectFailed = 探測失敗
+Diag.ReportTitle = 小狼毫控制面板 — 環境診斷報告
+Diag.ReportTime = 產生時間
+Diag.ReportEnv = ── 環境 ──
+Diag.ReportProbe = ── 探測結果 ──
+
+Diag.RowFormat = {0}：{1}
+Diag.ProbeFormat = [{0}] {1}：{2}
+
+Diag.Row.Installed = 已安裝小狼毫
+Diag.Row.ProgramDir = 程式目錄
+Diag.Row.SharedDir = 共用資料目錄
+Diag.Row.UserDir = 使用者目錄
+Diag.Row.UserDirState = 使用者目錄狀態
+Diag.Row.SyncDir = 同步目錄
+Diag.Row.BackupDir = 備份目錄
+Diag.Row.LogDir = 記錄檔目錄
+Diag.Row.Deployer = 部署程式
+Diag.Row.UserName = 目前使用者名稱
+Diag.Row.PipeName = 預期管道名稱
+Diag.Value.Yes = 是
+Diag.Value.No = 否
+Diag.Value.Ready = 已就緒
+Diag.Value.NotExist = 尚不存在（需先部署一次）
+
+# ── 探測狀態徽標 ────────────────────────────────────────────────────────
+Probe.Status.Ok = 正常
+Probe.Status.Warn = 警告
+Probe.Status.Fail = 失敗
+Probe.Status.Skip = 跳過
+
+# ── 探針：命名管道 ──────────────────────────────────────────────────────
+Probe.Name.Pipe = 命名管道
+Probe.Pipe.Ok = 連通：{0}
+Probe.Pipe.Fail = 無法連通：{0}
+Probe.Pipe.HintNotRunning = 多半是小狼毫服務沒在跑。先啟動小狼毫（或在任意輸入框裡切到中文狀態），再點一次探測。
+Probe.Pipe.Candidate = 候選
+Probe.Pipe.ReasonUpstream = 上游規則（含使用者名前綴）
+Probe.Pipe.ReasonNoPrefix = 無使用者名前綴（早期版本格式）
+
+# ── 探針：部署程式 ────────────────────────────────────────────────────────
+Probe.Name.Deployer = 部署程式 /deploy
+Probe.Deployer.Skipped = 已跳過（部署會修改使用者資料，請手動點選）
+
+# ── 探針：記錄檔檔案 ──────────────────────────────────────────────────────
+Probe.Name.Logs = 記錄檔檔案
+Probe.Logs.Found = 找到 {0} 個 rime 記錄檔
+Probe.Logs.DirMissing = 記錄檔目錄不存在：{0}
+
+# ── 探針：librime-lua ───────────────────────────────────────────────────
+Probe.Name.Lua = librime-lua 外掛
+Probe.Lua.Missing = 未安裝 lua 外掛（選用，不影響本體與面板使用）
+Probe.Lua.Found = 已找到 lua 外掛
+Probe.Lua.NoneFound = 在候選目錄中找不到 lua 外掛檔案。
+Probe.Lua.Explain = librime-lua 是選用外掛，未安裝不影響小狼毫本體與面板的正常使用。\n只有需要「紫毫糾錯」等 lua 功能時才需要它；屆時應安裝含 lua 的 librime 建置。
+Probe.Pipe.Connected = 已連接
+Probe.Pipe.NotConnected = 未連接
+Probe.Pipe.Timeout = 超時（管道不存在或服務端未監聽）
+Probe.Pipe.Denied = 拒絕訪問
+Probe.Pipe.HintRunning = WeaselServer 進程在運行但管道連不上 —— 請檢查是否以不同使用者身份運行，或重啟小狼毫後再測。
+Probe.Pipe.FailRunning = 管道無法連通（WeaselServer 在運行，屬管道/權限問題）
+Probe.Pipe.FailNotRunning = 管道無法連通 —— 小狼毫未運行
+Probe.Pipe.FailNonAscii = 全部候選均無法連通 —— 目前使用者名稱「{0}」含非 ASCII 字符，重點懷疑編碼問題
+Probe.Deployer.PathMissing = 路徑存在但檔案不存在：{0}
+Probe.Deployer.StartFailed = 進程啟動失敗
+Probe.Deployer.Timeout = 超時（{0} 秒未完成）—— 可能卡在互斥體等待或彈出對話框
+Probe.Deployer.Elapsed = 已運行：{0} 秒
+Probe.Deployer.CommandLine = 命令行："{0}" /deploy
+Probe.Deployer.ExitCodeLine = 結束碼：{0}
+Probe.Deployer.ElapsedSec = 耗時：{0} 秒
+Probe.Deployer.StdOut = 標準輸出：{0}
+Probe.Deployer.StdErr = 標準錯誤：{0}
+Probe.Exception = {0}：{1}
+Probe.Deployer.Ok = 成功（結束碼 {0}，耗時 {1} 秒）
+Probe.Deployer.Fail = 結束碼 {0} —— 按上游語義為「已有部署程式實例在運行」或互斥體建立失敗
+Probe.Deployer.Exception = 呼叫異常：{0}
+Probe.Deployer.NotFound = 未找到 WeaselDeployer.exe
+Probe.Logs.None = 未找到 rime.weasel 記錄檔（無錯誤時屬正常，不代表異常）
+Probe.Logs.ReadFailed = [{0}] 讀取失敗：{1}
+Probe.Logs.Scanned = 已掃描：{0}
+Probe.Lua.Scanned = 已掃描目錄：
+Probe.Lua.NoDir = （無有效目錄）
+Probe.Lua.FoundFiles = 發現的 lua 相關檔案：
+Probe.Lua.FileAt = {0}    ← {1}
+Probe.Lua.Refs = 設定中的 lua 引用（{0} 處，前 8 條）：
+Probe.Lua.Ready = 紫毫糾錯等 lua 功能具備啟用條件。
+Probe.Lua.ConfiguredButMissing = ⚠️ 設定引用了 lua 但外掛不在：部署會失敗，需安裝 librime-lua 或移除 lua 引用。
+Probe.Lua.SummaryOk = 發現 lua 外掛檔案，紫毫糾錯具備啟用條件
+Probe.Lua.SummaryMissing = 未發現外掛檔案，但設定中已有 lua 引用 —— 部署會失敗
+
+# ── 外觀頁 ──────────────────────────────────────────────────────────────
+Appearance.PreviewTitle = 候選窗預覽
+Appearance.PreviewNote1 = 顯示的是衍生後的生效值（而非設定原值）：顏色走完整回退鏈與 alpha 混合，
+Appearance.PreviewNote2 = 字號未設定時按上游規則兜底為 12，序號按 label_format 渲染。
+Appearance.ColorFont = 配色與字體
+Appearance.Scheme = 配色方案
+Appearance.FontFace = 字體
+Appearance.FontSize = 字號
+Appearance.CommentSize = 註解字號
+Appearance.CommentSizeNote = 註解字號為 0 表示未單獨設定。序號與註解字號未設定時會跟隨主字號 —— 這是上游的別鍵回退行為。
+Appearance.CandidateLayout = 候選與版面
+Appearance.Layout = 佈局
+Appearance.Layout.Vertical = 豎排
+Appearance.Layout.Horizontal = 橫排
+Appearance.Layout.VerticalText = 豎排文字
+Appearance.Layout.VerticalFullscreen = 豎排全屏
+Appearance.Layout.HorizontalFullscreen = 橫排全屏
+Appearance.LabelFormat = 序號格式
+Appearance.LabelFormatTip = printf 風格，%s 為序號佔位符。例如 %s. 顯示為 1.
+Appearance.MarkText = 反白標記
+Appearance.MarkTextTip = 高亮候選詞前的標記符。留空時小狼毫按 * 處理。
+Appearance.Preedit = 編碼顯示
+Appearance.Preedit.Composition = composition（編碼）
+Appearance.Preedit.Preview = preview（預覽）
+Appearance.Preedit.PreviewAll = preview_all（全部預覽）
+Appearance.Antialias = 反鋸齒
+Appearance.Hover = 懸停高亮
+Appearance.Hover.None = none（不響應）
+Appearance.Hover.SemiHilite = semi_hilite（半高亮）
+Appearance.Hover.Hilite = hilite（全高亮）
+Appearance.InlinePreedit = 編碼行內顯示（inline_preedit）
+Appearance.ApplyTitle = 應用
+Appearance.ApplyNote = 寫入 weasel.custom.yaml 後需執行部署才會生效。版面類型統一寫入 style/layout/type（覆蓋鏈中優先順序最高）。
+Appearance.ApplyBtn = 套用設定
+Appearance.Redeploy = 重新部署
+Appearance.ReloadBtn = 重新載入
+Appearance.Status.Writing = 正在寫入設定……
+Appearance.Status.Written = 已寫入 {0}（需執行部署後才會生效）
+Appearance.Status.ParseFailed = 設定解析失敗，已拒絕寫入（避免損毀使用者檔案）：{0}
+Appearance.Status.WriteFailed = 寫入失敗：{0}
+Appearance.Status.Deploying = 正在部署……
+Appearance.Status.DeployOk = 部署完成，切換輸入法即可看到新外觀
+Appearance.Status.DeployResult = 部署回傳：{0}
+Appearance.Status.DeployException = 部署異常：{0}
+Appearance.Status.LoadedSchemes = 已載入 {0} 套內建配色
+Appearance.Status.NoCatalog = 無法載入內建配色目錄 —— 請到「診斷」頁檢查共用資料目錄
+Appearance.Status.Ready = 就緒
+Appearance.CatalogMissing = （未找到 weasel.yaml，配色目錄為空）
+
+# ── 方案頁 ──────────────────────────────────────────────────────────────
+Schema.Title = 輸入方案
+Schema.Intro = 列表順序即為切換順序 —— 第一個是預設方案。修改後點「應用」寫入 default.custom.yaml 的 patch/schema_list，點「部署」即可在輸入法中看到變化。
+Schema.Rescan = 重新掃描
+Schema.MoveUp = ↑ 上移
+Schema.MoveDown = ↓ 下移
+Schema.Active = 已啟用
+Schema.Available = 可啟用
+Schema.Enable = 啟用 ←
+Schema.Remove = → 移除
+Schema.ApplyBtn = 應用（寫入 default.custom.yaml）
+Schema.SetDefault = 設為預設
+Schema.DefaultLabel = 預設方案
+Schema.DefaultNone = （未啟用任何方案）
+Schema.DefaultSummary = {0}：{1}
+Schema.OriginBuiltIn = 內建
+Schema.OriginUser = 使用者
+Schema.NotInstalled = （未安裝）
+Schema.OrphanDesc = （在磁碟上找不到對應的方案檔）
+Schema.Status.Ready = 就緒
+Schema.Status.Scanning = 正在掃描方案……
+Schema.Status.None = 找不到任何方案（請確認小狼毫已安裝，且共用資料目錄存在 *.schema.yaml）
+Schema.Status.Scanned = 已掃描 {0} 個方案，{1} 個已啟用
+Schema.Status.ScanFailed = 掃描失敗：{0}
+Schema.Status.Added = 已加入 {0}（尚未寫入磁碟，請點「應用」）
+Schema.Status.Removed = 已移除 {0}（尚未寫入磁碟，請點「應用」）
+Schema.Status.Writing = 正在寫入 default.custom.yaml……
+Schema.Status.DefaultSet = 已將「{0}」設為預設方案（尚未寫入磁碟，請點「應用」）
+Schema.Status.ParseFailed = 設定檔解析失敗，已拒絕寫入（避免損毀）：{0}
+Schema.Status.Written = 已寫入 {0}（{1} 個方案已寫入磁碟，需執行部署後才會生效）
+Schema.Status.WriteFailed = 寫入失敗：{0}
+
+# ── 按鍵與輸入頁 ────────────────────────────────────────────────────────
+Input.Title = 按鍵與輸入
+Input.Intro = 候選數、翻頁鍵、中英切換鍵。寫入 default.custom.yaml 後需執行部署。
+Input.PageSize = 每頁候選數
+Input.PageSizeNote = Rime 出廠預設為 5。
+Input.PagingKeys = 翻頁鍵
+Input.PagingKeys.Note = 勾選的按鍵對會寫入 key_binder/bindings（該列表為整體替換）。未點「應用」前一個位元組都不動。
+Input.PagingKeys.None = （未勾選翻頁鍵 —— 回退到方案自帶預設值）
+Input.Paging.MinusEqual = - 與 =（減號 / 等號）
+Input.Paging.CommaPeriod = , 與 .（逗號 / 句號）
+Input.Paging.Brackets = [ 與 ]（方括號）
+Input.Paging.UpDown = ↑ 與 ↓（方向鍵）
+Input.SwitchKey = 中英切換
+Input.Switch.None = 不變更（保持方案預設）
+Input.Switch.Shift = 左右 Shift
+Input.Switch.CapsLock = Caps Lock
+Input.Switch.Control = 左右 Control
+Input.Switch.Note = 寫入 ascii_composer/switch_key。「左右 Shift」是 Rime 默認（按住時上屏英文）。
+Input.Punct = 附加開關
+Input.Punct.FullShape = Shift+空白鍵 切換全形 / 半形
+Input.Punct.Punctuation = Ctrl+. 切換中 / 西文標點
+Input.ApplyBtn = 應用（寫入 default.custom.yaml）
+Input.ApplyTitle = 應用
+Input.ApplyNote = 寫入 default.custom.yaml 後請到「外觀」頁點「部署」。key_binder/bindings 是整體替換，且只有點「應用」時才會寫盤。
+Input.Status.Ready = 就緒
+Input.Status.Writing = 正在寫入 default.custom.yaml……
+Input.Status.Written = 已寫入 {0}（需執行部署後才會生效）
+Input.Status.ParseFailed = 設定檔解析失敗，已拒絕寫入（避免損毀）：{0}
+Input.Status.WriteFailed = 寫入失敗：{0}
+Input.Status.Loaded = 已從 {0} 載入當前設定
+Input.Status.NoConfig = 尚無 default.custom.yaml —— 顯示的是 Rime 預設值
+Input.Status.LoadFailed = 讀取 {0} 失敗：{1}
+
+# ── 備份頁 ──────────────────────────────────────────────────────────────
+Backup.Title = 備份與還原
+Backup.Intro = 改設定前先建一次備份，改壞了隨時能退回來。「還原」會先自動給當前狀態留一份快照，所以還原本身也是可復原的。
+Backup.Label = 標籤
+Backup.LabelTip = 可留空，留空記為「自動備份」
+Backup.Create = 建立備份
+Backup.Records = 備份記錄
+Backup.FilesInBackup = 備份內的設定檔（選取可檢視與目前版本的差異）
+Backup.DiffTitle = 差異對比（左＝備份版，右＝當前版）
+Backup.DiffIdentical = 兩版完全一致
+Backup.RestoreAll = 還原整個備份
+Backup.RestoreFile = 只還原選取的檔案
+Backup.DeleteBackup = 刪除此備份
+Backup.Status.Ready = 就緒
+Backup.Status.None = 尚無備份。建議先建立一次，之後改設定就有退路了。
+Backup.Status.Count = 共 {0} 個備份　·　存放於 {1}
+Backup.Status.LoadFailed = 讀取備份失敗：{0}
+Backup.Status.FilesFailed = 讀取備份內容失敗：{0}
+Backup.Status.DiffSame = 「{0}」與該備份完全一致
+Backup.Status.DiffDiffers = 「{0}」與備份存在差異（左＝備份版，右＝當前版）
+Backup.Status.DiffFailed = 比對失敗：{0}
+Backup.Status.Created = 已建立備份：{0}　{1}　{2} 個檔案 / {3}
+Backup.Status.CreateFailed = 建立備份失敗：{0}
+Backup.Status.Restored = 已還原。請到「外觀」頁點「部署」，改動才會在輸入法中生效。
+Backup.Status.RestoreFailed = 還原失敗：{0}
+Backup.Status.FileRestored = 已還原「{0}」。請點「部署」使改動生效。
+Backup.Status.Deleted = 已刪除備份
+Backup.Status.DeleteFailed = 刪除失敗：{0}
+Backup.Confirm.RestoreAll.Title = 還原備份
+Backup.Confirm.RestoreAll.Body = 即將把使用者目錄下的設定**全部**還原到：\n\n　{0}　{1}\n　{2} 個檔案 / {3}\n\n當前的設定將被覆蓋。\n還原前會自動為當前狀態建立一個備份（標籤「還原前自動備份」），可以隨時復原本次操作。\n\n確定要還原嗎？
+Backup.Confirm.RestoreFile.Title = 還原單個檔案
+Backup.Confirm.RestoreFile.Body = 即將把檔案「{0}」還原到備份版本：\n\n　{1}　{2}\n\n還原前會自動為當前狀態建立一個備份，可以隨時復原。\n\n確定嗎？
+Backup.Confirm.Delete.Title = 刪除備份
+Backup.Confirm.Delete.Body = 確定刪除這個備份嗎？\n\n　{0}　{1}\n　{2} 個檔案\n\n刪除後無法找回。
+Backup.AutoLabel = 還原前自動備份
+Backup.Msg.Restored.Body = 還原完成。\n\n請到「外觀」頁點「部署」，改動才會在輸入法中生效。
+
+# ── 關於頁 ──────────────────────────────────────────────────────────────
+About.Tagline = Weasel Panel — macOS「鼠鬚管控制面板」的 Windows 姊妹專案
+About.Version = 版本
+About.VersionPreview = {0}.{1}.{2} 預覽版
+About.Language = 介面語言
+About.Tech = 技術堆疊
+About.TechValue = C# / WPF / .NET 8
+About.License = 開源授權
+About.LicenseValue = GPL-3.0
+About.Repo = 儲存庫
+About.HowItWorks = 運作方式
+About.HowItWorksBody = 本面板不連結 librime，而是走與 macOS 版相同的路線：寫入 *.custom.yaml 修補檔 → 呼叫 WeaselDeployer.exe 部署 → 讀取部署產物。所有外觀數值均按上游 RimeWithWeasel.cpp 的衍生規則計算，保證「面板所見」與「候選窗所得」一致。
+About.Env = 目前環境
+About.ProgramDir = 程式目錄
+About.SharedDir = 共用資料
+About.UserDir = 使用者目錄
+About.RowFormat = {0}：{1}
+About.Deployer = 部署程式
+About.DeployHint = 改動需部署後生效 —— 改完請到「外觀」頁點「部署」。

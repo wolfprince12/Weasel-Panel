@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
 using WeaselPanel.App.Infrastructure;
+using WeaselPanel.App.Localization;
 using WeaselPanel.App.Services;
 using WeaselPanel.Core.Platform;
 
@@ -8,18 +10,21 @@ namespace WeaselPanel.App.ViewModels;
 
 public sealed class EnvironmentRow
 {
+    /// <summary>本地化后的标签。</summary>
     public required string Key { get; init; }
     public required string Value { get; init; }
     public bool IsWarning { get; init; }
 }
 
-public sealed class DiagnosticsViewModel : ViewModelBase
+public sealed class DiagnosticsViewModel : ViewModelBase, ILanguageAware
 {
     private bool _isBusy;
-    private string _statusText = "点击「开始探测」以验证本机小狼毫环境";
+    private string _statusText = "";
 
     public DiagnosticsViewModel()
     {
+        StatusText = StatusFromKey("Diag.HintClick");
+
         RefreshEnvironment();
         RunProbeCommand = new RelayCommand(RunProbeAsync, () => !IsBusy);
         RunDeployCommand = new RelayCommand(RunDeployAsync, () => !IsBusy && Environment?.DeployerPath is not null);
@@ -62,7 +67,12 @@ public sealed class DiagnosticsViewModel : ViewModelBase
         catch (Exception ex)
         {
             EnvironmentRows.Clear();
-            EnvironmentRows.Add(new EnvironmentRow { Key = "探测失败", Value = ex.Message, IsWarning = true });
+            EnvironmentRows.Add(new EnvironmentRow
+            {
+                Key = L10n.Instance.T("Diag.DetectFailed"),
+                Value = ex.Message,
+                IsWarning = true,
+            });
             return;
         }
 
@@ -71,22 +81,24 @@ public sealed class DiagnosticsViewModel : ViewModelBase
         void Add(string key, string? value, bool warn = false) =>
             EnvironmentRows.Add(new EnvironmentRow
             {
-                Key = key,
-                Value = string.IsNullOrWhiteSpace(value) ? "（未找到）" : value,
+                Key = L10n.Instance.T(key),
+                Value = string.IsNullOrWhiteSpace(value) ? L10n.Instance.T("Common.NotFound") : value,
                 IsWarning = warn || string.IsNullOrWhiteSpace(value),
             });
 
-        Add("已安装小狼毫", env.IsInstalled ? "是" : "否", !env.IsInstalled);
-        Add("程序目录", env.ProgramDirectory);
-        Add("共享数据目录", env.SharedDataDirectory);
-        Add("用户目录", env.UserDirectory, !env.IsUserDirectoryReady);
-        Add("用户目录状态", env.IsUserDirectoryReady ? "已就绪" : "尚不存在（需先部署一次）", !env.IsUserDirectoryReady);
-        Add("同步目录", env.SyncDirectory);
-        Add("备份目录", env.BackupsDirectory);
-        Add("日志目录", env.LogDirectory);
-        Add("部署器", env.DeployerPath);
-        Add("当前用户名", ProbeService.CurrentUserName);
-        Add("预期管道名", ProbeService.ExpectedPipeName);
+        Add("Diag.Row.Installed", env.IsInstalled ? L10n.Instance.T("Diag.Value.Yes") : L10n.Instance.T("Diag.Value.No"), !env.IsInstalled);
+        Add("Diag.Row.ProgramDir", env.ProgramDirectory);
+        Add("Diag.Row.SharedDir", env.SharedDataDirectory);
+        Add("Diag.Row.UserDir", env.UserDirectory, !env.IsUserDirectoryReady);
+        Add("Diag.Row.UserDirState",
+            env.IsUserDirectoryReady ? L10n.Instance.T("Diag.Value.Ready") : L10n.Instance.T("Diag.Value.NotExist"),
+            !env.IsUserDirectoryReady);
+        Add("Diag.Row.SyncDir", env.SyncDirectory);
+        Add("Diag.Row.BackupDir", env.BackupsDirectory);
+        Add("Diag.Row.LogDir", env.LogDirectory);
+        Add("Diag.Row.Deployer", env.DeployerPath);
+        Add("Diag.Row.UserName", ProbeService.CurrentUserName);
+        Add("Diag.Row.PipeName", ProbeService.ExpectedPipeName);
 
         OnPropertyChanged(nameof(Environment));
     }
@@ -94,7 +106,7 @@ public sealed class DiagnosticsViewModel : ViewModelBase
     private async Task RunProbeAsync()
     {
         IsBusy = true;
-        StatusText = "探测中……";
+        StatusText = StatusFromKey("Diag.Probing");
         Results.Clear();
         try
         {
@@ -107,12 +119,12 @@ public sealed class DiagnosticsViewModel : ViewModelBase
             foreach (var r in results) Results.Add(r);
             var failed = results.Count(r => r.Status == ProbeStatus.Fail);
             StatusText = failed == 0
-                ? $"探测完成，共 {results.Count} 项（部署项需手动执行）"
-                : $"探测完成，{failed} 项失败 —— 请把报告发给我";
+                ? StatusFromKey("Diag.ProbeDone", results.Count)
+                : StatusFromKey("Diag.ProbeFailed", failed);
         }
         catch (Exception ex)
         {
-            StatusText = "探测异常：" + ex.Message;
+            StatusText = StatusFromKey("Diag.ProbeException", ex.Message);
         }
         finally
         {
@@ -123,17 +135,19 @@ public sealed class DiagnosticsViewModel : ViewModelBase
     private async Task RunDeployAsync()
     {
         IsBusy = true;
-        StatusText = "正在执行部署（可能耗时数十秒）……";
+        StatusText = StatusFromKey("Diag.Deploying");
         try
         {
             var env = Environment;
             var result = await Task.Run(() => ProbeService.ProbeDeployer(env?.DeployerPath));
             Results.Insert(0, result);
-            StatusText = result.Status == ProbeStatus.Ok ? "部署完成" : result.Summary;
+            StatusText = result.Status == ProbeStatus.Ok
+                ? StatusFromKey("Diag.DeployDone")
+                : StatusFromKey("Diag.DeployResult", result.Summary);
         }
         catch (Exception ex)
         {
-            StatusText = "部署异常：" + ex.Message;
+            StatusText = StatusFromKey("Diag.DeployException", ex.Message);
         }
         finally
         {
@@ -144,27 +158,43 @@ public sealed class DiagnosticsViewModel : ViewModelBase
     private void CopyReport()
     {
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine("小狼毫控制面板 — 环境诊断报告");
-        sb.AppendLine("生成时间：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+        sb.AppendLine(L10n.Instance.T("Diag.ReportTitle"));
+        sb.AppendLine(L10n.Instance.T("Diag.RowFormat",
+    L10n.Instance.T("Diag.ReportTime"), DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
         sb.AppendLine();
-        sb.AppendLine("── 环境 ──");
-        foreach (var r in EnvironmentRows) sb.AppendLine($"{r.Key}：{r.Value}");
+        sb.AppendLine(L10n.Instance.T("Diag.ReportEnv"));
+        foreach (var r in EnvironmentRows)
+            sb.AppendLine(L10n.Instance.T("Diag.RowFormat", r.Key, r.Value));
         sb.AppendLine();
-        sb.AppendLine("── 探测结果 ──");
+        sb.AppendLine(L10n.Instance.T("Diag.ReportProbe"));
         foreach (var r in Results)
         {
-            sb.AppendLine($"[{r.StatusText}] {r.Name}：{r.Summary}");
+            sb.AppendLine(L10n.Instance.T("Diag.ProbeFormat", r.StatusText, r.Name, r.Summary));
             foreach (var d in r.Details) sb.AppendLine("    " + d);
         }
 
         try
         {
             Clipboard.SetText(sb.ToString());
-            StatusText = "报告已复制到剪贴板";
+            StatusText = StatusFromKey("Diag.Copied");
         }
         catch (Exception ex)
         {
-            StatusText = "复制失败：" + ex.Message;
+            StatusText = StatusFromKey("Diag.CopyFailed", ex.Message);
         }
+    }
+
+    /// <summary>
+    /// 语言切换后重跑：环境行标签与状态文本都是「取值那一刻拼好的字符串」，
+    /// 不像 XAML 里的 {l10n:L} 能自动刷新，必须手动重建一次。
+    /// 已跑出的探针结果不重跑（那要重新连管道、重新调部署器，代价太大且不必要）。
+    /// </summary>
+    public void RefreshTexts()
+    {
+        RefreshEnvironment();
+
+        // Restatus() 而不是把状态重置回「点击开始探测」——
+        // 用户刚跑完一轮探测再切语言，那句「探测完成，共 N 项」是有信息量的，不该被抹掉。
+        StatusText = Restatus();
     }
 }
