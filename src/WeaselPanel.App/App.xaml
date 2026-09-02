@@ -141,6 +141,17 @@
             <sys:Double x:Key="Sp10">40</sys:Double>
             <sys:Double x:Key="Sp12">48</sys:Double>
 
+            <!-- SpN 是 Double，仅供 Width / Height / 计算用。Margin/Padding 性质
+                 的留白请用下面 PadN — Thickness 类型，不会再踩 Double→Thickness
+                 隐式转换缺失导致 XamlParseException 的坑（v0.2.2 教训）。 -->
+            <Thickness x:Key="Pad1">4</Thickness>
+            <Thickness x:Key="Pad2">8</Thickness>
+            <Thickness x:Key="Pad3">12</Thickness>
+            <Thickness x:Key="Pad4">16</Thickness>
+            <Thickness x:Key="Pad5">20</Thickness>
+            <Thickness x:Key="Pad6">24</Thickness>
+            <Thickness x:Key="Pad8">32</Thickness>
+
             <!-- 语义化间距。之前外观页连续 8 个 `Margin="0,0,0,10"` —— 间距全等
                  是典型的「AI 模板风」信号，读起来没有分组感。这里按**关系**命名，
                  页面引用时就知道自己表达的是哪种关系。 -->
@@ -311,7 +322,7 @@
                 <Setter Property="BorderBrush" Value="{StaticResource BorderBrushKey}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="CornerRadius" Value="{StaticResource RadiusMd}"/>
-                <Setter Property="Padding" Value="{StaticResource Sp5}"/>
+                <Setter Property="Padding" Value="{StaticResource Pad5}"/>
                 <Setter Property="Effect" Value="{StaticResource ShadowXs}"/>
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
             </Style>

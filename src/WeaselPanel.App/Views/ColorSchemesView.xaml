@@ -336,7 +336,7 @@
                                                            Foreground="{StaticResource TextPrimaryBrush}"
                                                            TextTrimming="CharacterEllipsis"/>
                                                 <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource OriginChip}"
-                                                        Margin="{StaticResource Sp2}"
+                                                        Margin="{StaticResource Pad2}"
                                                         Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
                                                     <TextBlock Text="{l10n:L ColorSchemes.Badge.Active}"
                                                                Style="{StaticResource StatusChipText}"/>
@@ -371,7 +371,7 @@
                                       ToolTip="{l10n:L ColorSchemes.TemplateTip}"/>
                             <Button Grid.Column="1" Content="{l10n:L ColorSchemes.New}"
                                     Command="{Binding NewCommand}"
-                                    Style="{StaticResource SecondaryButton}" Margin="{StaticResource Sp2}"/>
+                                    Style="{StaticResource SecondaryButton}" Margin="{StaticResource Pad2}"/>
                         </Grid>
 
                         <Grid Margin="0,8,0,0">
@@ -384,7 +384,7 @@
                                     Style="{StaticResource SecondaryButton}"/>
                             <Button Grid.Column="1" Content="{l10n:L ColorSchemes.Delete}"
                                     Command="{Binding DeleteCommand}"
-                                    Style="{StaticResource DangerButton}" Margin="{StaticResource Sp2}"/>
+                                    Style="{StaticResource DangerButton}" Margin="{StaticResource Pad2}"/>
                         </Grid>
 
                         <Border Style="{StaticResource Divider}"/>
@@ -528,10 +528,10 @@
                                     Style="{StaticResource SecondaryButton}"/>
                             <Button Grid.Column="3" Content="{l10n:L ColorSchemes.Deploy}"
                                     Command="{Binding DeployCommand}"
-                                    Style="{StaticResource SecondaryButton}" Margin="{StaticResource Sp2}"/>
+                                    Style="{StaticResource SecondaryButton}" Margin="{StaticResource Pad2}"/>
                             <Button Grid.Column="4" Content="{l10n:L ColorSchemes.Save}"
                                     Command="{Binding SaveCommand}"
-                                    Style="{StaticResource PrimaryButton}" Margin="{StaticResource Sp2}"/>
+                                    Style="{StaticResource PrimaryButton}" Margin="{StaticResource Pad2}"/>
                         </Grid>
                     </StackPanel>
                 </StackPanel>
