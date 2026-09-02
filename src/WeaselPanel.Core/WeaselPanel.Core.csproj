@@ -16,6 +16,13 @@
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
 
+  <!-- 词典包注册表：内置一份「精选词库包」清单（对应 macOS 的 DictionaryPackages.json）。
+       必须走 EmbeddedResource 打进程序集：本项目是单文件发布，用户只拿走一个 exe，
+       用 <Content CopyToOutputDirectory> 会让清单文件落在 dist/ 里、被单文件 exe 找不到。 -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\DictionaryPackages.json" />
+  </ItemGroup>
+
   <!--
     允许测试项目访问 internal 成員（如排除规则、默认文件头等纯逻辑）。
     这样就不必为了可测性把这些内部实现细节暴露成 public API。

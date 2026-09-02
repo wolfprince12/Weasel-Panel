@@ -73,6 +73,7 @@
                     <ListBoxItem Content="{l10n:L Nav.AppOptions}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.Dictionary}" Tag="{l10n:L NavGroup.Data}"/>
+                    <ListBoxItem Content="{l10n:L Nav.Packages}"/>
                     <ListBoxItem Content="{l10n:L Nav.Maintenance}"/>
                     <ListBoxItem Content="{l10n:L Nav.Inspector}"/>
                     <ListBoxItem Content="{l10n:L Nav.Backup}"/>

@@ -35,6 +35,30 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        try
+        {
+            RunStartup(e);
+        }
+        catch (Exception ex)
+        {
+            // 启动早期（L10n/设置还没就绪）就崩：不能依赖 L10n 弹窗（它可能自己也废了），
+            // 直接用硬编码中文文本，保证用户至少看懂「启动失败 + 日志在哪」。
+            Log("!!! OnStartup 顶层异常：" + ex);
+            try
+            {
+                MessageBox.Show(
+                    $"程序启动失败：\n\n{ex.GetType().Name}: {ex.Message}\n\n日志已写入：\n{LogFilePath}",
+                    "小狼毫控制面板",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            catch { /* 连 MessageBox 都弹不出来时，至少日志已经落盘 */ }
+            Shutdown(1);
+        }
+    }
+
+    private void RunStartup(StartupEventArgs e)
+    {
         base.OnStartup(e);
 
         Log($"=== startup {DateTime.Now:yyyy-MM-dd HH:mm:ss} " +
@@ -55,11 +79,11 @@ public partial class App : Application
             Log("!!! DispatcherUnhandledException: " + args.Exception);
             try
             {
-                MessageBox.Show(
-                    L10n.Instance.T("App.CrashBody", args.Exception, LogFilePath),
-                    L10n.Instance.T("App.Name"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                // L10n 优先；万一它也没加载成功，用硬编码中文兜底，绝不显示裸键名。
+                var body = Safe(() => L10n.Instance.T("App.CrashBody", args.Exception, LogFilePath),
+                    $"发生未处理的异常：\n\n{args.Exception}\n\n日志已写入：\n{LogFilePath}");
+                var title = Safe(() => L10n.Instance.T("App.Name"), "小狼毫控制面板");
+                MessageBox.Show(body, title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch { /* 连 MessageBox 都弹不出来时（例如资源初始化失败），至少日志已经落盘 */ }
 
@@ -77,6 +101,13 @@ public partial class App : Application
 
         // 进程退出时补一行，便于判断「崩了」还是「正常关」。
         AppDomain.CurrentDomain.ProcessExit += (_, _) => Log("--- exit ---");
+    }
+
+    /// <summary>L10n 可能自己没加载成功，取值时必须套一层，失败就退回硬编码文本。</summary>
+    private static T Safe<T>(Func<T> getter, T fallback)
+    {
+        try { return getter(); }
+        catch { return fallback; }
     }
 
     /// <summary>首屏成功呈现后由 MainWindow 调用。日志里有这行 = 窗口已能正常显示。</summary>

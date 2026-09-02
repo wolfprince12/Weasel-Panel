@@ -73,7 +73,20 @@ public sealed class L10n : INotifyPropertyChanged
     {
         if (Lookup(_language, key, out var value)) return value;
         if (Lookup(DefaultLanguage, key, out value)) return value;
-        return key;
+        // 最坏情况（语言包全丢）也不把 "Nav.Diagnostics" 这种裸键甩给用户，
+        // 改成可读的中文/英文友好词（去掉前缀、点换空格、首字母大写）。
+        return HumanizeKey(key);
+    }
+
+    /// <summary>语言包彻底加载失败时，把裸键变成人能读的词，至少不吓人。</summary>
+    private static string HumanizeKey(string key)
+    {
+        var cleaned = key;
+        var dot = cleaned.IndexOf('.');
+        if (dot >= 0) cleaned = cleaned[(dot + 1)..];
+        cleaned = cleaned.Replace('.', ' ');
+        if (cleaned.Length > 0) cleaned = char.ToUpperInvariant(cleaned[0]) + cleaned[1..];
+        return cleaned;
     }
 
     /// <summary>带占位符：<c>L10n.Instance.T("Diag.ProbeDone", 7)</c> → "探测完成，共 7 项"。</summary>
@@ -193,31 +206,59 @@ public sealed class L10n : INotifyPropertyChanged
     private void LoadAllPacks()
     {
         var assembly = typeof(L10n).Assembly;
-        string[] names;
-        try { names = assembly.GetManifestResourceNames(); }
-        catch { return; }
+        var fromEmbedded = 0;
 
-        foreach (var resourceName in names)
+        // 第一优先：EmbeddedResource（开发期 / 非单文件发布时最干净）。
+        try
         {
-            if (!resourceName.StartsWith(ResourcePrefix, StringComparison.Ordinal)) continue;
-            if (!resourceName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)) continue;
-
-            var code = resourceName.Substring(
-                ResourcePrefix.Length,
-                resourceName.Length - ResourcePrefix.Length - ".txt".Length);
-
-            try
+            foreach (var resourceName in assembly.GetManifestResourceNames())
             {
-                using var stream = assembly.GetManifestResourceStream(resourceName);
-                if (stream is null) continue;
-                using var reader = new StreamReader(stream, System.Text.Encoding.UTF8);
-                _packs[code] = ParsePack(reader.ReadToEnd());
-            }
-            catch
-            {
-                // 单个语言包读不出来不能让程序起不来 —— 缺键会回落英文包，再缺显示键名
+                if (!resourceName.StartsWith(ResourcePrefix, StringComparison.Ordinal)) continue;
+                if (!resourceName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)) continue;
+
+                var code = resourceName.Substring(
+                    ResourcePrefix.Length,
+                    resourceName.Length - ResourcePrefix.Length - ".txt".Length);
+
+                try
+                {
+                    using var stream = assembly.GetManifestResourceStream(resourceName);
+                    if (stream is null) continue;
+                    using var reader = new StreamReader(stream, System.Text.Encoding.UTF8);
+                    _packs[code] = ParsePack(reader.ReadToEnd());
+                    fromEmbedded++;
+                }
+                catch
+                {
+                    // 单个语言包读不出来不能让程序起不来
+                }
             }
         }
+        catch (Exception ex)
+        {
+            Diag("EmbeddedResource 扫描失败：" + ex);
+        }
+
+        // 内联常量兜底：PublishSingleFile 自包含发布下，GetManifestResourceNames()
+        // 经常拿不到 .txt 资源名，导致 _packs 为空、界面全是裸键。这里用编译进 IL 的
+        // 常量补上，保证语言包永远随 exe 走。只补「EmbeddedResource 没拿到的包」。
+        foreach (var (code, text) in LangResources.AllPacks)
+        {
+            if (!_packs.TryGetValue(code, out var existing) || existing.Count == 0)
+            {
+                try { _packs[code] = ParsePack(text); }
+                catch (Exception ex) { Diag($"常量兜底失败 {code}：" + ex); }
+            }
+        }
+
+        Diag($"LoadAllPacks 完成：EmbeddedResource={fromEmbedded} 兜底后总包数={_packs.Count}");
+    }
+
+    /// <summary>启动期诊断：写进 %TEMP%\WeaselPanel\startup.log（App.Log 同程序集可见）。</summary>
+    private static void Diag(string message)
+    {
+        try { WeaselPanel.App.App.Log("[L10n] " + message); }
+        catch { /* 日志写不进也不能影响加载 */ }
     }
 
     /// <summary>

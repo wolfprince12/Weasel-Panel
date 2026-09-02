@@ -78,6 +78,13 @@ if [ "$RUN_TESTS" -eq 1 ]; then
   }
 fi
 
+echo "═══ 生成语言包内联常量（L10n 单文件兜底）═══"
+"$PY" tools/embed_lang.py || {
+  echo "" >&2
+  echo "语言包内联常量生成失败 —— 不出包。" >&2
+  exit 1
+}
+
 echo "═══ 发布 ${RID} ═══"
 dotnet publish src/WeaselPanel.App -c Release -r "$RID" -o "$OUT" --nologo 2>&1 | tail -2
 

@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     private readonly BehaviorView _behaviorView;
     private readonly AppOptionsView _appOptionsView;
     private readonly DictionaryView _dictionaryView;
+    private readonly PackageManagerView _packageManagerView;
     private readonly MaintenanceView _maintenanceView;
     private readonly InspectorView _inspectorView;
     private readonly BackupView _backupView;
@@ -59,6 +60,7 @@ public partial class MainWindow : Window
         _behaviorView = new BehaviorView(new BehaviorViewModel(environment));
         _appOptionsView = new AppOptionsView(environment);
         _dictionaryView = new DictionaryView(environment);
+        _packageManagerView = new PackageManagerView(environment);
         _maintenanceView = new MaintenanceView(environment);
         _inspectorView = new InspectorView(environment);
         _backupView = new BackupView(new BackupViewModel(environment));
@@ -114,7 +116,7 @@ public partial class MainWindow : Window
         {
             _diagnosticsView, _appearanceView, _colorSchemesView, _schemaView,
             _rimeIceView, _correctionView, _inputView, _behaviorView, _appOptionsView, _dictionaryView,
-            _maintenanceView, _inspectorView,
+            _packageManagerView, _maintenanceView, _inspectorView,
             _backupView, _aboutView,
         };
 
@@ -134,7 +136,7 @@ public partial class MainWindow : Window
             || _correctionView is null
             || _inputView is null
             || _behaviorView is null || _appOptionsView is null
-            || _dictionaryView is null
+            || _dictionaryView is null || _packageManagerView is null
             || _maintenanceView is null || _inspectorView is null
             || _backupView is null || _aboutView is null) return;
 
@@ -170,10 +172,11 @@ public partial class MainWindow : Window
         _inputView,         // 6 按键与输入
         _behaviorView,      // 7 行为
         _appOptionsView,    // 8 应用选项
-        _dictionaryView,    // 9 词典
-        _maintenanceView,   // 10 维护
-        _inspectorView,     // 11 配置查看器
-        _backupView,        // 12 备份与恢复
-        _aboutView,         // 13 关于
+        _dictionaryView,     // 9 词典
+        _packageManagerView, // 10 词库包
+        _maintenanceView,    // 11 维护
+        _inspectorView,      // 12 配置查看器
+        _backupView,         // 13 备份与恢复
+        _aboutView,          // 14 关于
     ];
 }
