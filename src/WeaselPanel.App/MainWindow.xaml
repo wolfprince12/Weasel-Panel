@@ -1,12 +1,14 @@
 <Window x:Class="WeaselPanel.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="小狼毫控制面板"
+        Title="小狼毫控制面板 — 预览版"
         Width="960" Height="640" MinWidth="780" MinHeight="540"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource WindowBgBrush}">
+        Background="{StaticResource WindowBgBrush}"
+        Loaded="Window_Loaded">
     <!-- 窗口标题栏 / 任务栏图标由 csproj 的 <ApplicationIcon> 单独管。
-         XAML 上不要写 Icon="pack://..." —— single-file 发布下会 NullReference。 -->
+         XAML 上不要写 Icon="pack://..." —— single-file 发布下会 NullReference。
+         标题里"预览版"提醒用户这是早期版本，期望对崩溃栈宽容。 -->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="188"/>

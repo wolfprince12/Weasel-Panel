@@ -47,6 +47,19 @@ public partial class MainWindow : Window
         ContentHost.Content = _diagnosticsView;
     }
 
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        // 首屏成功呈现。日志里出现 "main_window_ready" = 窗口已能正常显示；
+        // 若崩溃但日志里没有这行，说明崩在 InitializeComponent / ctor 阶段。
+        App.LogStartupReady();
+
+        // 标题栏带上版本号与构建时间 —— 让用户一眼确认自己跑的是哪一版，
+        // 不再出现「以为测的是新版、其实是旧 exe」的误判。
+        var v = App.ExecutableVersion;
+        Title = $"小狼毫控制面板 — v{v.Major}.{v.Minor}.{v.Build} " +
+                $"(构建 {App.ExecutableBuildTime:MM-dd HH:mm})";
+    }
+
     private void Nav_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         // 兜底：如果将来发生 ctor 阶段回调（极端改造），所有 4 个 view 字段都非空就放行，
