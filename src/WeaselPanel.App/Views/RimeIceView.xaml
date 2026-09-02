@@ -144,9 +144,7 @@
                 <TextBlock Text="{l10n:L RimeIce.Advanced.Title}" Style="{StaticResource SectionTitle}"/>
                 <TextBlock Text="{l10n:L RimeIce.Advanced.Hint}" Style="{StaticResource SectionIntro}"/>
 
-                <TextBlock Text="{l10n:L RimeIce.Lua.Title}" FontSize="{StaticResource FontSection}"
-                           FontWeight="SemiBold" Foreground="{StaticResource TextLabelBrush}"
-                           Margin="0,16,0,8"/>
+                <TextBlock Text="{l10n:L RimeIce.Lua.Title}" Style="{StaticResource SubSectionTitle}"/>
                 <ItemsControl ItemsSource="{Binding LuaRows}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:RimeIceLuaRow}">
@@ -164,9 +162,7 @@
                 <TextBlock Text="{l10n:L RimeIce.Lua.NeedEnglish}" Style="{StaticResource FieldNote}"
                            Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}"/>
 
-                <TextBlock Text="{l10n:L RimeIce.Fuzzy.Title}" FontSize="{StaticResource FontSection}"
-                           FontWeight="SemiBold" Foreground="{StaticResource TextLabelBrush}"
-                           Margin="0,18,0,4"/>
+                <TextBlock Text="{l10n:L RimeIce.Fuzzy.Title}" Style="{StaticResource SubSectionTitle}"/>
                 <TextBlock Text="{l10n:L RimeIce.Fuzzy.Hint}" Style="{StaticResource FieldNote}"
                            Margin="0,0,0,10"/>
 

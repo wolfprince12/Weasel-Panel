@@ -60,8 +60,7 @@
                            Style="{StaticResource FieldNote}"/>
 
                 <!-- 附加开关 -->
-                <TextBlock Text="{l10n:L Input.Punct}" FontSize="{StaticResource FontSection}"
-                           FontWeight="SemiBold" Margin="0,20,0,8"/>
+                <TextBlock Text="{l10n:L Input.Punct}" Style="{StaticResource SubSectionTitle}"/>
                 <CheckBox Content="{l10n:L Input.Punct.FullShape}" IsChecked="{Binding ToggleFullShape}"
                           Margin="0,4"/>
                 <CheckBox Content="{l10n:L Input.Punct.Punctuation}" IsChecked="{Binding TogglePunctuation}"

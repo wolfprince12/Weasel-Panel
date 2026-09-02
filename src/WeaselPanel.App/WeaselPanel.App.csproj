@@ -22,8 +22,8 @@
          的最快凭据 —— 之前连续两轮修复都栽在「以为测的是新版、其实是旧 exe」。
          别只改这里：./build.sh 出包时会用 tools/verify_lang_packs.py 拿每包里
          最长的若干条原文当哨兵真搜 exe，搜不到就让构建失败。 -->
-    <Version>0.1.15</Version>
-    <InformationalVersion>0.1.15-preview</InformationalVersion>
+    <Version>0.1.16</Version>
+    <InformationalVersion>0.1.16-preview</InformationalVersion>
     <Company>大狼导演工作室</Company>
     <Product>小狼毫控制面板</Product>
     <Copyright>GPL-3.0</Copyright>

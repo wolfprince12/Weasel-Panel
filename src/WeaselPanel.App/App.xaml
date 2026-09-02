@@ -252,6 +252,18 @@
                 <Setter Property="Margin" Value="{StaticResource GapHeader}"/>
             </Style>
 
+            <!-- 卡片内子分组标题。一个卡片里分出多个小节（如雾凇页的「基础 / 词库 /
+                 语言 / 高级」）时用它，而不是再堆一层 SectionTitle 或手写 FontSection。
+                 层次：比 SectionTitle 低半档（TextLabel 而非 TextPrimary），上方留 16px
+                 节奏、下方留 8px 让它和所辖内容贴紧 —— 与 SectionTitle 的「贴标题、离内容远」
+                 正好相反，靠这一正一反把「卡片内小节」和「卡片标题」区分开。 -->
+            <Style x:Key="SubSectionTitle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="{StaticResource FontSection}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Foreground" Value="{StaticResource TextLabelBrush}"/>
+                <Setter Property="Margin" Value="0,16,0,8"/>
+            </Style>
+
             <!-- 表单标签。用 TextLabel（比正文深）而不是 TextSecondary ——
                  标签是「要读」的，说明文字才是「可跳过」的，两者必须分得开。 -->
             <Style x:Key="FieldLabel" TargetType="TextBlock">
