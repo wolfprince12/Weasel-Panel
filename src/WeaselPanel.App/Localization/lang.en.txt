@@ -21,7 +21,7 @@
 #   2. CultureInfo.CurrentUICulture (zh-CN → zh-Hans → zh → this file)
 #   3. this file
 
-# ── Application identity ────────────────────────────────────────────────
+# ── Application identity ─────────────────────────────────────────────────────────────────────
 App.Name = Weasel Panel
 App.NameShort = Weasel
 App.Subtitle = Panel
@@ -31,16 +31,21 @@ App.BuildPrefix = Build
 App.CrashBody = An unhandled exception occurred:\n\n{0}\n\nLog written to:\n{1}
 App.DetectFailed = Environment detection failed:\n{0}
 
-# ── Sidebar navigation ──────────────────────────────────────────────────
+# ── Sidebar navigation ─────────────────────────────────────────────────────────────────────
 Nav.Diagnostics = Diagnostics
 Nav.Appearance = Appearance
 Nav.Schema = Schemas
 Nav.Input = Keys & Input
 Nav.Behavior = Behavior
+Nav.AppOptions = Per-app Options
 Nav.Backup = Backup
 Nav.About = About
 
-# ── Generic buttons / labels ────────────────────────────────────────────
+Nav.Dictionary = Dictionary
+Nav.Maintenance = Maintenance
+Nav.Inspector = Inspector
+
+# ── Generic buttons / labels ─────────────────────────────────────────────────────────────────────
 Common.Ready = Ready
 Common.Apply = Apply
 Common.Reload = Reload
@@ -59,14 +64,16 @@ Common.No = No
 Common.Language = Language
 Common.Error = Error
 
-# ── Language selector ───────────────────────────────────────────────────
+Common.Working = Working…
+
+# ── Language selector ─────────────────────────────────────────────────────────────────────
 Lang.Auto = Follow system
 Lang.zh-Hans = Simplified Chinese
 Lang.zh-Hant = Traditional Chinese
 Lang.en = English
 Lang.Note = Takes effect immediately. The choice is stored in %APPDATA%\WeaselPanel\settings.json — never in the Rime user directory, so it cannot pollute sync or backups.
 
-# ── Diagnostics page ────────────────────────────────────────────────────
+# ── Diagnostics page ─────────────────────────────────────────────────────────────────────
 Diag.EnvTitle = Environment
 Diag.ProbeTitle = Environment probes
 Diag.ProbeIntro = Verifies the things that cannot be settled by reading source: named pipe reachability, deployer exit code, log file naming, librime-lua availability.
@@ -109,13 +116,20 @@ Diag.Value.No = No
 Diag.Value.Ready = Ready
 Diag.Value.NotExist = Does not exist yet (deploy once first)
 
-# ── Probe status badges ─────────────────────────────────────────────────
+Diag.Title = Diagnostics
+Diag.Intro = Check where Weasel is installed, whether the user directory is ready, and whether the deployer can be invoked. Run this before changing anything - it rules out most "nothing happened" cases.
+Diag.NoResults = No probe results yet - click "Run probes".
+Diag.ReportPanel = Panel version
+Diag.ReportBuild = Build time
+Diag.ReportLang = Language pack
+
+# ── Probe status badges ─────────────────────────────────────────────────────────────────────
 Probe.Status.Ok = OK
 Probe.Status.Warn = Warning
 Probe.Status.Fail = Failed
 Probe.Status.Skip = Skipped
 
-# ── Probe: named pipe ───────────────────────────────────────────────────
+# ── Probe: named pipe ─────────────────────────────────────────────────────────────────────
 Probe.Name.Pipe = Named pipe
 Probe.Pipe.Ok = Connected: {0}
 Probe.Pipe.Fail = Could not connect: {0}
@@ -124,16 +138,16 @@ Probe.Pipe.Candidate = candidate
 Probe.Pipe.ReasonUpstream = upstream rule (with user-name prefix)
 Probe.Pipe.ReasonNoPrefix = no user-name prefix (older format)
 
-# ── Probe: deployer ─────────────────────────────────────────────────────
+# ── Probe: deployer ─────────────────────────────────────────────────────────────────────
 Probe.Name.Deployer = Deployer /deploy
 Probe.Deployer.Skipped = Skipped (deploying rewrites user data — run it manually)
 
-# ── Probe: log files ────────────────────────────────────────────────────
+# ── Probe: log files ─────────────────────────────────────────────────────────────────────
 Probe.Name.Logs = Log files
 Probe.Logs.Found = Found {0} rime log file(s)
 Probe.Logs.DirMissing = Log directory does not exist: {0}
 
-# ── Probe: librime-lua ──────────────────────────────────────────────────
+# ── Probe: librime-lua ─────────────────────────────────────────────────────────────────────
 Probe.Name.Lua = librime-lua plugin
 Probe.Lua.Missing = lua plugin not installed (optional — Weasel and this panel work without it)
 Probe.Lua.Found = lua plugin found
@@ -174,7 +188,7 @@ Probe.Lua.ConfiguredButMissing = ⚠️ The config references lua but the plugin
 Probe.Lua.SummaryOk = lua plugin files found — "Zihao" correction can be enabled
 Probe.Lua.SummaryMissing = No plugin files found, but the config already references lua — deployment will fail
 
-# ── Appearance page ─────────────────────────────────────────────────────
+# ── Appearance page ─────────────────────────────────────────────────────────────────────
 Appearance.PreviewTitle = Candidate window preview
 Appearance.PreviewNote1 = Shows the resolved effective values (not the raw config): colours go through the full fallback chain and alpha blending,
 Appearance.PreviewNote2 = font sizes fall back to 12 when unset, labels render through label_format.
@@ -223,7 +237,10 @@ Appearance.Status.NoCatalog = Could not load the colour scheme catalogue — che
 Appearance.Status.Ready = Ready
 Appearance.CatalogMissing = (weasel.yaml not found — colour scheme catalogue is empty)
 
-# ── Schema page ─────────────────────────────────────────────────────────
+Appearance.Title = Appearance
+Appearance.Intro = Fonts, colours and layout of the candidate window. Every value is derived with the same rules as Weasel itself - what you see here is what actually gets rendered.
+
+# ── Schema page ─────────────────────────────────────────────────────────────────────
 Schema.Title = Input schemas
 Schema.Intro = List order is the switch order — the first one is the default. Press "Apply" to write patch/schema_list into default.custom.yaml, then "Deploy".
 Schema.Rescan = Rescan
@@ -255,7 +272,11 @@ Schema.Status.ParseFailed = Config parse failed, write refused (would corrupt th
 Schema.Status.Written = Written to {0} ({1} schemas on disk — deploy to apply)
 Schema.Status.WriteFailed = Write failed: {0}
 
-# ── Input / keys page ───────────────────────────────────────────────────
+Schema.NoActive = No schema is active yet.
+Schema.NoAvailable = Every installed schema is already active.
+Schema.AvailableNote = "Available" lists schemas installed on this machine but not currently active.
+
+# ── Input / keys page ─────────────────────────────────────────────────────────────────────
 Input.Title = Keys & input
 Input.Intro = Page size and paging keys. Written to default.custom.yaml; deploy afterwards.
 Input.PageSize = Candidates per page
@@ -283,7 +304,9 @@ Input.Status.Loaded = Loaded current settings from {0}
 Input.Status.NoConfig = No default.custom.yaml yet — showing Rime defaults
 Input.Status.LoadFailed = Could not read {0}: {1}
 
-# ── Behavior page ───────────────────────────────────────────────────────
+Input.PageSizeGroup = Page size & candidates
+
+# ── Behavior page ─────────────────────────────────────────────────────────────────────
 Behavior.Switch.Title = Chinese / English switch
 Behavior.Switch.Intro = What each of these five keys does when pressed. Written to the ascii_composer section of default.custom.yaml.
 Behavior.GoodOldCapsLock = Caps Lock commits ASCII directly (good_old_caps_lock)
@@ -330,7 +353,176 @@ Behavior.Status.Written = Written to weasel.custom.yaml and default.custom.yaml 
 Behavior.Status.WriteFailed = Write failed: {0}
 Behavior.Status.ParseFailed = Config parse failed, write refused (would corrupt the file): {0}
 
-# ── Backup page ─────────────────────────────────────────────────────────
+Behavior.Title = Behaviour
+Behavior.Intro = Toggles for typing habits: Chinese/English switching, what Shift commits, notification duration. Deploy after changing.
+
+# ── App options page ─────────────────────────────────────────────────────────────────────
+AppOptions.Title = Per-app options
+AppOptions.Intro = Set how the input method behaves when it starts in a given program. Written to the app_options section of weasel.custom.yaml; the key is the program's .exe file name. Deploy after changing.
+AppOptions.AddLabel = Program
+AppOptions.Add = Add
+AppOptions.PresetTip = Pick a common program to fill the box on the right
+AppOptions.NewExeTip = The .exe file name, e.g. notepad.exe — not the window title or the product name
+AppOptions.FilterTip = Filter by .exe file name
+AppOptions.Remove = Remove
+AppOptions.RemoveTip = Removes a program you added. Factory entries can't be removed — they live in weasel.yaml.
+AppOptions.ResetAll = Reset all
+AppOptions.ResetAllTip = Deletes every app_options key this panel wrote; keys you wrote by hand are kept
+AppOptions.Column.Exe = Program (.exe)
+AppOptions.Column.Ascii = English
+AppOptions.Column.Vim = Vim mode
+AppOptions.Column.Inline = Inline preedit
+AppOptions.Column.Origin = Source
+AppOptions.AsciiTip = Start in this program with English input
+AppOptions.VimTip = Esc / Ctrl+C / Ctrl+[ drops back to English automatically
+AppOptions.InlineTip = Draw the pre-edit string inside the program instead of following the global setting
+AppOptions.Inline.Follow = Follow global
+AppOptions.Inline.On = On
+AppOptions.Inline.Off = Off
+AppOptions.OriginBuiltIn = Factory
+AppOptions.OriginUser = Custom
+AppOptions.NoRows = No per-app options yet. Add a program above to give it its own defaults.
+AppOptions.NoMatch = No program matches the filter.
+AppOptions.RowCountFormat = {0} programs
+AppOptions.Save = Save
+AppOptions.NoteTitle = What the three switches do
+AppOptions.NoteIntro = Weasel reads every key under app_options/<exe> and feeds it to Rime. Any other name is accepted without complaint and simply does nothing.
+AppOptions.NoteAscii = Start in English. The factory weasel.yaml already sets this for cmd.exe and conhost.exe.
+AppOptions.NoteVim = Esc, Ctrl+C or Ctrl+[ returns to English — handy in Vim and in terminals.
+AppOptions.NoteInline = Draw the in-progress string inside the program itself. "Follow global" leaves it to the appearance page; the other two override it for this program only.
+AppOptions.NoteDeploy = Changes take effect after deploying (Maintenance page → Deploy). Programs already running must be restarted: these options are read once, when the program connects.
+AppOptions.Status.Loading = Reading weasel.custom.yaml…
+AppOptions.Status.Loaded = {0} programs loaded.
+AppOptions.Status.LoadFailed = Read failed: {0}
+AppOptions.Status.Saving = Writing…
+AppOptions.Status.Saved = Saved. {0} programs in effect.
+AppOptions.Status.SaveFailed = Write failed: {0}
+AppOptions.Status.Added = {0} added — save to write it.
+AppOptions.Status.Removed = {0} removed — save to write it.
+AppOptions.Status.Duplicate = {0} is already in the list.
+AppOptions.Status.Reset = Restored to factory behaviour.
+AppOptions.DiscardTitle = Discard changes?
+AppOptions.DiscardBody = You have unsaved changes. Reloading will discard them.
+AppOptions.ResetAllTitle = Reset per-app options?
+AppOptions.ResetAllBody = This deletes every app_options key this panel wrote in weasel.custom.yaml, restoring factory behaviour everywhere.\n\nKeys you wrote by hand are kept.
+AppOptions.Preset.Cmd = Command Prompt ({0})
+AppOptions.Preset.Conhost = Console window ({0})
+AppOptions.Preset.Powershell = Windows PowerShell ({0})
+AppOptions.Preset.Pwsh = PowerShell 7 ({0})
+AppOptions.Preset.WindowsTerminal = Windows Terminal ({0})
+AppOptions.Preset.Wsl = WSL ({0})
+AppOptions.Preset.Bash = Git Bash ({0})
+AppOptions.Preset.Vscode = Visual Studio Code ({0})
+AppOptions.Preset.VisualStudio = Visual Studio ({0})
+AppOptions.Preset.Idea = IntelliJ IDEA ({0})
+AppOptions.Preset.Pycharm = PyCharm ({0})
+AppOptions.Preset.Vim = Vim ({0})
+
+# ── Dictionary page ─────────────────────────────────────────────────────────────────────
+Dictionary.Title = User dictionary
+Dictionary.Intro = Edit custom_phrase.txt (full pinyin) and custom_phrase_double.txt (double pinyin). One entry per line: word<Tab>code<Tab>weight.
+Dictionary.File = File
+Dictionary.File.Full = custom_phrase.txt (full pinyin)
+Dictionary.File.Double = custom_phrase_double.txt (double pinyin)
+Dictionary.FilterTip = Filter by word, code or weight
+Dictionary.Add = Add
+Dictionary.Remove = Remove
+Dictionary.Save = Save
+Dictionary.Column.Word = Word
+Dictionary.Column.Code = Code
+Dictionary.Column.Weight = Weight
+Dictionary.EntryCountFormat = {0} entries
+Dictionary.NoEntries = No entries in this file yet.
+Dictionary.NoMatch = No entries match the current filter.
+Dictionary.Status.Loading = Loading…
+Dictionary.Status.Loaded = Loaded {0} entries
+Dictionary.Status.NewFile = The file does not exist yet - it will be created when you save.
+Dictionary.Status.LoadFailed = Failed to read: {0}
+Dictionary.Status.Added = Added a blank entry - fill it in at the bottom of the list.
+Dictionary.Status.Removed = Entry removed.
+Dictionary.Status.Saving = Saving…
+Dictionary.Status.Saved = Saved {0} entries. Deploy to apply.
+Dictionary.Status.SaveFailed = Failed to save: {0}
+Dictionary.CaveatTitle = When do these entries take effect?
+Dictionary.CaveatBody = Rime only loads custom_phrase.txt when the active schema references it via translator/dictionary. rime-ice ships with that reference; the schemas bundled with Weasel do not. This page only tells you - it never edits your schema, because one wrong entry there breaks the whole schema and you would be unable to type Chinese at all.
+
+# ── Maintenance page ─────────────────────────────────────────────────────────────────────
+Maintenance.Title = Maintenance
+Maintenance.Intro = Deploy, sync, browse the directories and clean up logs. Deploying is what makes every change on the other pages take effect.
+Maintenance.DeployTitle = Deploy
+Maintenance.DeployIntro = Writing a *.custom.yaml only records your change; Rime does not read it until you deploy. The first deploy can take a few minutes because it compiles dictionaries.
+Maintenance.Deploy = Deploy
+Maintenance.Sync = Sync user data
+Maintenance.Reinstall = Initial deployment
+Maintenance.FolderTitle = Directories
+Maintenance.FolderIntro = Where Weasel keeps program files, shared data, your configuration and its logs.
+Maintenance.Folder.User = User directory
+Maintenance.Folder.Program = Program directory
+Maintenance.Folder.Shared = Shared data
+Maintenance.Folder.Sync = Sync directory
+Maintenance.Folder.Log = Log directory
+Maintenance.Open = Open
+Maintenance.LogTitle = Logs
+Maintenance.LogIntro = librime writes one log file per process. They are safe to delete - Weasel recreates them on the next start.
+Maintenance.NoLogs = No log files.
+Maintenance.LogTotal = {0} files, {1} in total
+Maintenance.ClearLogs = Clear logs
+Maintenance.ClearConfirmTitle = Clear logs?
+Maintenance.ClearConfirmBody = Delete {0} log file(s) from:\n{1}\n\nThis cannot be undone.
+Maintenance.Status.Cancelled = Cancelled.
+Maintenance.Status.Cleared = Deleted {0} log file(s).
+Maintenance.Status.ClearPartial = Deleted {0} file(s); {1} could not be deleted (in use, or no permission).
+Maintenance.Status.LogsRefreshed = Found {0} log file(s).
+Maintenance.Status.LogScanFailed = Failed to scan the log directory: {0}
+Maintenance.Status.NoDeployer = WeaselDeployer.exe was not found - is Weasel installed?
+Maintenance.Status.Done = Done.
+Maintenance.Status.AnotherInstance = The deployer is already running (exit code 1) - this is not a failure. Wait for it to finish.
+Maintenance.Status.Timeout = Timed out after 3 minutes.
+Maintenance.Status.ExitCode = The deployer exited with code {0}.
+Maintenance.Status.Exception = Failed to run the deployer: {0}
+Maintenance.InstallConfirmTitle = Run initial deployment?
+Maintenance.InstallConfirmBody = Initial deployment rebuilds the whole user workspace and takes much longer than a normal deploy. Only use it when the user directory is broken or was wiped.
+Maintenance.Action.Deploying = Deploying - this can take a few minutes…
+Maintenance.Action.Syncing = Syncing user data…
+Maintenance.Action.Installing = Running initial deployment - this can take several minutes…
+Maintenance.Err.StartFailed = Failed to start the deployer process.
+Maintenance.Err.Timeout = Timed out (process killed).
+Maintenance.Out.CommandLine = Command line: "{0}" {1}
+Maintenance.Out.ExitCode = Exit code: {0}
+Maintenance.Out.Elapsed = Elapsed: {0} s
+Maintenance.Out.StdOut = Standard output: {0}
+Maintenance.Out.StdErr = Standard error: {0}
+
+# ── Inspector page ─────────────────────────────────────────────────────────────────────
+Inspector.Title = Inspector
+Inspector.Intro = The values Rime actually reads, after merging the base file with your *.custom.yaml patch. Read-only - to change something, use the page that owns it.
+Inspector.File = File
+Inspector.FilterTip = Filter by key path or value
+Inspector.Copy = Copy all
+Inspector.Locate = Locate
+Inspector.ClearFilter = Clear filter
+Inspector.BaseFile = Base file
+Inspector.PatchFile = Patch file
+Inspector.Column.Path = Key path
+Inspector.Column.Value = Effective value
+Inspector.Column.Origin = Origin
+Inspector.Origin.Base = base
+Inspector.Origin.Patch = patch
+Inspector.EntryCountFormat = {0} keys
+Inspector.OverrideCountFormat = {0} overridden
+Inspector.NoEntries = This file has no keys, or it could not be parsed.
+Inspector.NoMatch = No keys match the current filter.
+Inspector.Status.Loaded = Read {0}; merged {1} keys.
+Inspector.Status.NoBaseFile = {0} was not found.
+Inspector.Status.Copied = Copied {0} keys to the clipboard.
+Inspector.Status.ClipboardBusy = The clipboard is busy - try again.
+Inspector.Copy.BaseLine = Base file: {0}
+Inspector.Copy.PatchLine = Patch file: {0}
+Inspector.RuleTitle = How these values are merged
+Inspector.RuleBody = A same-named file in the user directory replaces the one in the shared data directory entirely - they are not merged key by key. Then the patch: node of <name>.custom.yaml is merged in: maps are merged deeply (changing style/font_point will not wipe style/layout), but lists are replaced as a whole (schema_list is overwritten completely once you write it).
+
+
+# ── Backup page ─────────────────────────────────────────────────────────────────────
 Backup.Title = Backup & restore
 Backup.Intro = Take a backup before touching the config so you can always come back. "Restore" first snapshots the current state, so a restore is itself undoable.
 Backup.Label = Label
@@ -367,7 +559,10 @@ Backup.Confirm.Delete.Body = Delete this backup?\n\n　{0}　{1}\n　{2} files\n
 Backup.AutoLabel = Pre-restore auto backup
 Backup.Msg.Restored.Body = Restore finished.\n\nPress "Deploy" on the Appearance page for the change to take effect.
 
-# ── About page ──────────────────────────────────────────────────────────
+Backup.NoBackups = No backups yet - consider creating one before you change anything.
+Backup.NoFiles = This backup contains no files.
+
+# ── About page ─────────────────────────────────────────────────────────────────────
 About.Tagline = Weasel Panel — the Windows sibling of macOS "Squirrel Panel"
 About.Version = Version
 About.VersionPreview = {0}.{1}.{2} preview
@@ -386,3 +581,5 @@ About.UserDir = User directory
 About.RowFormat = {0}: {1}
 About.Deployer = Deployer
 About.DeployHint = Deploy to apply changes — run it from the Appearance page after editing.
+
+About.LanguageIntro = The interface follows your system language by default; override it here.

@@ -5,29 +5,43 @@
              xmlns:svc="clr-namespace:WeaselPanel.App.Services">
     <StackPanel>
 
-        <!-- ── 环境信息 ─────────────────────────────── -->
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+        <!-- ── 页面标题 ──────────────────────────────────────────────
+             之前所有页面都缺这一级：进页面第一眼看到的是卡片小标题（15px），
+             和正文只差 2px，整页是平的，看不出「这是哪一页」。 -->
+        <TextBlock Text="{l10n:L Diag.Title}" Style="{StaticResource PageTitle}"/>
+        <TextBlock Text="{l10n:L Diag.Intro}" Style="{StaticResource PageIntro}"/>
+
+        <!-- ── 环境信息 ────────────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
             <StackPanel>
                 <TextBlock Text="{l10n:L Diag.EnvTitle}" Style="{StaticResource SectionTitle}"/>
+
                 <ItemsControl ItemsSource="{Binding EnvironmentRows}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="0,3">
+                            <!-- 标签列宽用统一 token。之前这里写死 150，
+                                 而输入页写 110、行为页写 130 —— 三页三个值，
+                                 左右切页时列会跳。 -->
+                            <Grid Margin="{StaticResource GapRow}">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding Key}" FontSize="12.5"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                <TextBlock Grid.Column="0" Text="{Binding Key}"
+                                           Style="{StaticResource FieldNote}"
                                            VerticalAlignment="Top"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="12.5"
+                                <TextBlock Grid.Column="1" Text="{Binding Value}"
+                                           FontSize="{StaticResource FontBody}"
                                            TextWrapping="Wrap" VerticalAlignment="Top">
                                     <TextBlock.Style>
+                                        <!-- 不能写 BasedOn="{StaticResource {x:Type TextBlock}}}" ——
+                                             项目里没有定义 TextBlock 的隐式样式，
+                                             StaticResource 找不到这个 key 会在加载期直接抛异常。 -->
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsWarning}" Value="True">
-                                                    <Setter Property="Foreground" Value="#FFC5221F"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -40,15 +54,13 @@
             </StackPanel>
         </Border>
 
-        <!-- ── 探测 ─────────────────────────────────── -->
+        <!-- ── 探测 ────────────────────────────────────────────────── -->
         <Border Style="{StaticResource Card}">
             <StackPanel>
                 <TextBlock Text="{l10n:L Diag.ProbeTitle}" Style="{StaticResource SectionTitle}"/>
-                <TextBlock Text="{l10n:L Diag.ProbeIntro}"
-                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="0,0,0,12"/>
+                <TextBlock Text="{l10n:L Diag.ProbeIntro}" Style="{StaticResource SectionIntro}"/>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <StackPanel Orientation="Horizontal" Margin="{StaticResource GapActionRow}">
                     <Button Content="{l10n:L Diag.RunProbe}" Style="{StaticResource PrimaryButton}"
                             Command="{Binding RunProbeCommand}" Margin="0,0,10,0"/>
                     <Button Content="{l10n:L Diag.RunDeploy}" Style="{StaticResource SecondaryButton}"
@@ -57,51 +69,80 @@
                             Command="{Binding CopyReportCommand}"/>
                 </StackPanel>
 
-                <Border Background="#FFF0F2F5" CornerRadius="6" Padding="10,8" Margin="0,0,0,12">
-                    <TextBlock Text="{Binding StatusText}" FontSize="12.5"
-                               Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                <!-- 忙碌指示。探测要跑命名管道 + 部署器 + 扫日志，几百毫秒起步，
+                     这段时间界面毫无变化的话用户会以为按钮没点上而连点。 -->
+                <StackPanel Orientation="Horizontal" Margin="{StaticResource GapActionRow}"
+                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+                    <Border Style="{StaticResource BusySpinner}" Margin="0,0,8,0">
+                        <Border.RenderTransform>
+                            <RotateTransform Angle="0" CenterX="7" CenterY="7"/>
+                        </Border.RenderTransform>
+                        <Border.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                         From="0" To="360" Duration="0:0:0.9"
+                                                         RepeatBehavior="Forever"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Border.Triggers>
+                    </Border>
+                    <TextBlock Text="{l10n:L Common.Working}" FontSize="{StaticResource FontCaption}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <Border Style="{StaticResource StatusStrip}" Margin="{StaticResource GapActionRow}">
+                    <TextBlock Text="{Binding StatusText}" FontSize="{StaticResource FontBody}"
+                               Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap"
+                               LineHeight="{StaticResource LineBody}"/>
                 </Border>
 
                 <ItemsControl ItemsSource="{Binding Results}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="#FFFAFBFC" BorderBrush="{StaticResource BorderBrushKey}"
-                                    BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                            <Border Style="{StaticResource ListFrame}" Padding="14,12"
+                                    Margin="0,0,0,10">
                                 <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                         <!-- 徽标背景按 Status（枚举）判断，不按 StatusText（本地化文本）——
                                              否则用户切到英文后 "正常" 变成 "OK"，DataTrigger 全部失配、徽标变灰。 -->
-                                        <Border CornerRadius="4" Padding="7,2" Margin="0,0,8,0">
+                                        <!-- Style 只能用属性元素设一次。同时写 Style="..." 特性和
+                                             <Border.Style> 属性元素会报「重复设置属性」。 -->
+                                        <Border Margin="0,0,10,0">
                                             <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="#FFE8EAED"/>
+                                                <Style TargetType="Border" BasedOn="{StaticResource StatusChip}">
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Status}" Value="{x:Static svc:ProbeStatus.Ok}">
-                                                            <Setter Property="Background" Value="#FFD9F0DC"/>
+                                                            <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Status}" Value="{x:Static svc:ProbeStatus.Warn}">
-                                                            <Setter Property="Background" Value="#FFFDF0D9"/>
+                                                            <Setter Property="Background" Value="{StaticResource WarningSoftBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Status}" Value="{x:Static svc:ProbeStatus.Fail}">
-                                                            <Setter Property="Background" Value="#FFFBE0DF"/>
+                                                            <Setter Property="Background" Value="{StaticResource ErrorSoftBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
-                                            <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding StatusText}" Style="{StaticResource StatusChipText}"/>
                                         </Border>
-                                        <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
-                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding Summary}" FontSize="12.5"
+                                        <TextBlock Text="{Binding Name}" FontSize="{StaticResource FontBody}"
+                                                   FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <TextBlock Text="{Binding Summary}" FontSize="{StaticResource FontBody}"
                                                    Foreground="{StaticResource TextSecondaryBrush}"
                                                    VerticalAlignment="Center" TextWrapping="Wrap"/>
                                     </StackPanel>
                                     <ItemsControl ItemsSource="{Binding Details}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding}" FontSize="11.5" FontFamily="Consolas"
+                                                <TextBlock Text="{Binding}" Style="{StaticResource MonoText}"
+                                                           FontSize="{StaticResource FontCaption}"
                                                            Foreground="{StaticResource TextSecondaryBrush}"
-                                                           TextWrapping="Wrap" Margin="0,1"/>
+                                                           TextWrapping="Wrap" Margin="0,2"/>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
@@ -110,6 +151,11 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
+                <!-- 空状态：没跑过探测时，「没有结果」和「探测失败」看起来一模一样，
+                     用户会以为程序坏了。给一句人话。 -->
+                <TextBlock Text="{l10n:L Diag.NoResults}" Style="{StaticResource EmptyState}"
+                           Visibility="{Binding ShowNoResults, Converter={StaticResource BoolToVisibility}}"/>
             </StackPanel>
         </Border>
     </StackPanel>

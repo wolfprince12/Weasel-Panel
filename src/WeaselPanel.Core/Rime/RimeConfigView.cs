@@ -142,6 +142,14 @@ public sealed class RimeConfigView
 
     public object? Lookup(string path) => TryResolve(path, out var v) ? v : null;
 
+    /// <summary>
+    /// 合并后的整棵树（只读）。**仅供「配置查看器」这类需要遍历全部键的场景使用。**
+    /// 取值请一律走 <see cref="Lookup"/> / TryGet* —— 扁平键（"style/font_point"）
+    /// 与「列表整体替换、映射深度合并」的语义都封装在本类里，
+    /// 在外部自己下钻会得到与 librime 不一致的结果。
+    /// </summary>
+    public IReadOnlyDictionary<string, object?> Root => _root;
+
     /// <summary>取布尔。返回值 = 键存在且可解析为布尔。</summary>
     public bool TryGetBool(string path, out bool value)
     {

@@ -25,6 +25,12 @@ public sealed class DiagnosticsViewModel : ViewModelBase, ILanguageAware
     {
         StatusText = StatusFromKey("Diag.HintClick");
 
+        // 探测结果的「空状态」提示靠这个开关。WPF 的 XAML 没法直接写
+        // 「集合为空时显示」，得在 ViewModel 里算成 bool 再让转换器绑 Visibility。
+        // 挂 CollectionChanged 而不是在每个改动处手动刷新 —— 后者漏一次就是
+        // 一个「改了没生效」的 bug。
+        Results.CollectionChanged += (_, _) => OnPropertyChanged(nameof(ShowNoResults));
+
         RefreshEnvironment();
         RunProbeCommand = new RelayCommand(RunProbeAsync, () => !IsBusy);
         RunDeployCommand = new RelayCommand(RunDeployAsync, () => !IsBusy && Environment?.DeployerPath is not null);
@@ -50,6 +56,9 @@ public sealed class DiagnosticsViewModel : ViewModelBase, ILanguageAware
     }
 
     public bool IsNotBusy => !IsBusy;
+
+    /// <summary>还没跑过探测（或结果被清空）时为真，用于在结果区显示一句空状态提示。</summary>
+    public bool ShowNoResults => Results.Count == 0;
 
     public string StatusText
     {
@@ -161,7 +170,23 @@ public sealed class DiagnosticsViewModel : ViewModelBase, ILanguageAware
         sb.AppendLine(L10n.Instance.T("Diag.ReportTitle"));
         sb.AppendLine(L10n.Instance.T("Diag.RowFormat",
     L10n.Instance.T("Diag.ReportTime"), DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
+
+        // ── 自证三行 ──────────────────────────────────────────────────
+        // 这三行不是给用户看的，是给「收到报告的人」看的。
+        // 之前踩过一次：报告里漏出一堆键名（Diag.RowFormat / Diag.ReportTitle），
+        // 看着像语言包缺键，实际是用户跑的是旧版 exe —— 但光看报告根本判断不出来，
+        // 只能靠时间戳猜。把版本、构建时间、语言包写进报告，下次一眼就能分辨
+        // 「包缺键」还是「exe 旧」。
+        var v = App.ExecutableVersion;
+        sb.AppendLine(L10n.Instance.T("Diag.RowFormat",
+            L10n.Instance.T("Diag.ReportPanel"), $"{v.Major}.{v.Minor}.{v.Build}"));
+        sb.AppendLine(L10n.Instance.T("Diag.RowFormat",
+            L10n.Instance.T("Diag.ReportBuild"),
+            App.ExecutableBuildTime.ToString("yyyy-MM-dd HH:mm:ss")));
+        sb.AppendLine(L10n.Instance.T("Diag.RowFormat",
+            L10n.Instance.T("Diag.ReportLang"), L10n.Instance.Language));
         sb.AppendLine();
+
         sb.AppendLine(L10n.Instance.T("Diag.ReportEnv"));
         foreach (var r in EnvironmentRows)
             sb.AppendLine(L10n.Instance.T("Diag.RowFormat", r.Key, r.Value));

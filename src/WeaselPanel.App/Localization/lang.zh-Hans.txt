@@ -5,7 +5,7 @@
 #
 # 格式见 lang.en.txt 顶部注释。
 
-# ── 程序名 ──────────────────────────────────────────────────────────────
+# ── 程序名 ─────────────────────────────────────────────────────────────────────
 App.Name = 小狼毫控制面板
 App.NameShort = 小狼毫
 App.Subtitle = 控制面板
@@ -15,16 +15,21 @@ App.BuildPrefix = 构建
 App.CrashBody = 发生未处理的异常：\n\n{0}\n\n日志已写入：\n{1}
 App.DetectFailed = 环境探测失败：\n{0}
 
-# ── 侧边导航 ────────────────────────────────────────────────────────────
+# ── 侧边导航 ─────────────────────────────────────────────────────────────────────
 Nav.Diagnostics = 环境诊断
 Nav.Appearance = 外观
 Nav.Schema = 输入方案
 Nav.Input = 按键与输入
 Nav.Behavior = 行为
+Nav.AppOptions = 应用选项
 Nav.Backup = 备份
 Nav.About = 关于
 
-# ── 通用按钮 / 标签 ─────────────────────────────────────────────────────
+Nav.Dictionary = 词典
+Nav.Maintenance = 维护
+Nav.Inspector = 配置查看
+
+# ── 通用按钮 / 标签 ─────────────────────────────────────────────────────────────────────
 Common.Ready = 就绪
 Common.Apply = 应用
 Common.Reload = 重新加载
@@ -43,14 +48,16 @@ Common.No = 否
 Common.Language = 语言
 Common.Error = 错误
 
-# ── 语言选择 ────────────────────────────────────────────────────────────
+Common.Working = 处理中……
+
+# ── 语言选择 ─────────────────────────────────────────────────────────────────────
 Lang.Auto = 跟随系统
 Lang.zh-Hans = 简体中文
 Lang.zh-Hant = 繁體中文
 Lang.en = English
 Lang.Note = 切换后立即生效。选择保存在 %APPDATA%\WeaselPanel\settings.json，不写入 Rime 用户目录（避免污染同步与备份）。
 
-# ── 诊断页 ──────────────────────────────────────────────────────────────
+# ── 诊断页 ─────────────────────────────────────────────────────────────────────
 Diag.EnvTitle = 环境
 Diag.ProbeTitle = 环境探测
 Diag.ProbeIntro = 验证那些无法靠读源码确定的行为：命名管道连通性、部署器退出码、日志文件名格式、librime-lua 可用性。
@@ -93,13 +100,20 @@ Diag.Value.No = 否
 Diag.Value.Ready = 已就绪
 Diag.Value.NotExist = 尚不存在（需先部署一次）
 
-# ── 探测状态徽标 ────────────────────────────────────────────────────────
+Diag.Title = 环境诊断
+Diag.Intro = 先看本机小狼毫装在哪个目录、用户目录是否就绪、部署器能否调用。改配置前跑一遍，能避开大部分「改了没反应」。
+Diag.NoResults = 还没有探测结果 —— 点「开始探测」跑一遍。
+Diag.ReportPanel = 面板版本
+Diag.ReportBuild = 构建时间
+Diag.ReportLang = 语言包
+
+# ── 探测状态徽标 ─────────────────────────────────────────────────────────────────────
 Probe.Status.Ok = 正常
 Probe.Status.Warn = 警告
 Probe.Status.Fail = 失败
 Probe.Status.Skip = 跳过
 
-# ── 探针：命名管道 ──────────────────────────────────────────────────────
+# ── 探针：命名管道 ─────────────────────────────────────────────────────────────────────
 Probe.Name.Pipe = 命名管道
 Probe.Pipe.Ok = 连通：{0}
 Probe.Pipe.Fail = 无法连通：{0}
@@ -108,16 +122,16 @@ Probe.Pipe.Candidate = 候选
 Probe.Pipe.ReasonUpstream = 上游规则（含用户名前缀）
 Probe.Pipe.ReasonNoPrefix = 无用户名前缀（早期版本格式）
 
-# ── 探针：部署器 ────────────────────────────────────────────────────────
+# ── 探针：部署器 ─────────────────────────────────────────────────────────────────────
 Probe.Name.Deployer = 部署器 /deploy
 Probe.Deployer.Skipped = 已跳过（部署会修改用户数据，请手动点击）
 
-# ── 探针：日志文件 ──────────────────────────────────────────────────────
+# ── 探针：日志文件 ─────────────────────────────────────────────────────────────────────
 Probe.Name.Logs = 日志文件
 Probe.Logs.Found = 找到 {0} 个 rime 日志
 Probe.Logs.DirMissing = 日志目录不存在：{0}
 
-# ── 探针：librime-lua ───────────────────────────────────────────────────
+# ── 探针：librime-lua ─────────────────────────────────────────────────────────────────────
 Probe.Name.Lua = librime-lua 插件
 Probe.Lua.Missing = 未安装 lua 插件（可选，不影响本体与面板使用）
 Probe.Lua.Found = 已找到 lua 插件
@@ -158,7 +172,7 @@ Probe.Lua.ConfiguredButMissing = ⚠️ 配置引用了 lua 但插件不在：�
 Probe.Lua.SummaryOk = 发现 lua 插件文件，紫毫纠错具备启用条件
 Probe.Lua.SummaryMissing = 未发现插件文件，但配置中已有 lua 引用 —— 部署会失败
 
-# ── 外观页 ──────────────────────────────────────────────────────────────
+# ── 外观页 ─────────────────────────────────────────────────────────────────────
 Appearance.PreviewTitle = 候选窗预览
 Appearance.PreviewNote1 = 显示的是派生后的生效值（而非配置原值）：颜色走完整回退链与 alpha 混合，
 Appearance.PreviewNote2 = 字号未配置时按上游规则兜底为 12，序号按 label_format 渲染。
@@ -207,7 +221,10 @@ Appearance.Status.NoCatalog = 未能加载内置配色目录 —— 请到「诊
 Appearance.Status.Ready = 就绪
 Appearance.CatalogMissing = （未找到 weasel.yaml，配色目录为空）
 
-# ── 方案页 ──────────────────────────────────────────────────────────────
+Appearance.Title = 外观
+Appearance.Intro = 候选窗口的字体、配色与排版。所有取值都用与小狼毫本体同一套规则推导，这里看到的就是实际渲染结果。
+
+# ── 方案页 ─────────────────────────────────────────────────────────────────────
 Schema.Title = 输入方案
 Schema.Intro = 列表顺序即为切换顺序 —— 第一个是默认方案。修改后点「应用」写入 default.custom.yaml 的 patch/schema_list，点「部署」即可在输入法中看到变化。
 Schema.Rescan = 重新扫描
@@ -239,7 +256,11 @@ Schema.Status.ParseFailed = 配置文件解析失败，已拒绝写入（避免�
 Schema.Status.Written = 已写入 {0}（{1} 个方案已写盘，需执行部署后生效）
 Schema.Status.WriteFailed = 写入失败：{0}
 
-# ── 按键与输入页 ────────────────────────────────────────────────────────
+Schema.NoActive = 还没有启用任何方案。
+Schema.NoAvailable = 所有已安装的方案都已启用。
+Schema.AvailableNote = 「可用方案」列出的是本机已安装、但当前未启用的方案。
+
+# ── 按键与输入页 ─────────────────────────────────────────────────────────────────────
 Input.Title = 按键与输入
 Input.Intro = 候选数与翻页键。写入 default.custom.yaml 后需执行部署。
 Input.PageSize = 每页候选数
@@ -267,7 +288,9 @@ Input.Status.Loaded = 已从 {0} 载入当前设置
 Input.Status.NoConfig = 尚无 default.custom.yaml —— 显示的是 Rime 默认值
 Input.Status.LoadFailed = 读取 {0} 失败：{1}
 
-# ── 行为页 ──────────────────────────────────────────────────────────────
+Input.PageSizeGroup = 翻页与候选数
+
+# ── 行为页 ─────────────────────────────────────────────────────────────────────
 Behavior.Switch.Title = 中英切换
 Behavior.Switch.Intro = 决定这五个键各自按下时做什么。写入 default.custom.yaml 的 ascii_composer 段。
 Behavior.GoodOldCapsLock = Caps Lock 直接上屏英文（good_old_caps_lock）
@@ -314,7 +337,176 @@ Behavior.Status.Written = 已写入 weasel.custom.yaml 与 default.custom.yaml�
 Behavior.Status.WriteFailed = 写入失败：{0}
 Behavior.Status.ParseFailed = 配置解析失败，已拒绝写入（避免损坏用户文件）：{0}
 
-# ── 备份页 ──────────────────────────────────────────────────────────────
+Behavior.Title = 行为
+Behavior.Intro = 中英切换、Shift 上屏、通知时长等输入习惯开关。改完记得部署。
+
+# ── 应用选项页 ─────────────────────────────────────────────────────────────────────
+AppOptions.Title = 应用选项
+AppOptions.Intro = 给单个程序单独设定输入法进入时的默认状态。写在 weasel.custom.yaml 的 app_options 段，键是程序的 exe 文件名。改完需要重新部署。
+AppOptions.AddLabel = 程序
+AppOptions.Add = 添加
+AppOptions.PresetTip = 选一个常见程序，右边的输入框会自动填好
+AppOptions.NewExeTip = 填 exe 文件名，比如 notepad.exe —— 不是窗口标题，也不是软件名
+AppOptions.FilterTip = 按 exe 文件名筛选
+AppOptions.Remove = 移除
+AppOptions.RemoveTip = 只能移除自己添加的条目。出厂条目在 weasel.yaml 里，移不掉。
+AppOptions.ResetAll = 恢复默认
+AppOptions.ResetAllTip = 删掉本面板写过的全部 app_options 键；你自己手写的键会保留
+AppOptions.Column.Exe = 程序（exe）
+AppOptions.Column.Ascii = 默认英文
+AppOptions.Column.Vim = Vim 模式
+AppOptions.Column.Inline = 行内显示
+AppOptions.Column.Origin = 来源
+AppOptions.AsciiTip = 进入这个程序时默认英文
+AppOptions.VimTip = 按 Esc / Ctrl+C / Ctrl+[ 时自动切回英文
+AppOptions.InlineTip = 把正在拼的字直接画在程序里，而不是跟随全局设置
+AppOptions.Inline.Follow = 跟随全局
+AppOptions.Inline.On = 开
+AppOptions.Inline.Off = 关
+AppOptions.OriginBuiltIn = 出厂
+AppOptions.OriginUser = 自定义
+AppOptions.NoRows = 还没有给任何程序单独设过。在上面加一个程序，就能给它单独定默认值。
+AppOptions.NoMatch = 没有匹配的程序。
+AppOptions.RowCountFormat = 共 {0} 个程序
+AppOptions.Save = 保存
+AppOptions.NoteTitle = 三个开关分别管什么
+AppOptions.NoteIntro = 小狼毫会把 app_options/<程序> 下的所有键都当成开关交给 Rime。写别的名字不会报错，但也不会有任何效果。
+AppOptions.NoteAscii = 进入时默认英文。出厂的 weasel.yaml 已经给 cmd.exe 和 conhost.exe 设了这一条。
+AppOptions.NoteVim = 按 Esc / Ctrl+C / Ctrl+[ 时自动切回英文 —— 在 Vim 和终端里很有用。
+AppOptions.NoteInline = 把正在拼的字直接画在程序里。「跟随全局」沿用外观页的设置，另外两档只对这一个程序生效。
+AppOptions.NoteDeploy = 改完要到「维护」页重新部署才会生效。已经开着的程序要重启：这些选项是程序连上输入法时读一次的。
+AppOptions.Status.Loading = 正在读取 weasel.custom.yaml…
+AppOptions.Status.Loaded = 已载入 {0} 个程序。
+AppOptions.Status.LoadFailed = 读取失败：{0}
+AppOptions.Status.Saving = 正在写入…
+AppOptions.Status.Saved = 已保存，当前生效 {0} 个程序。
+AppOptions.Status.SaveFailed = 写入失败：{0}
+AppOptions.Status.Added = 已添加 {0}，记得保存。
+AppOptions.Status.Removed = 已移除 {0}，记得保存。
+AppOptions.Status.Duplicate = {0} 已经在列表里了。
+AppOptions.Status.Reset = 已恢复为出厂行为。
+AppOptions.DiscardTitle = 放弃改动？
+AppOptions.DiscardBody = 有未保存的改动，重新载入会丢掉。
+AppOptions.ResetAllTitle = 恢复应用选项默认值？
+AppOptions.ResetAllBody = 这会删掉本面板在 weasel.custom.yaml 里写过的全部 app_options 键，所有程序回到出厂行为。\n\n你自己手写的键会保留。
+AppOptions.Preset.Cmd = 命令提示符（{0}）
+AppOptions.Preset.Conhost = 控制台窗口（{0}）
+AppOptions.Preset.Powershell = Windows PowerShell（{0}）
+AppOptions.Preset.Pwsh = PowerShell 7（{0}）
+AppOptions.Preset.WindowsTerminal = Windows 终端（{0}）
+AppOptions.Preset.Wsl = WSL（{0}）
+AppOptions.Preset.Bash = Git Bash（{0}）
+AppOptions.Preset.Vscode = Visual Studio Code（{0}）
+AppOptions.Preset.VisualStudio = Visual Studio（{0}）
+AppOptions.Preset.Idea = IntelliJ IDEA（{0}）
+AppOptions.Preset.Pycharm = PyCharm（{0}）
+AppOptions.Preset.Vim = Vim（{0}）
+
+# ── 词典页 ─────────────────────────────────────────────────────────────────────
+Dictionary.Title = 用户词典
+Dictionary.Intro = 编辑 custom_phrase.txt（全拼）与 custom_phrase_double.txt（双拼）。一行一条：词<Tab>编码<Tab>权重。
+Dictionary.File = 文件
+Dictionary.File.Full = custom_phrase.txt（全拼）
+Dictionary.File.Double = custom_phrase_double.txt（双拼）
+Dictionary.FilterTip = 按词、编码或权重过滤
+Dictionary.Add = 添加
+Dictionary.Remove = 删除
+Dictionary.Save = 保存
+Dictionary.Column.Word = 词
+Dictionary.Column.Code = 编码
+Dictionary.Column.Weight = 权重
+Dictionary.EntryCountFormat = 共 {0} 条
+Dictionary.NoEntries = 这个文件里还没有词条。
+Dictionary.NoMatch = 没有符合当前搜索条件的词条。
+Dictionary.Status.Loading = 正在读取……
+Dictionary.Status.Loaded = 已读取 {0} 条
+Dictionary.Status.NewFile = 文件尚不存在，保存时会自动创建。
+Dictionary.Status.LoadFailed = 读取失败：{0}
+Dictionary.Status.Added = 已添加一条空白条目，请在列表末尾填写。
+Dictionary.Status.Removed = 已删除该条目。
+Dictionary.Status.Saving = 正在保存……
+Dictionary.Status.Saved = 已保存 {0} 条。需要部署后生效。
+Dictionary.Status.SaveFailed = 保存失败：{0}
+Dictionary.CaveatTitle = 什么时候才会生效？
+Dictionary.CaveatBody = 只有当当前方案在 translator/dictionary 里挂了 custom_phrase，Rime 才会加载这个词库。雾凇拼音（rime-ice）出厂就挂了；小狼毫自带的方案默认没挂。此页只做提示、不代改方案 —— 方案里写错一格会导致整个方案编译失败，直接打不出中文。
+
+# ── 维护页 ─────────────────────────────────────────────────────────────────────
+Maintenance.Title = 维护
+Maintenance.Intro = 部署、同步、查看目录、清理日志。部署是让其他页面的改动真正生效的那一步。
+Maintenance.DeployTitle = 部署
+Maintenance.DeployIntro = 写 *.custom.yaml 只是把改动记下来，Rime 要等你部署后才会去读。首次部署可能要几分钟，因为要编译词典。
+Maintenance.Deploy = 部署
+Maintenance.Sync = 同步用户数据
+Maintenance.Reinstall = 初始部署
+Maintenance.FolderTitle = 目录
+Maintenance.FolderIntro = 小狼毫的程序文件、共享数据、你的配置与日志分别放在哪里。
+Maintenance.Folder.User = 用户目录
+Maintenance.Folder.Program = 程序目录
+Maintenance.Folder.Shared = 共享数据
+Maintenance.Folder.Sync = 同步目录
+Maintenance.Folder.Log = 日志目录
+Maintenance.Open = 打开
+Maintenance.LogTitle = 日志
+Maintenance.LogIntro = librime 每个进程写一个日志文件。这些文件可以放心删除，小狼毫下次启动会重新生成。
+Maintenance.NoLogs = 没有日志文件。
+Maintenance.LogTotal = 共 {0} 个文件，{1}
+Maintenance.ClearLogs = 清空日志
+Maintenance.ClearConfirmTitle = 清空日志？
+Maintenance.ClearConfirmBody = 将删除 {0} 个日志文件，位置：\n{1}\n\n此操作不可撤销。
+Maintenance.Status.Cancelled = 已取消。
+Maintenance.Status.Cleared = 已删除 {0} 个日志文件。
+Maintenance.Status.ClearPartial = 已删除 {0} 个，另有 {1} 个删不掉（被占用或没有权限）。
+Maintenance.Status.LogsRefreshed = 找到 {0} 个日志文件。
+Maintenance.Status.LogScanFailed = 扫描日志目录失败：{0}
+Maintenance.Status.NoDeployer = 没有找到 WeaselDeployer.exe —— 小狼毫装好了吗？
+Maintenance.Status.Done = 已完成。
+Maintenance.Status.AnotherInstance = 部署器已在运行（退出码 1），这不是失败 —— 等它跑完即可。
+Maintenance.Status.Timeout = 超过 3 分钟仍未结束，已超时。
+Maintenance.Status.ExitCode = 部署器退出码 {0}。
+Maintenance.Status.Exception = 调用部署器失败：{0}
+Maintenance.InstallConfirmTitle = 执行初始部署？
+Maintenance.InstallConfirmBody = 初始部署会重建整个用户工作区，比普通部署慢得多。只在用户目录损坏或被清空时才需要它。
+Maintenance.Action.Deploying = 正在部署，可能需要几分钟……
+Maintenance.Action.Syncing = 正在同步用户数据……
+Maintenance.Action.Installing = 正在执行初始部署，可能需要数分钟……
+Maintenance.Err.StartFailed = 部署器进程启动失败。
+Maintenance.Err.Timeout = 已超时（进程被终止）。
+Maintenance.Out.CommandLine = 命令行："{0}" {1}
+Maintenance.Out.ExitCode = 退出码：{0}
+Maintenance.Out.Elapsed = 耗时：{0} 秒
+Maintenance.Out.StdOut = 标准输出：{0}
+Maintenance.Out.StdErr = 标准错误：{0}
+
+# ── 配置查看器页 ─────────────────────────────────────────────────────────────────────
+Inspector.Title = 配置查看
+Inspector.Intro = 这里显示的是 Rime 实际读到的值 —— 基础文件与你的 *.custom.yaml 补丁合并之后的结果。只读；要改请去对应的编辑页。
+Inspector.File = 文件
+Inspector.FilterTip = 按键路径或值过滤
+Inspector.Copy = 复制全部
+Inspector.Locate = 定位
+Inspector.ClearFilter = 清除搜索
+Inspector.BaseFile = 基础文件
+Inspector.PatchFile = 补丁文件
+Inspector.Column.Path = 键路径
+Inspector.Column.Value = 生效值
+Inspector.Column.Origin = 来源
+Inspector.Origin.Base = 基础
+Inspector.Origin.Patch = 补丁
+Inspector.EntryCountFormat = 共 {0} 个键
+Inspector.OverrideCountFormat = 其中 {0} 项被覆盖
+Inspector.NoEntries = 这个文件里没有键，或者解析失败。
+Inspector.NoMatch = 没有符合当前搜索条件的键。
+Inspector.Status.Loaded = 已读取 {0}，合并后共 {1} 个键。
+Inspector.Status.NoBaseFile = 没有找到 {0}。
+Inspector.Status.Copied = 已复制 {0} 个键到剪贴板。
+Inspector.Status.ClipboardBusy = 剪贴板被占用，请再试一次。
+Inspector.Copy.BaseLine = 基础文件：{0}
+Inspector.Copy.PatchLine = 补丁文件：{0}
+Inspector.RuleTitle = 这些值是怎么合并出来的
+Inspector.RuleBody = 用户目录里的同名文件会整份取代共享数据目录里的那份，不是逐键合并。然后再并入 <name>.custom.yaml 的 patch 节点：映射是深度合并（只改 style/font_point 不会抹掉 style/layout），列表则是整体替换（schema_list 一写就整份覆盖）。
+
+
+# ── 备份页 ─────────────────────────────────────────────────────────────────────
 Backup.Title = 备份与恢复
 Backup.Intro = 改配置前先建一次备份，改坏了随时能退回来。「恢复」会先自动给当前状态留一份快照，所以恢复本身也是可撤销的。
 Backup.Label = 标签
@@ -351,7 +543,10 @@ Backup.Confirm.Delete.Body = 确定删除这个备份吗？\n\n　{0}　{1}\n　
 Backup.AutoLabel = 恢复前自动备份
 Backup.Msg.Restored.Body = 恢复完成。\n\n请到「外观」页点「部署」，改动才会在输入法中生效。
 
-# ── 关于页 ──────────────────────────────────────────────────────────────
+Backup.NoBackups = 还没有备份 —— 改动配置前建议先建一个。
+Backup.NoFiles = 这个备份里没有任何文件。
+
+# ── 关于页 ─────────────────────────────────────────────────────────────────────
 About.Tagline = Weasel Panel — macOS「鼠须管控制面板」的 Windows 姊妹项目
 About.Version = 版本
 About.VersionPreview = {0}.{1}.{2} 预览版
@@ -370,3 +565,5 @@ About.UserDir = 用户目录
 About.RowFormat = {0}：{1}
 About.Deployer = 部署器
 About.DeployHint = 改动需部署后生效 —— 改完请到「外观」页点「部署」。
+
+About.LanguageIntro = 界面语言默认跟随系统，可在此手动覆盖。

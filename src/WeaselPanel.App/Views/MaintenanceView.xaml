@@ -1,0 +1,173 @@
+<UserControl x:Class="WeaselPanel.App.Views.MaintenanceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
+    <StackPanel>
+        <TextBlock Text="{l10n:L Maintenance.Title}" Style="{StaticResource PageTitle}"/>
+        <TextBlock Text="{l10n:L Maintenance.Intro}" Style="{StaticResource PageIntro}"/>
+
+        <!-- ── 部署 ────────────────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Maintenance.DeployTitle}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Maintenance.DeployIntro}" Style="{StaticResource SectionIntro}"/>
+
+                <WrapPanel Orientation="Horizontal" Margin="0,0,0,14">
+                    <Button Content="{l10n:L Maintenance.Deploy}" Command="{Binding DeployCommand}"
+                            Style="{StaticResource PrimaryButton}" Margin="0,0,10,0"/>
+                    <Button Content="{l10n:L Maintenance.Sync}" Command="{Binding SyncCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"/>
+                    <Button Content="{l10n:L Maintenance.Reinstall}" Command="{Binding ReinstallCommand}"
+                            Style="{StaticResource SecondaryButton}"/>
+                </WrapPanel>
+
+                <!-- 部署器路径。找不到时三个按钮都是灰的，这里把路径亮出来，
+                     用户一眼能看出是「没装」还是「装到了别处」。 -->
+                <Border Style="{StaticResource CodeBlock}" Padding="10,8">
+                    <TextBlock Text="{Binding DeployerPath}" Style="{StaticResource MonoText}"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                </Border>
+
+                <!-- 忙碌指示。部署动辄几十秒到几分钟，不给反馈用户会一直点。 -->
+                <StackPanel Orientation="Horizontal" Margin="0,14,0,0"
+                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+                    <Border Style="{StaticResource BusySpinner}" Margin="0,0,8,0">
+                        <Border.RenderTransform>
+                            <RotateTransform Angle="0" CenterX="7" CenterY="7"/>
+                        </Border.RenderTransform>
+                        <Border.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                         From="0" To="360" Duration="0:0:0.9"
+                                                         RepeatBehavior="Forever"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Border.Triggers>
+                    </Border>
+                    <TextBlock Text="{Binding CurrentAction}" FontSize="{StaticResource FontCaption}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <Border Style="{StaticResource StatusStrip}" Margin="0,14,0,0">
+                    <TextBlock Text="{Binding StatusText}" FontSize="{StaticResource FontBody}"
+                               TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"/>
+                </Border>
+
+                <!-- 部署器输出。GUI 子系统程序的 stdout 常常是空的，所以
+                     「没输出」不等于「没干活」—— 只在真有输出时才显示这块。 -->
+                <Border Style="{StaticResource CodeBlock}" Margin="0,10,0,0"
+                        Visibility="{Binding HasOutput, Converter={StaticResource BoolToVisibility}}">
+                    <ScrollViewer MaxHeight="160" VerticalScrollBarVisibility="Auto">
+                        <TextBlock Text="{Binding OutputText}" Style="{StaticResource MonoText}"
+                                   TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"/>
+                    </ScrollViewer>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- ── 目录 ──────────────────────────────────────────────────
+             四个「打开目录」走 TertiaryButton（纯文字），不占视觉重量 ——
+             它们是顺手工具，不是这一页的主操作。 -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Maintenance.FolderTitle}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Maintenance.FolderIntro}" Style="{StaticResource SectionIntro}"/>
+
+                <!-- 五个目录用同一套行模板渲染。写死五行 Grid 也能跑，
+                     但标签是「拼好的字符串」，切语言时只能整块重建 ——
+                     交给 ItemsControl 后重建逻辑收敛在 VM 的 BuildFolders()。 -->
+                <ItemsControl ItemsSource="{Binding Folders}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="{StaticResource GapRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Label}" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Path}" Style="{StaticResource MonoText}"
+                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <Button Grid.Column="2" Content="{l10n:L Maintenance.Open}"
+                                        Command="{Binding OpenCommand}"
+                                        Style="{StaticResource TertiaryButton}" Margin="8,0,0,0"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- ── 日志 ────────────────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="{l10n:L Maintenance.LogTitle}" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="{l10n:L Maintenance.LogIntro}" Style="{StaticResource SectionIntro}"/>
+                </StackPanel>
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource ListFrame}" Height="200">
+                        <Grid>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding LogFiles}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="{StaticResource GapRow}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="86"/>
+                                                    <ColumnDefinition Width="130"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}"
+                                                           Style="{StaticResource MonoText}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding SizeText}"
+                                                           Style="{StaticResource FieldNote}"
+                                                           HorizontalAlignment="Right" Margin="12,0"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding ModifiedText}"
+                                                           Style="{StaticResource FieldNote}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            <TextBlock Text="{l10n:L Maintenance.NoLogs}" Style="{StaticResource EmptyState}"
+                                       IsHitTestVisible="False"
+                                       Visibility="{Binding ShowNoLogs, Converter={StaticResource BoolToVisibility}}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- 刷新 / 清空竖排放在列表右侧，跟列表等高对齐 -->
+                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Top">
+                        <Button Content="{l10n:L Common.Refresh}" Command="{Binding RefreshLogsCommand}"
+                                Style="{StaticResource SecondaryButton}" Margin="0,0,0,8"/>
+                        <Button Content="{l10n:L Maintenance.ClearLogs}" Command="{Binding ClearLogsCommand}"
+                                Style="{StaticResource DangerButton}"/>
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Grid.Row="2" Text="{Binding LogTotalText}" Style="{StaticResource FieldNote}"
+                           Margin="0,10,0,0"/>
+            </Grid>
+        </Border>
+    </StackPanel>
+</UserControl>

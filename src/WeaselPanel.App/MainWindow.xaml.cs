@@ -18,6 +18,10 @@ public partial class MainWindow : Window
     private readonly SchemaView _schemaView;
     private readonly InputView _inputView;
     private readonly BehaviorView _behaviorView;
+    private readonly AppOptionsView _appOptionsView;
+    private readonly DictionaryView _dictionaryView;
+    private readonly MaintenanceView _maintenanceView;
+    private readonly InspectorView _inspectorView;
     private readonly BackupView _backupView;
     private readonly AboutView _aboutView;
 
@@ -47,11 +51,15 @@ public partial class MainWindow : Window
         _schemaView = new SchemaView(new SchemaViewModel(environment));
         _inputView = new InputView(new InputViewModel(environment));
         _behaviorView = new BehaviorView(new BehaviorViewModel(environment));
+        _appOptionsView = new AppOptionsView(environment);
+        _dictionaryView = new DictionaryView(environment);
+        _maintenanceView = new MaintenanceView(environment);
+        _inspectorView = new InspectorView(environment);
         _backupView = new BackupView(new BackupViewModel(environment));
         _aboutView = new AboutView(environment);
 
         // ⚠️ 不要在 XAML 里写 ListBoxItem.IsSelected="True"，会在 InitializeComponent
-        // 阶段触发 SelectionChanged，此时 6 个 view 字段还没就绪 → NRE。
+        // 阶段触发 SelectionChanged，此时各 view 字段还没就绪 → NRE。
         // 直接在 ctor 末尾赋 ContentHost.Content 给默认页，不经过事件 —— 用户
         // 启动即看「环境诊断」，后续点击 ListBoxItem 才进入正常的 SelectionChanged 路径。
         ContentHost.Content = _diagnosticsView;
@@ -91,14 +99,17 @@ public partial class MainWindow : Window
     /// 把语言变更派发给各页的 ViewModel。
     /// XAML 里的 <c>{l10n:L Key}</c> 会自己刷新，但 ViewModel 里「赋值那一刻拼好的
     /// 字符串」不会 —— 那些由各自的 <see cref="ILanguageAware.RefreshTexts"/> 重建。
-    /// 诊断页/外观页/方案页/按键页/行为页/备份页都实现了该接口；关于页没有需要重建的文本。
+    /// 诊断页/外观页/方案页/按键页/行为页/词典页/维护页/配置查看器页/备份页都实现了该
+    /// 接口；关于页没有需要重建的文本。
     /// </summary>
     private void RefreshViewTexts()
     {
         UserControl[] views =
         {
             _diagnosticsView, _appearanceView, _schemaView,
-            _inputView, _behaviorView, _backupView, _aboutView,
+            _inputView, _behaviorView, _appOptionsView, _dictionaryView,
+            _maintenanceView, _inspectorView,
+            _backupView, _aboutView,
         };
 
         foreach (var view in views)
@@ -113,16 +124,26 @@ public partial class MainWindow : Window
         // 否则 return —— 永远不让 Nav_SelectionChanged 因为字段未就绪而 NRE。
         if (_diagnosticsView is null || _appearanceView is null
             || _schemaView is null || _inputView is null
-            || _behaviorView is null || _backupView is null || _aboutView is null) return;
+            || _behaviorView is null || _appOptionsView is null
+            || _dictionaryView is null
+            || _maintenanceView is null || _inspectorView is null
+            || _backupView is null || _aboutView is null) return;
 
+        // ⚠️ 索引必须与 MainWindow.xaml 里 ListBoxItem 的顺序严格一致。
+        // 侧栏是「纯 ListBox + 索引 switch」，加/删/换位都要两边同时改 ——
+        // 一旦错位，点「维护」会跳出「词典」，而且不报错，很难发现。
         ContentHost.Content = Nav.SelectedIndex switch
         {
             1 => _appearanceView,
             2 => _schemaView,
             3 => _inputView,
             4 => _behaviorView,
-            5 => _backupView,
-            6 => _aboutView,
+            5 => _appOptionsView,
+            6 => _dictionaryView,
+            7 => _maintenanceView,
+            8 => _inspectorView,
+            9 => _backupView,
+            10 => _aboutView,
             _ => _diagnosticsView,
         };
     }

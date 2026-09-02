@@ -41,8 +41,18 @@ public sealed class BackupViewModel : ViewModelBase, ILanguageAware
         DeleteCommand = new DelegateCommand(Delete, () => SelectedBackup is not null);
         RefreshCommand = new DelegateCommand(Load);
 
+        // 两张列表的空状态提示。XAML 判不了「集合为空」，在 VM 里算成 bool。
+        Backups.CollectionChanged += (_, _) => OnPropertyChanged(nameof(ShowNoBackups));
+        BackupFiles.CollectionChanged += (_, _) => OnPropertyChanged(nameof(ShowNoFiles));
+
         Load();
     }
+
+    /// <summary>还没有任何备份。</summary>
+    public bool ShowNoBackups => Backups.Count == 0;
+
+    /// <summary>已选中备份，但它里面没有文件（或还没选备份）。</summary>
+    public bool ShowNoFiles => BackupFiles.Count == 0;
 
     // ── 命令 ────────────────────────────────────────────────
 

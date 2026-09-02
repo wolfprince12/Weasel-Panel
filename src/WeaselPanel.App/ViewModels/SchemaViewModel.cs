@@ -164,9 +164,24 @@ public sealed class SchemaViewModel : ViewModelBase, ILanguageAware
         ApplyCommand = new RelayCommand(ApplyAsync, () => ActiveSchemas.Count > 0);
 
         // ObservableCollection 不带 setter 触发的 CanExecute 通知，改写 ActiveSchemas 后统一刷一次。
-        ActiveSchemas.CollectionChanged += (_, _) => CommandManager.InvalidateRequerySuggested();
-        AvailableSchemas.CollectionChanged += (_, _) => CommandManager.InvalidateRequerySuggested();
+        // 顺带驱动两张列表的空状态提示 —— XAML 没法直接判「集合为空」。
+        ActiveSchemas.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(ShowNoActive));
+            CommandManager.InvalidateRequerySuggested();
+        };
+        AvailableSchemas.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(ShowNoAvailable));
+            CommandManager.InvalidateRequerySuggested();
+        };
     }
+
+    /// <summary>左栏（已启用）为空时为真 —— 通常是还没扫到方案，或全被移走了。</summary>
+    public bool ShowNoActive => ActiveSchemas.Count == 0;
+
+    /// <summary>右栏（可启用）为空时为真 —— 所有已安装方案都已在左栏。</summary>
+    public bool ShowNoAvailable => AvailableSchemas.Count == 0;
 
     // ── 加载 ────────────────────────────────────────────────────────────────
 

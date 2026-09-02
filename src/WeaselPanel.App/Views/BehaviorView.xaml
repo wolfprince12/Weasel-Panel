@@ -3,28 +3,27 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
     <StackPanel>
+        <TextBlock Text="{l10n:L Behavior.Title}" Style="{StaticResource PageTitle}"/>
+        <TextBlock Text="{l10n:L Behavior.Intro}" Style="{StaticResource PageIntro}"/>
 
         <!-- ── 中英切换（ascii_composer，写 default.custom.yaml）───────── -->
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
             <StackPanel>
                 <TextBlock Text="{l10n:L Behavior.Switch.Title}" Style="{StaticResource SectionTitle}"/>
-                <TextBlock Text="{l10n:L Behavior.Switch.Intro}" FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="0,0,0,10"/>
+                <TextBlock Text="{l10n:L Behavior.Switch.Intro}" Style="{StaticResource SectionIntro}"/>
 
                 <CheckBox Content="{l10n:L Behavior.GoodOldCapsLock}" IsChecked="{Binding GoodOldCapsLock}"
-                          FontSize="13" Margin="0,3"/>
-                <TextBlock Text="{l10n:L Behavior.GoodOldCapsLock.Note}" FontSize="11"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="22,2,0,10"/>
+                          Margin="0,4"/>
+                <TextBlock Text="{l10n:L Behavior.GoodOldCapsLock.Note}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNoteIndent}"/>
 
                 <!-- 五个切换键各配一个动作下拉。
                      DisplayMemberPath 绑的是 NamedOption.Name —— 它实现 INPC，
                      所以切语言时下拉项文字会跟着变，不用重建集合（重建会丢选中项）。 -->
-                <Grid Margin="0,4,0,0">
+                <Grid Margin="0,16,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="130"/>
-                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                        <ColumnDefinition Width="220"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
@@ -39,118 +38,108 @@
                                Style="{StaticResource FieldLabel}"/>
                     <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding SwitchActionOptions}"
                               SelectedValuePath="Id" DisplayMemberPath="Name"
-                              SelectedValue="{Binding CapsLockAction}" Margin="0,3"/>
+                              SelectedValue="{Binding CapsLockAction}" Margin="0,4"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{l10n:L Behavior.SwitchKey.ShiftL}"
                                Style="{StaticResource FieldLabel}"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding SwitchActionOptions}"
                               SelectedValuePath="Id" DisplayMemberPath="Name"
-                              SelectedValue="{Binding ShiftLeftAction}" Margin="0,3"/>
+                              SelectedValue="{Binding ShiftLeftAction}" Margin="0,4"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="{l10n:L Behavior.SwitchKey.ShiftR}"
                                Style="{StaticResource FieldLabel}"/>
                     <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding SwitchActionOptions}"
                               SelectedValuePath="Id" DisplayMemberPath="Name"
-                              SelectedValue="{Binding ShiftRightAction}" Margin="0,3"/>
+                              SelectedValue="{Binding ShiftRightAction}" Margin="0,4"/>
 
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="{l10n:L Behavior.SwitchKey.ControlL}"
                                Style="{StaticResource FieldLabel}"/>
                     <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding SwitchActionOptions}"
                               SelectedValuePath="Id" DisplayMemberPath="Name"
-                              SelectedValue="{Binding ControlLeftAction}" Margin="0,3"/>
+                              SelectedValue="{Binding ControlLeftAction}" Margin="0,4"/>
 
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="{l10n:L Behavior.SwitchKey.ControlR}"
                                Style="{StaticResource FieldLabel}"/>
                     <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding SwitchActionOptions}"
                               SelectedValuePath="Id" DisplayMemberPath="Name"
-                              SelectedValue="{Binding ControlRightAction}" Margin="0,3"/>
+                              SelectedValue="{Binding ControlRightAction}" Margin="0,4"/>
                 </Grid>
 
-                <TextBlock Text="{l10n:L Behavior.Switch.Note}" FontSize="11"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="0,10,0,0"/>
+                <TextBlock Text="{l10n:L Behavior.Switch.Note}" Style="{StaticResource FieldNote}"
+                           Margin="0,12,0,0"/>
             </StackPanel>
         </Border>
 
         <!-- ── 候选窗行为（写 weasel.custom.yaml）────────────────────── -->
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
             <StackPanel>
                 <TextBlock Text="{l10n:L Behavior.Candidate.Title}" Style="{StaticResource SectionTitle}"/>
-                <TextBlock Text="{l10n:L Behavior.Candidate.Intro}" FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="0,0,0,10"/>
+                <TextBlock Text="{l10n:L Behavior.Candidate.Intro}" Style="{StaticResource SectionIntro}"/>
 
                 <CheckBox Content="{l10n:L Behavior.PagingOnScroll}" IsChecked="{Binding PagingOnScroll}"
-                          FontSize="13" Margin="0,3"/>
-                <TextBlock Text="{l10n:L Behavior.PagingOnScroll.Note}" FontSize="11"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="22,2,0,8"/>
+                          Margin="0,4"/>
+                <TextBlock Text="{l10n:L Behavior.PagingOnScroll.Note}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNoteIndent}"/>
 
                 <CheckBox Content="{l10n:L Behavior.ClickToCapture}" IsChecked="{Binding ClickToCapture}"
-                          FontSize="13" Margin="0,3"/>
-                <TextBlock Text="{l10n:L Behavior.ClickToCapture.Note}" FontSize="11"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="22,2,0,8"/>
+                          Margin="0,4"/>
+                <TextBlock Text="{l10n:L Behavior.ClickToCapture.Note}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNoteIndent}"/>
 
                 <CheckBox Content="{l10n:L Behavior.VerticalAutoReverse}" IsChecked="{Binding VerticalAutoReverse}"
-                          FontSize="13" Margin="0,3"/>
-                <TextBlock Text="{l10n:L Behavior.VerticalAutoReverse.Note}" FontSize="11"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="22,2,0,0"/>
+                          Margin="0,4"/>
+                <TextBlock Text="{l10n:L Behavior.VerticalAutoReverse.Note}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNoteIndent}"/>
             </StackPanel>
         </Border>
 
         <!-- ── 状态与提示 ────────────────────────────────────────────── -->
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
             <StackPanel>
                 <TextBlock Text="{l10n:L Behavior.Status.Title}" Style="{StaticResource SectionTitle}"/>
 
                 <CheckBox Content="{l10n:L Behavior.GlobalAscii}" IsChecked="{Binding GlobalAscii}"
-                          FontSize="13" Margin="0,3"/>
-                <TextBlock Text="{l10n:L Behavior.GlobalAscii.Note}" FontSize="11"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="22,2,0,8"/>
+                          Margin="0,4"/>
+                <TextBlock Text="{l10n:L Behavior.GlobalAscii.Note}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNoteIndent}"/>
 
                 <CheckBox Content="{l10n:L Behavior.AsciiTipFollowCursor}" IsChecked="{Binding AsciiTipFollowCursor}"
-                          FontSize="13" Margin="0,3"/>
-                <TextBlock Text="{l10n:L Behavior.AsciiTipFollowCursor.Note}" FontSize="11"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="22,2,0,8"/>
+                          Margin="0,4"/>
+                <TextBlock Text="{l10n:L Behavior.AsciiTipFollowCursor.Note}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNoteIndent}"/>
 
                 <CheckBox Content="{l10n:L Behavior.DisplayTrayIcon}" IsChecked="{Binding DisplayTrayIcon}"
-                          FontSize="13" Margin="0,3"/>
-                <TextBlock Text="{l10n:L Behavior.DisplayTrayIcon.Note}" FontSize="11"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="22,2,0,0"/>
+                          Margin="0,4"/>
+                <TextBlock Text="{l10n:L Behavior.DisplayTrayIcon.Note}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNoteIndent}"/>
             </StackPanel>
         </Border>
 
         <!-- ── 通知 ─────────────────────────────────────────────────── -->
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
             <StackPanel>
                 <TextBlock Text="{l10n:L Behavior.Notify.Title}" Style="{StaticResource SectionTitle}"/>
 
                 <CheckBox Content="{l10n:L Behavior.ShowNotifications}" IsChecked="{Binding ShowNotifications}"
-                          FontSize="13" Margin="0,3"/>
+                          Margin="0,4"/>
 
-                <Grid Margin="0,12,0,0">
+                <Grid Margin="0,14,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="130"/>
-                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                        <ColumnDefinition Width="96"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="{l10n:L Behavior.NotifyTime}"
                                Style="{StaticResource FieldLabel}"/>
                     <TextBox Grid.Column="1"
-                             Text="{Binding NotificationTime, UpdateSourceTrigger=PropertyChanged}"
-                             FontSize="13" Padding="4,3" VerticalContentAlignment="Center"/>
-                    <TextBlock Grid.Column="2" Text="{l10n:L Behavior.NotifyTime.Unit}" FontSize="12"
+                             Text="{Binding NotificationTime, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Column="2" Text="{l10n:L Behavior.NotifyTime.Unit}"
+                               FontSize="{StaticResource FontBody}"
                                Foreground="{StaticResource TextSecondaryBrush}"
-                               VerticalAlignment="Center" Margin="8,0,0,0"/>
+                               VerticalAlignment="Center" Margin="10,0,0,0"/>
                 </Grid>
-                <TextBlock Text="{l10n:L Behavior.Notify.Note}" FontSize="11"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="0,8,0,0"/>
+                <TextBlock Text="{l10n:L Behavior.Notify.Note}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNoteIndent}"/>
             </StackPanel>
         </Border>
 
@@ -158,19 +147,18 @@
         <Border Style="{StaticResource Card}">
             <StackPanel>
                 <TextBlock Text="{l10n:L Behavior.Apply.Title}" Style="{StaticResource SectionTitle}"/>
-                <TextBlock Text="{l10n:L Behavior.Apply.Note}" FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="0,0,0,12"/>
+                <TextBlock Text="{l10n:L Behavior.Apply.Note}" Style="{StaticResource SectionIntro}"/>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <StackPanel Orientation="Horizontal" Margin="{StaticResource GapActionRow}">
                     <Button Content="{l10n:L Common.Apply}" Style="{StaticResource PrimaryButton}"
                             Command="{Binding ApplyCommand}" Margin="0,0,10,0"/>
                     <Button Content="{l10n:L Common.Reload}" Style="{StaticResource SecondaryButton}"
                             Command="{Binding ReloadCommand}"/>
                 </StackPanel>
 
-                <Border Background="#FFF0F2F5" CornerRadius="6" Padding="10,8">
-                    <TextBlock Text="{Binding StatusText}" FontSize="12.5" TextWrapping="Wrap"/>
+                <Border Style="{StaticResource StatusStrip}">
+                    <TextBlock Text="{Binding StatusText}" FontSize="{StaticResource FontBody}"
+                               TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"/>
                 </Border>
             </StackPanel>
         </Border>

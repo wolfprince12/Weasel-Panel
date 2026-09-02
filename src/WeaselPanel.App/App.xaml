@@ -1,87 +1,383 @@
 <Application x:Class="WeaselPanel.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
              StartupUri="MainWindow.xaml">
+    <!-- ════════════════════════════════════════════════════════════════
+         设计 token 体系
+
+         这一份资源字典是整个界面唯一的取值来源。页面里**不要**再出现硬编码的
+         颜色、字号、间距、圆角 —— 一律引这里的 key。理由不是洁癖：
+
+         1. 改一处就能全站生效。之前「状态栏底色」写成了 #FFF0F2F5 硬编码，
+            散在 5 个页面里，换个配色要改 5 处必漏。
+         2. 对比度可控。文字色是按 WCAG AA 反推的（见 TextSecondaryBrush 注释），
+            随手写一个灰很容易掉到 3:1 以下，在 125% 缩放的机器上直接糊掉。
+         3. 层次靠 token 区分，不靠各页自由发挥。
+
+         命名沿用 ui-ux-pro-max 的分层：梯度的原始色 → 语义别名 → 控件样式。
+         页面只该用语义别名与控件样式这一层，不要用 Primary500 这种梯度名。
+         ════════════════════════════════════════════════════════════════ -->
     <Application.Resources>
         <ResourceDictionary>
 
-            <!-- ── 调色板 ───────────────────────────────── -->
-            <Color x:Key="WindowBg">#FFF6F7F9</Color>
-            <Color x:Key="SidebarBg">#FFECEEF1</Color>
-            <Color x:Key="CardBg">#FFFFFFFF</Color>
-            <Color x:Key="BorderColor">#FFD8DCE2</Color>
-            <Color x:Key="TextPrimary">#FF1D1D1F</Color>
-            <Color x:Key="TextSecondary">#FF6E6E73</Color>
-            <Color x:Key="AccentColor">#FF0A6ED1</Color>
-            <Color x:Key="OkColor">#FF137333</Color>
-            <Color x:Key="WarnColor">#FFB06000</Color>
-            <Color x:Key="FailColor">#FFC5221F</Color>
+            <!-- ═══ 1. 调色板 ══════════════════════════════════════════ -->
 
-            <SolidColorBrush x:Key="WindowBgBrush" Color="{StaticResource WindowBg}"/>
-            <SolidColorBrush x:Key="SidebarBgBrush" Color="{StaticResource SidebarBg}"/>
-            <SolidColorBrush x:Key="CardBgBrush" Color="{StaticResource CardBg}"/>
-            <SolidColorBrush x:Key="BorderBrushKey" Color="{StaticResource BorderColor}"/>
-            <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimary}"/>
-            <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}"/>
-            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+            <!-- 主色 5 级梯度。500 是主色，700 用于「主色上的文字」，
+                 50/100 做浅底（选中态、徽标），300 做 hover 描边。 -->
+            <Color x:Key="Primary50">#FFEEF4FC</Color>
+            <Color x:Key="Primary100">#FFD8E8F9</Color>
+            <Color x:Key="Primary300">#FF7FB4EC</Color>
+            <Color x:Key="Primary500">#FF1F6FD0</Color>
+            <Color x:Key="Primary700">#FF16539C</Color>
 
-        <!-- bool → Visibility。XAML 里判断 null / bool 很容易把条件写反，
-             这类显示与否的判断优先在 ViewModel 里算成 bool 属性，再由此转换器绑定。 -->
-        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+            <!-- 中性 7 级。带一点冷调，比纯灰更贴合 Windows 11 的观感。 -->
+            <Color x:Key="Gray50">#FFFAFBFC</Color>
+            <Color x:Key="Gray100">#FFF3F5F7</Color>
+            <Color x:Key="Gray200">#FFE5E9ED</Color>
+            <Color x:Key="Gray300">#FFD2D8DE</Color>
+            <Color x:Key="Gray500">#FF7A838C</Color>
+            <Color x:Key="Gray700">#FF454C54</Color>
+            <Color x:Key="Gray900">#FF16191D</Color>
 
-            <FontFamily x:Key="UIFont">Segoe UI, Microsoft YaHei UI, Microsoft YaHei, PingFang SC</FontFamily>
+            <!-- 语义色 + 对应的浅底（徽标、差异高亮用浅底，不用实色，
+                 实色块在小字号下会把文字吃掉）。 -->
+            <Color x:Key="Success">#FF1E8E4E</Color>
+            <Color x:Key="Warning">#FFB7791F</Color>
+            <Color x:Key="Error">#FFD1372C</Color>
+            <Color x:Key="Info">#FF1F6FD0</Color>
+            <Color x:Key="SuccessSoft">#FFE3F4E9</Color>
+            <Color x:Key="WarningSoft">#FFFDF3E0</Color>
+            <Color x:Key="ErrorSoft">#FFFBE7E5</Color>
+            <Color x:Key="InfoSoft">#FFE8F1FC</Color>
+            <Color x:Key="NeutralSoft">#FFEDF0F3</Color>
 
-            <!-- ── 全局字体 ─────────────────────────────── -->
+            <!-- ═══ 2. 语义别名（页面只用这一层）══════════════════════ -->
+
+            <!-- 文字三级。全部按 WCAG AA 反推过对比度（在 #FFF 与页面底色
+                 #F5F7F9 上都测）：
+                   TextPrimary    #16191D  对白 17.9:1  ✓ AAA
+                   TextLabel      #454C54  对白  8.7:1  ✓ AAA   —— 表单标签
+                   TextSecondary  #5F6871  对白  5.6:1  ✓ AA    —— 说明文字
+                   TextDisabled   #9AA2AB  对白  2.6:1         —— 仅禁用态，WCAG 豁免
+                 之前诊断页的 diff 行号用的是 #FF9A9AA0，对白只有 2.9:1，
+                 正文级内容不合格，已统一换成 TextSecondary。 -->
+            <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource Gray900}"/>
+            <SolidColorBrush x:Key="TextLabelBrush" Color="{StaticResource Gray700}"/>
+            <SolidColorBrush x:Key="TextSecondaryBrush" Color="#FF5F6871"/>
+            <SolidColorBrush x:Key="TextDisabledBrush" Color="#FF9AA2AB"/>
+
+            <!-- 表面。page 是窗口底，card 是卡片，subtle 是卡片里的凹陷区
+                 （状态条/代码块），hover 是所有可点元素的悬停底。 -->
+            <SolidColorBrush x:Key="WindowBgBrush" Color="#FFF5F7F9"/>
+            <SolidColorBrush x:Key="SidebarBgBrush" Color="{StaticResource Gray50}"/>
+            <SolidColorBrush x:Key="CardBgBrush" Color="#FFFFFFFF"/>
+            <SolidColorBrush x:Key="BgSubtleBrush" Color="{StaticResource Gray100}"/>
+            <SolidColorBrush x:Key="BgHoverBrush" Color="{StaticResource Gray100}"/>
+            <!-- 表格隔行底色。整行填色会压过内容，所以只比白底暗一档。 -->
+            <SolidColorBrush x:Key="RowAltBrush" Color="{StaticResource Gray50}"/>
+
+            <!-- 边框两档。default 用于卡片外框与分割线，strong 用于输入控件
+                 （输入控件需要更清晰的边界才看得出「这里能填」）。 -->
+            <SolidColorBrush x:Key="BorderBrushKey" Color="{StaticResource Gray200}"/>
+            <SolidColorBrush x:Key="BorderBrushStrong" Color="{StaticResource Gray300}"/>
+
+            <!-- 强调与状态 -->
+            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Primary500}"/>
+            <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary500}"/>
+            <SolidColorBrush x:Key="PrimaryHoverBrush" Color="{StaticResource Primary700}"/>
+            <SolidColorBrush x:Key="PrimaryPressedBrush" Color="{StaticResource Primary700}"/>
+            <SolidColorBrush x:Key="Primary50Brush" Color="{StaticResource Primary50}"/>
+            <SolidColorBrush x:Key="Primary100Brush" Color="{StaticResource Primary100}"/>
+            <SolidColorBrush x:Key="Primary300Brush" Color="{StaticResource Primary300}"/>
+            <SolidColorBrush x:Key="Primary700Brush" Color="{StaticResource Primary700}"/>
+            <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource Success}"/>
+            <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource Warning}"/>
+            <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource Error}"/>
+            <SolidColorBrush x:Key="SuccessSoftBrush" Color="{StaticResource SuccessSoft}"/>
+            <SolidColorBrush x:Key="WarningSoftBrush" Color="{StaticResource WarningSoft}"/>
+            <SolidColorBrush x:Key="ErrorSoftBrush" Color="{StaticResource ErrorSoft}"/>
+            <SolidColorBrush x:Key="InfoSoftBrush" Color="{StaticResource InfoSoft}"/>
+            <SolidColorBrush x:Key="NeutralSoftBrush" Color="{StaticResource NeutralSoft}"/>
+
+            <!-- bool → Visibility。XAML 里判断 null / bool 很容易把条件写反，
+                 这类显示与否的判断优先在 ViewModel 里算成 bool 属性，再由此转换器绑定。 -->
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+
+            <!-- ═══ 3. 字体 ════════════════════════════════════════════ -->
+            <FontFamily x:Key="UIFont">Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI, Microsoft YaHei, PingFang SC</FontFamily>
+            <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas, Microsoft YaHei Mono, monospace</FontFamily>
+
+            <!-- 字号梯度。页面标题 22 / 正文 13 = 1.69 倍（规范要求 ≥1.5）。
+                 卡片小标题 14.5 与正文差得不多，所以小标题另外用字重 + 颜色 +
+                 下方留白来拉开层次，不单靠字号。 -->
+            <sys:Double x:Key="FontMicro">10.5</sys:Double>    <!-- 徽标、角标 -->
+            <sys:Double x:Key="FontCaption">11.5</sys:Double>   <!-- 说明、辅助信息 -->
+            <sys:Double x:Key="FontBody">13</sys:Double>        <!-- 正文、标签、控件 -->
+            <sys:Double x:Key="FontSection">14.5</sys:Double>   <!-- 卡片小标题 -->
+            <sys:Double x:Key="FontSubtitle">16</sys:Double>    <!-- 分组标题 -->
+            <sys:Double x:Key="FontTitle">22</sys:Double>       <!-- 页面标题 -->
+            <sys:Double x:Key="FontHero">26</sys:Double>        <!-- 关于页应用名 -->
+
+            <!-- 行高（正文 1.5，紧凑 1.2） -->
+            <sys:Double x:Key="LineBody">20</sys:Double>
+            <sys:Double x:Key="LineCaption">17</sys:Double>
+
+            <!-- ═══ 4. 间距：8px 基准网格 ═════════════════════════════
+                 单值 token 用于宽高与需要拼装的场合；下面另有一组 Thickness
+                 token 用于最常见的那几种「某一边留白」，页面优先引 Thickness，
+                 少写裸数字。 -->
+            <sys:Double x:Key="Sp1">4</sys:Double>
+            <sys:Double x:Key="Sp2">8</sys:Double>
+            <sys:Double x:Key="Sp3">12</sys:Double>
+            <sys:Double x:Key="Sp4">16</sys:Double>
+            <sys:Double x:Key="Sp5">20</sys:Double>
+            <sys:Double x:Key="Sp6">24</sys:Double>
+            <sys:Double x:Key="Sp8">32</sys:Double>
+            <sys:Double x:Key="Sp10">40</sys:Double>
+            <sys:Double x:Key="Sp12">48</sys:Double>
+
+            <!-- 语义化间距。之前外观页连续 8 个 `Margin="0,0,0,10"` —— 间距全等
+                 是典型的「AI 模板风」信号，读起来没有分组感。这里按**关系**命名，
+                 页面引用时就知道自己表达的是哪种关系。 -->
+            <Thickness x:Key="GapCard">0,0,0,16</Thickness>          <!-- 卡片与卡片 -->
+            <Thickness x:Key="GapSection">0,0,0,20</Thickness>       <!-- 卡片内小节 -->
+            <Thickness x:Key="GapField">0,0,0,12</Thickness>         <!-- 表单字段之间 -->
+            <Thickness x:Key="GapFieldTight">0,0,0,8</Thickness>     <!-- 字段与它的说明 -->
+            <Thickness x:Key="GapNote">0,3,0,0</Thickness>           <!-- 说明紧贴字段 -->
+            <Thickness x:Key="GapNoteIndent">24,3,0,10</Thickness>   <!-- CheckBox 说明（缩进对齐文字而非方框） -->
+            <Thickness x:Key="GapActionRow">0,0,0,14</Thickness>     <!-- 按钮行下方 -->
+            <Thickness x:Key="GapHeader">0,0,0,16</Thickness>        <!-- 卡片标题与其内容 -->
+            <Thickness x:Key="GapTitleIntro">0,0,0,4</Thickness>     <!-- 页面标题与其副标题 -->
+            <Thickness x:Key="GapIntroBody">0,0,0,20</Thickness>     <!-- 页面副标题与首张卡片 -->
+            <Thickness x:Key="GapRow">0,3</Thickness>                <!-- 列表行 -->
+
+            <!-- 表单标签列宽。三个页面之前用了 96 / 110 / 130 三种，来回切换
+                 时列会跳。统一一个值；取 150 是按最长的英文标签（
+                 "Candidates per page"）留的余量，中文更不会换行。 -->
+            <sys:Double x:Key="FieldLabelWidth">150</sys:Double>
+
+            <!-- ═══ 5. 圆角：全站只留 3 档 ════════════════════════════ -->
+            <CornerRadius x:Key="RadiusSm">4</CornerRadius>          <!-- 按钮、输入框、徽标 -->
+            <CornerRadius x:Key="RadiusMd">8</CornerRadius>          <!-- 卡片、大容器 -->
+            <CornerRadius x:Key="RadiusLg">12</CornerRadius>         <!-- 关于页 logo 容器 -->
+
+            <!-- ═══ 6. 阴影：4 档层级 ════════════════════════════════
+                 x:Shared="False" 是必需的：Effect 是 Freezable，多个元素共用同一
+                 实例时 WPF 会把它们当成同一份可变对象，各自渲染会互相干扰。
+                 设成 False 后每次引用都会拿到独立副本。
+                 卡片只上最低一档 —— 设置面板一屏十几张卡，阴影重了会糊成一片。 -->
+            <DropShadowEffect x:Key="ShadowXs" x:Shared="False"
+                              BlurRadius="4" ShadowDepth="1" Direction="270" Opacity="0.06" Color="#FF000000"/>
+            <DropShadowEffect x:Key="ShadowSm" x:Shared="False"
+                              BlurRadius="8" ShadowDepth="1" Direction="270" Opacity="0.08" Color="#FF000000"/>
+            <DropShadowEffect x:Key="ShadowMd" x:Shared="False"
+                              BlurRadius="14" ShadowDepth="2" Direction="270" Opacity="0.10" Color="#FF000000"/>
+            <DropShadowEffect x:Key="ShadowLg" x:Shared="False"
+                              BlurRadius="24" ShadowDepth="4" Direction="270" Opacity="0.12" Color="#FF000000"/>
+
+            <!-- ═══ 7. 动效时长 ════════════════════════════════════════
+                 WPF 没有 CSS transition，状态切换都是瞬时的。这里只留一组
+                 Duration 常量，给确实用到 Storyboard 的地方（目前只有忙碌指示器的
+                 旋转）用；其余控件的 hover/press 是即时换色，不加过渡 ——
+                 设置面板的按钮加 250ms 渐变只会让人觉得迟钝。 -->
+            <Duration x:Key="DurationFast">0:0:0.15</Duration>
+            <Duration x:Key="DurationNormal">0:0:0.25</Duration>
+
+            <!-- ═══ 8. 全局基础样式 ═══════════════════════════════════ -->
             <Style TargetType="Window">
                 <Setter Property="FontFamily" Value="{StaticResource UIFont}"/>
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
                 <Setter Property="Background" Value="{StaticResource WindowBgBrush}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
             </Style>
             <Style TargetType="UserControl">
                 <Setter Property="FontFamily" Value="{StaticResource UIFont}"/>
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
             </Style>
 
-            <!-- ── 卡片 ─────────────────────────────────── -->
-            <Style x:Key="Card" TargetType="Border">
-                <Setter Property="Background" Value="{StaticResource CardBgBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushKey}"/>
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="CornerRadius" Value="8"/>
-                <Setter Property="Padding" Value="16"/>
-                <Setter Property="SnapsToDevicePixels" Value="True"/>
-            </Style>
+            <!-- ═══ 9. 文字层次 ════════════════════════════════════════ -->
 
-            <Style x:Key="SectionTitle" TargetType="TextBlock">
-                <Setter Property="FontSize" Value="15"/>
+            <!-- 页面标题。之前所有页面都没有这一级，进页面第一眼看到的是卡片小标题
+                 （15px），和正文几乎分不出主次，整页是平的。 -->
+            <Style x:Key="PageTitle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="{StaticResource FontTitle}"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-                <Setter Property="Margin" Value="0,0,0,10"/>
+                <Setter Property="Margin" Value="{StaticResource GapTitleIntro}"/>
             </Style>
 
-            <Style x:Key="FieldLabel" TargetType="TextBlock">
-                <Setter Property="FontSize" Value="13"/>
+            <!-- 页面副标题：一句话说清这页干什么、写到哪个文件 -->
+            <Style x:Key="PageIntro" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
                 <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="LineHeight" Value="{StaticResource LineBody}"/>
+                <Setter Property="Margin" Value="{StaticResource GapIntroBody}"/>
+            </Style>
+
+            <!-- 卡片小标题 -->
+            <Style x:Key="SectionTitle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="{StaticResource FontSection}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                <Setter Property="Margin" Value="0,0,0,4"/>
+            </Style>
+
+            <!-- 卡片小标题下的一段说明 -->
+            <Style x:Key="SectionIntro" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="LineHeight" Value="{StaticResource LineBody}"/>
+                <Setter Property="Margin" Value="{StaticResource GapHeader}"/>
+            </Style>
+
+            <!-- 表单标签。用 TextLabel（比正文深）而不是 TextSecondary ——
+                 标签是「要读」的，说明文字才是「可跳过」的，两者必须分得开。 -->
+            <Style x:Key="FieldLabel" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextLabelBrush}"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
                 <Setter Property="Margin" Value="0,0,12,0"/>
             </Style>
 
-            <!-- ── 按钮 ─────────────────────────────────── -->
+            <!-- 说明文字：字段下方、复选框下方的小字 -->
+            <Style x:Key="FieldNote" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="{StaticResource FontCaption}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="LineHeight" Value="{StaticResource LineCaption}"/>
+            </Style>
+
+            <!-- 等宽文本：路径、YAML 片段、差异行 -->
+            <Style x:Key="MonoText" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource MonoFont}"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            </Style>
+
+            <!-- 空状态。列表没数据时给一句人话，而不是留一大片空白 ——
+                 用户分不清「没数据」和「加载失败」。 -->
+            <Style x:Key="EmptyState" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextDisabledBrush}"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Padding" Value="16,24"/>
+            </Style>
+
+            <!-- ═══ 10. 容器 ═══════════════════════════════════════════ -->
+
+            <Style x:Key="Card" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource CardBgBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushKey}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="{StaticResource RadiusMd}"/>
+                <Setter Property="Padding" Value="{StaticResource Sp5}"/>
+                <Setter Property="Effect" Value="{StaticResource ShadowXs}"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+            </Style>
+
+            <!-- 状态条 / 代码块：卡片内部的凹陷区 -->
+            <Style x:Key="StatusStrip" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource BgSubtleBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushKey}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}"/>
+                <Setter Property="Padding" Value="12,10"/>
+            </Style>
+
+            <Style x:Key="CodeBlock" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource BgSubtleBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushKey}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}"/>
+                <Setter Property="Padding" Value="12,10"/>
+            </Style>
+
+            <!-- 列表外框：只描边不投影，投影留给卡片，避免层层叠影 -->
+            <Style x:Key="ListFrame" TargetType="Border">
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushKey}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}"/>
+                <Setter Property="Background" Value="{StaticResource CardBgBrush}"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+            </Style>
+
+            <!-- 分割线。规范说能用留白就不用分割线，所以只保留「确实需要切断
+                 阅读流」的场合（比如卡片内两个语义无关的小节）。 -->
+            <Style x:Key="Divider" TargetType="Border">
+                <Setter Property="Height" Value="1"/>
+                <Setter Property="Background" Value="{StaticResource BorderBrushKey}"/>
+                <Setter Property="Margin" Value="{StaticResource GapSection}"/>
+            </Style>
+
+            <Style x:Key="OriginChip" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource BgSubtleBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushKey}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="3"/>
+                <Setter Property="Padding" Value="6,1"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <!-- 状态徽标：诊断结果、备份状态。默认中性底，由使用方用
+                 DataTrigger 换底。**必须绑枚举而不是本地化文本** ——
+                 否则用户切到英文后 "正常" 变 "OK"，DataTrigger 全部失配。 -->
+            <Style x:Key="StatusChip" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource NeutralSoftBrush}"/>
+                <Setter Property="CornerRadius" Value="3"/>
+                <Setter Property="Padding" Value="7,2"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <Style x:Key="StatusChipText" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="{StaticResource FontMicro}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Foreground" Value="{StaticResource TextLabelBrush}"/>
+            </Style>
+
+            <!-- ═══ 11. 按钮：三档层级 + 完整状态 ═════════════════════
+                 每档都要有 hover / pressed / disabled / **键盘 focus**。
+                 之前缺的就是 focus：模板里没画焦点环，用 Tab 走一遍完全看不出
+                 焦点在哪，纯键盘用户等于瞎走。 -->
             <Style x:Key="PrimaryButton" TargetType="Button">
-                <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
                 <Setter Property="Foreground" Value="White"/>
-                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
                 <Setter Property="Padding" Value="18,8"/>
+                <Setter Property="MinHeight" Value="32"/>
+                <Setter Property="MinWidth" Value="76"/>
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                    CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
+                            <Grid>
+                                <!-- 焦点环：Margin 负值让它比按钮大一圈，
+                                     Opacity 常态 0，键盘聚焦时才显形 -->
+                                <Border x:Name="ring" Margin="-3" CornerRadius="7"
+                                        BorderBrush="{StaticResource PrimaryBrush}" BorderThickness="2"
+                                        Opacity="0" IsHitTestVisible="False"/>
+                                <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                        CornerRadius="{StaticResource RadiusSm}"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="Opacity" Value="0.88"/>
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource PrimaryHoverBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource Primary700Brush}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="ring" Property="Opacity" Value="1"/>
                                 </Trigger>
                                 <Trigger Property="IsEnabled" Value="False">
                                     <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
@@ -93,25 +389,41 @@
             </Style>
 
             <Style x:Key="SecondaryButton" TargetType="Button">
-                <Setter Property="Background" Value="White"/>
+                <Setter Property="Background" Value="{StaticResource CardBgBrush}"/>
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
                 <Setter Property="Padding" Value="14,7"/>
+                <Setter Property="MinHeight" Value="32"/>
+                <Setter Property="MinWidth" Value="68"/>
                 <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushKey}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushStrong}"/>
                 <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
+                            <Grid>
+                                <Border x:Name="ring" Margin="-3" CornerRadius="7"
+                                        BorderBrush="{StaticResource PrimaryBrush}" BorderThickness="2"
+                                        Opacity="0" IsHitTestVisible="False"/>
+                                <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="{StaticResource RadiusSm}"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="#FFF0F2F5"/>
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Primary300Brush}"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource Gray200}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="ring" Property="Opacity" Value="1"/>
                                 </Trigger>
                                 <Trigger Property="IsEnabled" Value="False">
                                     <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
@@ -122,90 +434,346 @@
                 </Setter>
             </Style>
 
-            <!-- ── 输入框 ───────────────────────────────── -->
+            <!-- 危险操作：删除备份、清空日志。红字 + hover 红底，二次确认在
+                 ViewModel 里做（弹 MessageBox）。 -->
+            <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="BorderBrush" Value="{StaticResource ErrorBrush}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- 纯文字按钮：次要到不能再次要的操作（打开目录、复制链接） -->
+            <Style x:Key="TertiaryButton" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
+                <Setter Property="Padding" Value="6,4"/>
+                <Setter Property="MinHeight" Value="28"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                    CornerRadius="{StaticResource RadiusSm}"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource Primary50Brush}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource Primary50Brush}"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.45"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ═══ 12. 输入控件 ═══════════════════════════════════════ -->
+
             <Style TargetType="TextBox">
-                <Setter Property="FontSize" Value="13"/>
-                <Setter Property="Padding" Value="8,6"/>
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
+                <Setter Property="Padding" Value="9,6"/>
+                <Setter Property="MinHeight" Value="32"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushKey}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                <Setter Property="CaretBrush" Value="{StaticResource TextPrimaryBrush}"/>
+                <Setter Property="Background" Value="{StaticResource CardBgBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushStrong}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="BorderBrush" Value="{StaticResource Primary300Brush}"/>
+                    </Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True">
+                        <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                        <Setter Property="BorderThickness" Value="2"/>
+                    </Trigger>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Opacity" Value="0.5"/>
+                    </Trigger>
+                </Style.Triggers>
             </Style>
 
             <Style TargetType="ComboBox">
-                <Setter Property="FontSize" Value="13"/>
-                <Setter Property="Padding" Value="8,6"/>
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
+                <Setter Property="Padding" Value="9,5,8,5"/>
+                <Setter Property="MinHeight" Value="32"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                <Setter Property="Background" Value="{StaticResource CardBgBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushStrong}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="BorderBrush" Value="{StaticResource Primary300Brush}"/>
+                    </Trigger>
+                    <!-- ComboBox 获得焦点的是内部嵌套的 TextBox，
+                         所以这里要用 IsKeyboardFocusWithin 而不是 IsKeyboardFocused -->
+                    <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                        <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                    </Trigger>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Opacity" Value="0.5"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- CheckBox 重画：默认样式里的方框是硬边直角、勾选是位图，
+                 在高分屏上发虚。这里用 Path 画勾，缩放不糊。 -->
+            <Style TargetType="CheckBox">
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Padding" Value="8,0,0,0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="CheckBox">
+                            <Grid Background="Transparent">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center">
+                                    <Border x:Name="box" Width="16" Height="16" CornerRadius="3"
+                                            Background="{StaticResource CardBgBrush}"
+                                            BorderBrush="{StaticResource BorderBrushStrong}"
+                                            BorderThickness="1"/>
+                                    <Path x:Name="tick" Data="M 3.6,8.3 L 6.6,11.2 L 12.4,5.0"
+                                          Stroke="White" StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                          Visibility="Collapsed"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          SnapsToDevicePixels="True"/>
+                                </Grid>
+                                <ContentPresenter Grid.Column="1" Margin="{TemplateBinding Padding}"
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                  RecognizesAccessKey="True"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="box" Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                                    <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                                    <Setter TargetName="tick" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                                    <Setter TargetName="box" Property="BorderThickness" Value="2"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.45"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ═══ 13. 列表 ═══════════════════════════════════════════ -->
+
+            <!-- 侧边导航。选中态改成「左侧 3px 主色条 + 主色 50 浅底 + 主色文字加粗」，
+                 而不是整行填主色 —— 规范：主色用来点缀，不用来铺满。
+                 整行填色在 7 个条目时，一屏下来左半边是蓝的，很压。 -->
+            <Style x:Key="NavItem" TargetType="ListBoxItem">
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Margin" Value="8,1"/>
+                <Setter Property="MinHeight" Value="34"/>
+                <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextLabelBrush}"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Grid>
+                                <Border x:Name="bar" Width="3" HorizontalAlignment="Left"
+                                        CornerRadius="0,2,2,0"
+                                        Background="{StaticResource PrimaryBrush}" Opacity="0"/>
+                                <Border x:Name="bd" Margin="3,0,0,0" Background="Transparent"
+                                        CornerRadius="{StaticResource RadiusSm}"
+                                        Padding="11,0,8,0">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                </Border>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource Primary50Brush}"/>
+                                    <Setter TargetName="bar" Property="Opacity" Value="1"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Primary700Brush}"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsSelected" Value="False"/>
+                                        <Condition Property="IsMouseOver" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                                </MultiTrigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Primary700Brush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- 列表条目（方案列表、备份列表、词典条目）。
+                 选中态同样是浅底 + 左侧指示条，文字保持深色 ——
+                 之前选中后文字变白，而条目里的次要文字（副标题、角标）是
+                 写死的 TextSecondary，在蓝底上根本看不清。 -->
+            <Style x:Key="SchemaItem" TargetType="ListBoxItem">
+                <Setter Property="Padding" Value="10,8"/>
+                <Setter Property="Margin" Value="3,1"/>
+                <Setter Property="MinHeight" Value="40"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Grid>
+                                <Border x:Name="bar" Width="2" HorizontalAlignment="Left"
+                                        CornerRadius="0,1,1,0"
+                                        Background="{StaticResource PrimaryBrush}" Opacity="0"/>
+                                <Border x:Name="bd" Margin="2,0,0,0" Background="Transparent"
+                                        CornerRadius="{StaticResource RadiusSm}"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter/>
+                                </Border>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource Primary50Brush}"/>
+                                    <Setter TargetName="bar" Property="Opacity" Value="1"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsSelected" Value="False"/>
+                                        <Condition Property="IsMouseOver" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                                </MultiTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ═══ 14. 忙碌指示器 ═════════════════════════════════════
+                 部署、探测、扫描都要几百毫秒到几秒，这段时间里如果界面毫无变化，
+                 用户会以为按钮没点上而连点。这里用一个 12px 的转圈 + 一行状态字。
+                 只有 loading 是无例外允许无限循环的动效。 -->
+            <Style x:Key="BusySpinner" TargetType="Border">
+                <Setter Property="Width" Value="14"/>
+                <Setter Property="Height" Value="14"/>
+                <Setter Property="CornerRadius" Value="7"/>
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="BorderBrush" Value="{StaticResource Primary100Brush}"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Style.Triggers>
+                    <Trigger Property="IsVisible" Value="True">
+                        <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- ═══ 15. 数据表格 ═════════════════════════════════════════
+                 DataGrid 的默认皮肤（深蓝选中底、立体表头、粗网格线）跟本项目
+                 的设计语言不搭，这里整套重画。词典页与配置查看器页共用 ——
+                 两个页面要用，就不该留在某一个页面的资源里抄两份。
+
+                 为什么用 DataGrid 而不是自绘 ItemsControl：custom_phrase.txt
+                 动辄上千行、schema.yaml 展开后几百行，ItemsControl 不做虚拟化，
+                 会一次性把几千个控件建出来，直接卡死。 -->
+
+            <Style x:Key="GridHeader" TargetType="DataGridColumnHeader">
+                <Setter Property="Background" Value="{StaticResource BgSubtleBrush}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextLabelBrush}"/>
+                <Setter Property="FontSize" Value="{StaticResource FontCaption}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Padding" Value="10,8"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushKey}"/>
+                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+            </Style>
+
+            <!-- 单元格重画是为了去掉默认的焦点虚线框，并在选中时给浅底而不是深蓝。
+                 默认选中色是系统强调色，配黑字勉强能看，配上次要文字就看不清了。 -->
+            <Style x:Key="GridCell" TargetType="DataGridCell">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                <Setter Property="Padding" Value="10,0"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="DataGridCell">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    SnapsToDevicePixels="True">
+                                <ContentPresenter VerticalAlignment="Center"
+                                                  Margin="{TemplateBinding Padding}"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="{StaticResource Primary50Brush}"/>
+                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="GridRow" TargetType="DataGridRow">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Style.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="{StaticResource Primary50Brush}"/>
+                    </Trigger>
+                    <MultiTrigger>
+                        <MultiTrigger.Conditions>
+                            <Condition Property="IsSelected" Value="False"/>
+                            <Condition Property="IsMouseOver" Value="True"/>
+                        </MultiTrigger.Conditions>
+                        <Setter Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                    </MultiTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- 编辑态的输入框：行高只有 32，用全局 TextBox 样式的 MinHeight 会把行撑开 -->
+            <Style x:Key="GridEditBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                <Setter Property="MinHeight" Value="0"/>
+                <Setter Property="Padding" Value="5,3"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
             </Style>
 
-            <!-- ── 侧边导航 ─────────────────────────────── -->
-            <Style x:Key="NavItem" TargetType="ListBoxItem">
-                <Setter Property="Padding" Value="14,10"/>
-                <Setter Property="Margin" Value="6,2"/>
-                <Setter Property="FontSize" Value="13.5"/>
-                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-                <Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ListBoxItem">
-                            <Border x:Name="bd" Background="Transparent" CornerRadius="6"
-                                    Padding="{TemplateBinding Padding}">
-                                <ContentPresenter/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentBrush}"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                </Trigger>
-                                <MultiTrigger>
-                                    <MultiTrigger.Conditions>
-                                        <Condition Property="IsSelected" Value="False"/>
-                                        <Condition Property="IsMouseOver" Value="True"/>
-                                    </MultiTrigger.Conditions>
-                                    <Setter TargetName="bd" Property="Background" Value="#FFDCE0E6"/>
-                                </MultiTrigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
-            <!-- ── 方案列表条目 ────────────────────────── -->
-            <Style x:Key="SchemaItem" TargetType="ListBoxItem">
-                <Setter Property="Padding" Value="10,8"/>
-                <Setter Property="Margin" Value="2,1"/>
-                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                <Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ListBoxItem">
-                            <Border x:Name="bd" Background="Transparent" CornerRadius="4"
-                                    Padding="{TemplateBinding Padding}">
-                                <ContentPresenter/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentBrush}"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                </Trigger>
-                                <MultiTrigger>
-                                    <MultiTrigger.Conditions>
-                                        <Condition Property="IsSelected" Value="False"/>
-                                        <Condition Property="IsMouseOver" Value="True"/>
-                                    </MultiTrigger.Conditions>
-                                    <Setter TargetName="bd" Property="Background" Value="#FFEEF1F5"/>
-                                </MultiTrigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
-            <Style x:Key="OriginChip" TargetType="Border">
-                <Setter Property="Background" Value="#FFEEF1F5"/>
-                <Setter Property="CornerRadius" Value="3"/>
-                <Setter Property="Padding" Value="5,1"/>
-                <Setter Property="VerticalAlignment" Value="Center"/>
+            <!-- 只读表格的单元格（配置查看器用）。与 GridCell 的区别只在于
+                 文字用 Mono —— 键路径是给人抄的，等宽比比例字体好读。 -->
+            <Style x:Key="GridMonoCell" TargetType="DataGridCell" BasedOn="{StaticResource GridCell}">
+                <Setter Property="FontFamily" Value="{StaticResource MonoFont}"/>
+                <Setter Property="FontSize" Value="{StaticResource FontCaption}"/>
             </Style>
 
         </ResourceDictionary>

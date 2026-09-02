@@ -3,48 +3,51 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
     <StackPanel>
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
-            <StackPanel>
-                <TextBlock Text="{l10n:L Input.Title}" Style="{StaticResource SectionTitle}"/>
-                <TextBlock Text="{l10n:L Input.Intro}" FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap"/>
+        <TextBlock Text="{l10n:L Input.Title}" Style="{StaticResource PageTitle}"/>
+        <TextBlock Text="{l10n:L Input.Intro}" Style="{StaticResource PageIntro}"/>
 
-                <!-- 候选数 -->
-                <Grid Margin="0,14,0,0">
+        <!-- ── 候选数 ──────────────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Input.PageSizeGroup}" Style="{StaticResource SectionTitle}"/>
+
+                <Grid Margin="{StaticResource GapFieldTight}">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="46"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="44"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="{l10n:L Input.PageSize}" Style="{StaticResource FieldLabel}"/>
                     <Slider Grid.Column="1" Minimum="3" Maximum="10" TickFrequency="1"
                             IsSnapToTickEnabled="True" Value="{Binding PageSize}"
                             VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="2" Text="{Binding PageSize}" FontSize="13"
+                    <TextBlock Grid.Column="3" Text="{Binding PageSize}"
+                               FontSize="{StaticResource FontBody}"
+                               Foreground="{StaticResource TextPrimaryBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Grid>
-                <TextBlock Text="{l10n:L Input.PageSizeNote}" FontSize="11"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           Margin="110,4,0,0"/>
+                <!-- 说明文字缩进到与控件左沿对齐（跳过标签列），
+                     否则它会挂在标签底下，读起来像是标签的一部分。 -->
+                <TextBlock Text="{l10n:L Input.PageSizeNote}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNoteIndent}"/>
             </StackPanel>
         </Border>
 
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+        <!-- ── 翻页键 ──────────────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
             <StackPanel>
                 <TextBlock Text="{l10n:L Input.PagingKeys}" Style="{StaticResource SectionTitle}"/>
-                <TextBlock Text="{l10n:L Input.PagingKeys.Note}" FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="0,0,0,10"/>
+                <TextBlock Text="{l10n:L Input.PagingKeys.Note}" Style="{StaticResource SectionIntro}"/>
 
                 <CheckBox Content="{l10n:L Input.Paging.MinusEqual}" IsChecked="{Binding PagingMinusEqual}"
-                          FontSize="13" Margin="0,3"/>
+                          Margin="0,4"/>
                 <CheckBox Content="{l10n:L Input.Paging.CommaPeriod}" IsChecked="{Binding PagingCommaPeriod}"
-                          FontSize="13" Margin="0,3"/>
+                          Margin="0,4"/>
                 <CheckBox Content="{l10n:L Input.Paging.Brackets}" IsChecked="{Binding PagingBrackets}"
-                          FontSize="13" Margin="0,3"/>
+                          Margin="0,4"/>
                 <CheckBox Content="{l10n:L Input.Paging.UpDown}" IsChecked="{Binding PagingUpDown}"
-                          FontSize="13" Margin="0,3"/>
+                          Margin="0,4"/>
 
                 <!-- 中英切换键已移到「行为」页。
                      为什么不能两处都放：ascii_composer/switch_key 是**整块替换**的，
@@ -52,48 +55,47 @@
                      行为页逐键设置的 Caps_Lock=commit_code 之类整块冲掉，反过来也一样。
                      macOS 鼠须管面板里这一项本来就只在 BehaviorPage 一处，
                      行为页是它的严格超集（5 个键 × 6 种动作），所以归行为页独占。 -->
-                <TextBlock Text="{l10n:L Input.Switch.MovedToBehavior}" FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="0,16,0,0"/>
+                <Border Style="{StaticResource Divider}"/>
+                <TextBlock Text="{l10n:L Input.Switch.MovedToBehavior}"
+                           Style="{StaticResource FieldNote}"/>
 
                 <!-- 附加开关 -->
-                <TextBlock Text="{l10n:L Input.Punct}" FontSize="13" FontWeight="SemiBold"
-                           Margin="0,16,0,6"/>
+                <TextBlock Text="{l10n:L Input.Punct}" FontSize="{StaticResource FontSection}"
+                           FontWeight="SemiBold" Margin="0,20,0,8"/>
                 <CheckBox Content="{l10n:L Input.Punct.FullShape}" IsChecked="{Binding ToggleFullShape}"
-                          FontSize="13" Margin="0,3"/>
+                          Margin="0,4"/>
                 <CheckBox Content="{l10n:L Input.Punct.Punctuation}" IsChecked="{Binding TogglePunctuation}"
-                          FontSize="13" Margin="0,3"/>
+                          Margin="0,4"/>
             </StackPanel>
         </Border>
 
+        <!-- ── 应用 ────────────────────────────────────────────────── -->
         <Border Style="{StaticResource Card}">
             <StackPanel>
                 <TextBlock Text="{l10n:L Input.ApplyTitle}" Style="{StaticResource SectionTitle}"/>
-                <TextBlock Text="{l10n:L Input.ApplyNote}" FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap" Margin="0,0,0,10"/>
+                <TextBlock Text="{l10n:L Input.ApplyNote}" Style="{StaticResource SectionIntro}"/>
 
-                <Border Background="#FFF0F2F5" CornerRadius="6" Padding="10,8" Margin="0,0,0,12">
+                <Border Style="{StaticResource CodeBlock}" Margin="{StaticResource GapActionRow}">
                     <ItemsControl ItemsSource="{Binding PreviewLines}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding}" FontSize="11.5"
-                                           FontFamily="Consolas, Cascadia Mono, monospace"
-                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock Text="{Binding}" Style="{StaticResource MonoText}"
+                                           LineHeight="{StaticResource LineBody}"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </Border>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <StackPanel Orientation="Horizontal" Margin="{StaticResource GapActionRow}">
                     <Button Content="{l10n:L Input.ApplyBtn}" Style="{StaticResource PrimaryButton}"
                             Command="{Binding ApplyCommand}" Margin="0,0,10,0"/>
                     <Button Content="{l10n:L Common.Reload}" Style="{StaticResource SecondaryButton}"
                             Command="{Binding ReloadCommand}"/>
                 </StackPanel>
 
-                <Border Background="#FFF0F2F5" CornerRadius="6" Padding="10,8">
-                    <TextBlock Text="{Binding StatusText}" FontSize="12.5" TextWrapping="Wrap"/>
+                <Border Style="{StaticResource StatusStrip}">
+                    <TextBlock Text="{Binding StatusText}" FontSize="{StaticResource FontBody}"
+                               TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"/>
                 </Border>
             </StackPanel>
         </Border>

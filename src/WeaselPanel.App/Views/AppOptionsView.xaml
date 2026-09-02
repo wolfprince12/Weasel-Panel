@@ -1,0 +1,263 @@
+<UserControl x:Class="WeaselPanel.App.Views.AppOptionsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
+    <!-- DataGrid 的重画样式已提升到 App.xaml 第 15 节，这里只写列。 -->
+    <StackPanel>
+        <TextBlock Text="{l10n:L AppOptions.Title}" Style="{StaticResource PageTitle}"/>
+        <TextBlock Text="{l10n:L AppOptions.Intro}" Style="{StaticResource PageIntro}"/>
+
+        <Border Style="{StaticResource Card}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- ── 添加 ──────────────────────────────────────────────
+                     预设下拉只是「快速填充输入框」的入口，不是第二个输入框，
+                     所以两者都指向同一个 NewExeKey。 -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="188"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="{l10n:L AppOptions.AddLabel}" Style="{StaticResource FieldLabel}"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding Presets}"
+                              SelectedValuePath="Id" DisplayMemberPath="Name"
+                              SelectedValue="{Binding PresetPick, Mode=OneWayToSource}"
+                              ToolTip="{l10n:L AppOptions.PresetTip}"/>
+                    <TextBox Grid.Column="3" Text="{Binding NewExeKey, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="{l10n:L AppOptions.NewExeTip}"/>
+                    <Button Grid.Column="4" Content="{l10n:L AppOptions.Add}" Command="{Binding AddCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"/>
+                </Grid>
+
+                <Border Grid.Row="1" Style="{StaticResource Divider}"/>
+
+                <!-- ── 工具条 ──────────────────────────────────────────── -->
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0" Text="{Binding Filter, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="{l10n:L AppOptions.FilterTip}"/>
+                    <Button Grid.Column="1" Content="{l10n:L AppOptions.Remove}" Command="{Binding RemoveCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"
+                            ToolTip="{l10n:L AppOptions.RemoveTip}"/>
+                    <Button Grid.Column="2" Content="{l10n:L AppOptions.ResetAll}" Command="{Binding ResetAllCommand}"
+                            Style="{StaticResource DangerButton}" Margin="8,0,0,0"
+                            ToolTip="{l10n:L AppOptions.ResetAllTip}"/>
+                    <Button Grid.Column="3" Content="{l10n:L Common.Refresh}" Command="{Binding ReloadCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"/>
+                </Grid>
+
+                <!-- ── 表格 ────────────────────────────────────────────────
+                     三列开关用模板列而不是 DataGridCheckBoxColumn：后者要点两下
+                     （第一下只是进入编辑态），在这种「勾一下就好」的场景里很难用。 -->
+                <Border Grid.Row="3" Style="{StaticResource ListFrame}" Height="304" Margin="0,16,0,0">
+                    <Grid>
+                        <DataGrid ItemsSource="{Binding RowView}"
+                                  SelectedItem="{Binding SelectedRow}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  IsReadOnly="True"
+                                  SelectionMode="Single"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="{StaticResource BorderBrushKey}"
+                                  VerticalGridLinesBrush="Transparent"
+                                  RowHeight="38"
+                                  RowHeaderWidth="0"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  FontSize="{StaticResource FontBody}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  AlternatingRowBackground="{StaticResource RowAltBrush}"
+                                  RowBackground="{StaticResource CardBgBrush}"
+                                  ColumnHeaderStyle="{StaticResource GridHeader}"
+                                  CellStyle="{StaticResource GridCell}"
+                                  RowStyle="{StaticResource GridRow}"
+                                  EnableRowVirtualization="True"
+                                  EnableColumnVirtualization="False">
+
+                            <DataGrid.Columns>
+                                <!-- 表头文字走 HeaderTemplate 而不是 Header 属性，
+                                     这样列标题才能用 {l10n:L} 随语言切换。 -->
+
+                                <!-- 程序。列表里只读：改名等于「删旧键加新键」，
+                                     而出厂旧键删不掉，改名后会冒出两行。 -->
+                                <DataGridTemplateColumn Width="*" MinWidth="150">
+                                    <DataGridTemplateColumn.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{l10n:L AppOptions.Column.Exe}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.HeaderTemplate>
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <!-- 单元格内边距由 GridCell 样式的 Padding 统一给，
+                                                 这里再叠 Margin 会让第一列比别的列缩进一倍。 -->
+                                            <TextBlock Text="{Binding ExeKey}" Style="{StaticResource MonoText}"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding ExeKey}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Width="96">
+                                    <DataGridTemplateColumn.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{l10n:L AppOptions.Column.Ascii}" HorizontalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.HeaderTemplate>
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding AsciiMode, UpdateSourceTrigger=PropertyChanged}"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                      ToolTip="{l10n:L AppOptions.AsciiTip}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Width="96">
+                                    <DataGridTemplateColumn.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{l10n:L AppOptions.Column.Vim}" HorizontalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.HeaderTemplate>
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding VimMode, UpdateSourceTrigger=PropertyChanged}"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                      ToolTip="{l10n:L AppOptions.VimTip}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Width="156">
+                                    <DataGridTemplateColumn.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{l10n:L AppOptions.Column.Inline}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.HeaderTemplate>
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding InlineOptions}"
+                                                      SelectedValuePath="Id" DisplayMemberPath="Name"
+                                                      SelectedValue="{Binding InlineMode, UpdateSourceTrigger=PropertyChanged}"
+                                                      ToolTip="{l10n:L AppOptions.InlineTip}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- 来源。绑 IsBuiltIn 而不是绑本地化文本 ——
+                                     否则用户切到英文后「出厂」变 "Built-in"，
+                                     DataTrigger 全部失配。 -->
+                                <DataGridTemplateColumn Width="92">
+                                    <DataGridTemplateColumn.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{l10n:L AppOptions.Column.Origin}" HorizontalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.HeaderTemplate>
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource OriginChip}" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding OriginText}" Style="{StaticResource StatusChipText}"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- 空状态分两种：一条都没有 vs 被搜索过滤光了 -->
+                        <TextBlock Text="{l10n:L AppOptions.NoRows}" Style="{StaticResource EmptyState}"
+                                   IsHitTestVisible="False"
+                                   Visibility="{Binding ShowNoRows, Converter={StaticResource BoolToVisibility}}"/>
+                        <TextBlock Text="{l10n:L AppOptions.NoMatch}" Style="{StaticResource EmptyState}"
+                                   IsHitTestVisible="False"
+                                   Visibility="{Binding ShowFilteredEmpty, Converter={StaticResource BoolToVisibility}}"/>
+                    </Grid>
+                </Border>
+
+                <!-- ── 底部：路径 + 保存。主操作靠右，与词典页一致 ─────────── -->
+                <Grid Grid.Row="4" Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                        <TextBlock Text="{Binding FilePath}" Style="{StaticResource MonoText}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding RowCountText}" Style="{StaticResource FieldNote}"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Content="{l10n:L AppOptions.Save}" Command="{Binding SaveCommand}"
+                            Style="{StaticResource PrimaryButton}" VerticalAlignment="Center"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border Style="{StaticResource StatusStrip}" Margin="0,16,0,0">
+            <TextBlock Text="{Binding StatusText}" FontSize="{StaticResource FontBody}"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"/>
+        </Border>
+
+        <!-- 三个开关分别管什么。上游会把 app_options 下任何键都当 bool 读走，
+             写错名字不报错也不生效 —— 不写清楚，用户会以为面板坏了。 -->
+        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+            <StackPanel>
+                <TextBlock Text="{l10n:L AppOptions.NoteTitle}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L AppOptions.NoteIntro}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNote}"/>
+
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="ascii_mode" Style="{StaticResource MonoText}"
+                               Margin="0,0,14,0" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{l10n:L AppOptions.NoteAscii}"
+                               Style="{StaticResource FieldNote}" Margin="0,0,0,10"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="vim_mode" Style="{StaticResource MonoText}"
+                               Margin="0,0,14,0" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{l10n:L AppOptions.NoteVim}"
+                               Style="{StaticResource FieldNote}" Margin="0,0,0,10"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="inline_preedit" Style="{StaticResource MonoText}"
+                               Margin="0,0,14,0" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{l10n:L AppOptions.NoteInline}"
+                               Style="{StaticResource FieldNote}"/>
+                </Grid>
+
+                <TextBlock Text="{l10n:L AppOptions.NoteDeploy}" Style="{StaticResource FieldNote}"
+                           Margin="0,14,0,0"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

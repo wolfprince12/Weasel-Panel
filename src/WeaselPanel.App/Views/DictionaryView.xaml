@@ -1,0 +1,162 @@
+<UserControl x:Class="WeaselPanel.App.Views.DictionaryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
+    <!-- DataGrid 的重画样式已提升到 App.xaml 第 15 节（配置查看器页也要用，
+         留在单页资源里就得抄两份）。 -->
+    <StackPanel>
+        <TextBlock Text="{l10n:L Dictionary.Title}" Style="{StaticResource PageTitle}"/>
+        <TextBlock Text="{l10n:L Dictionary.Intro}" Style="{StaticResource PageIntro}"/>
+
+        <Border Style="{StaticResource Card}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- ── 工具条 ────────────────────────────────────────────── -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="{l10n:L Dictionary.File}" Style="{StaticResource FieldLabel}"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding FileOptions}"
+                              SelectedValuePath="Id" DisplayMemberPath="Name"
+                              SelectedValue="{Binding FileName}"/>
+
+                    <!-- 搜索框。词条上千行时，没有搜索就没法用。 -->
+                    <TextBox Grid.Column="3" Text="{Binding Filter, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="{l10n:L Dictionary.FilterTip}"/>
+
+                    <Button Grid.Column="4" Content="{l10n:L Dictionary.Add}" Command="{Binding AddCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"/>
+                    <Button Grid.Column="5" Content="{l10n:L Dictionary.Remove}" Command="{Binding RemoveCommand}"
+                            Style="{StaticResource DangerButton}" Margin="8,0,0,0"/>
+                    <Button Grid.Column="6" Content="{l10n:L Common.Refresh}" Command="{Binding ReloadCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"/>
+                </Grid>
+
+                <Border Grid.Row="1" Style="{StaticResource Divider}"/>
+
+                <!-- ── 表格 ────────────────────────────────────────────────
+                     为什么不自绘行：custom_phrase.txt 动辄上千行，
+                     ItemsControl 不虚拟化。DataGrid 默认带行虚拟化。 -->
+                <Border Grid.Row="2" Style="{StaticResource ListFrame}" Height="380">
+                    <Grid>
+                        <DataGrid ItemsSource="{Binding EntryView}"
+                                  SelectedItem="{Binding SelectedEntry}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  IsReadOnly="False"
+                                  SelectionMode="Single"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="{StaticResource BorderBrushKey}"
+                                  VerticalGridLinesBrush="Transparent"
+                                  RowHeight="32"
+                                  RowHeaderWidth="0"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  FontSize="{StaticResource FontBody}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  AlternatingRowBackground="{StaticResource RowAltBrush}"
+                                  RowBackground="{StaticResource CardBgBrush}"
+                                  ColumnHeaderStyle="{StaticResource GridHeader}"
+                                  CellStyle="{StaticResource GridCell}"
+                                  RowStyle="{StaticResource GridRow}"
+                                  EnableRowVirtualization="True"
+                                  EnableColumnVirtualization="False">
+
+                            <DataGrid.Columns>
+                                <!-- 表头文字走 HeaderTemplate 而不是 Header 属性，
+                                     这样列标题才能用 {l10n:L} 随语言切换。 -->
+                                <DataGridTextColumn Binding="{Binding Word, UpdateSourceTrigger=PropertyChanged}"
+                                                    Width="*"
+                                                    EditingElementStyle="{StaticResource GridEditBox}">
+                                    <DataGridTextColumn.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{l10n:L Dictionary.Column.Word}"/>
+                                        </DataTemplate>
+                                    </DataGridTextColumn.HeaderTemplate>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Binding="{Binding Code, UpdateSourceTrigger=PropertyChanged}"
+                                                    Width="*"
+                                                    EditingElementStyle="{StaticResource GridEditBox}">
+                                    <DataGridTextColumn.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{l10n:L Dictionary.Column.Code}"/>
+                                        </DataTemplate>
+                                    </DataGridTextColumn.HeaderTemplate>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Binding="{Binding Weight, UpdateSourceTrigger=PropertyChanged}"
+                                                    Width="90"
+                                                    EditingElementStyle="{StaticResource GridEditBox}">
+                                    <DataGridTextColumn.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{l10n:L Dictionary.Column.Weight}"/>
+                                        </DataTemplate>
+                                    </DataGridTextColumn.HeaderTemplate>
+                                </DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- 空状态分两种：一条都没有 vs 被搜索过滤光了。
+                             文案不同，否则用户会以为自己的词组没了。 -->
+                        <TextBlock Text="{l10n:L Dictionary.NoEntries}" Style="{StaticResource EmptyState}"
+                                   IsHitTestVisible="False"
+                                   Visibility="{Binding ShowNoEntries, Converter={StaticResource BoolToVisibility}}"/>
+                        <TextBlock Text="{l10n:L Dictionary.NoMatch}" Style="{StaticResource EmptyState}"
+                                   IsHitTestVisible="False"
+                                   Visibility="{Binding ShowFilteredEmpty, Converter={StaticResource BoolToVisibility}}"/>
+                    </Grid>
+                </Border>
+
+                <!-- ── 底部：路径 + 保存 ──────────────────────────────────── -->
+                <Grid Grid.Row="3" Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                        <TextBlock Text="{Binding FilePath}" Style="{StaticResource MonoText}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding EntryCountText}" Style="{StaticResource FieldNote}"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Content="{l10n:L Dictionary.Save}" Command="{Binding SaveCommand}"
+                            Style="{StaticResource PrimaryButton}" VerticalAlignment="Center"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border Style="{StaticResource StatusStrip}" Margin="0,16,0,0">
+            <TextBlock Text="{Binding StatusText}" FontSize="{StaticResource FontBody}"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"/>
+        </Border>
+
+        <!-- 生效前提。这条不写清楚，用户建完文件发现打不出来，会直接判定面板是坏的。 -->
+        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Dictionary.CaveatTitle}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Dictionary.CaveatBody}" Style="{StaticResource FieldNote}"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

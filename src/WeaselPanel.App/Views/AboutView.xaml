@@ -3,7 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
     <StackPanel>
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+
+        <!-- ── 身份区 ──────────────────────────────────────────────
+             这一页没有 PageTitle —— 应用名 + logo 本身就是标题，
+             再加一个 22px 的「关于」就成了重复。 -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
             <StackPanel>
                 <Grid HorizontalAlignment="Left">
                     <Grid.ColumnDefinitions>
@@ -15,28 +19,35 @@
                          不要写 Source="pack://..." —— single-file 下 pack URI 会 NRE。
                          加载失败时由代码侧把 LogoImage.Visibility 设为 Collapsed，
                          FallbackText 显示纯文字占位。 -->
-                    <Grid Grid.Column="0" Width="88" Height="88" Margin="0,0,14,0">
-                        <Image x:Name="LogoImage" Stretch="Uniform"
+                    <Border Grid.Column="0" Width="96" Height="96" Margin="0,0,20,0"
+                            CornerRadius="{StaticResource RadiusLg}"
+                            Background="{StaticResource BgSubtleBrush}">
+                        <Image x:Name="LogoImage" Stretch="Uniform" Margin="12"
                                RenderOptions.BitmapScalingMode="HighQuality"
                                SnapsToDevicePixels="True"/>
-                        <TextBlock x:Name="FallbackText" Text="{l10n:L App.NameShort}"
-                                   FontSize="28" FontWeight="SemiBold"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Foreground="{StaticResource AccentBrush}"
-                                   Visibility="Collapsed"/>
-                    </Grid>
+                    </Border>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="{l10n:L App.Name}" FontSize="20" FontWeight="SemiBold"
+                        <TextBlock x:Name="FallbackText" Text="{l10n:L App.NameShort}"
+                                   FontSize="{StaticResource FontHero}" FontWeight="SemiBold"
+                                   Foreground="{StaticResource PrimaryBrush}"
+                                   Visibility="Collapsed" Margin="0,0,0,4"/>
+                        <TextBlock Text="{l10n:L App.Name}" FontSize="{StaticResource FontSubtitle}"
+                                   FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimaryBrush}"/>
                         <TextBlock Text="{l10n:L About.Tagline}"
-                                   FontSize="12.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"
-                                   TextWrapping="Wrap"/>
+                                   FontSize="{StaticResource FontBody}"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,6,0,0" TextWrapping="Wrap"
+                                   MaxWidth="460" LineHeight="{StaticResource LineBody}"/>
                     </StackPanel>
                 </Grid>
 
+                <Border Style="{StaticResource Divider}"/>
+
+                <!-- 版本 / 技术栈 / 许可 / 仓库。标签列宽与其它页统一。 -->
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
@@ -47,23 +58,28 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{l10n:L About.Version}"
-                               Style="{StaticResource FieldLabel}" Margin="0,3"/>
+                               Style="{StaticResource FieldLabel}" Margin="0,4"/>
                     <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding VersionText}"
-                               FontSize="12.5" Margin="0,3"/>
+                               FontSize="{StaticResource FontBody}"
+                               FontFamily="{StaticResource MonoFont}" Margin="0,4"
+                               VerticalAlignment="Center"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{l10n:L About.Tech}"
-                               Style="{StaticResource FieldLabel}" Margin="0,3"/>
+                               Style="{StaticResource FieldLabel}" Margin="0,4"/>
                     <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TechValue}"
-                               FontSize="12.5" Margin="0,3"/>
+                               FontSize="{StaticResource FontBody}" Margin="0,4"
+                               TextWrapping="Wrap" VerticalAlignment="Center"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="{l10n:L About.License}"
-                               Style="{StaticResource FieldLabel}" Margin="0,3"/>
+                               Style="{StaticResource FieldLabel}" Margin="0,4"/>
                     <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LicenseValue}"
-                               FontSize="12.5" Margin="0,3"/>
+                               FontSize="{StaticResource FontBody}" Margin="0,4"
+                               VerticalAlignment="Center"/>
 
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="{l10n:L About.Repo}"
-                               Style="{StaticResource FieldLabel}" Margin="0,3"/>
-                    <TextBlock Grid.Row="3" Grid.Column="1" FontSize="12.5" Margin="0,3">
+                               Style="{StaticResource FieldLabel}" Margin="0,4"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" FontSize="{StaticResource FontBody}"
+                               Margin="0,4" VerticalAlignment="Center">
                         <Hyperlink NavigateUri="{Binding RepoUrl}"
                                    RequestNavigate="Hyperlink_RequestNavigate">
                             <TextBlock Text="{Binding RepoDisplay}"/>
@@ -74,27 +90,25 @@
         </Border>
 
         <!-- 语言选择。存 %APPDATA%\WeaselPanel\settings.json，不碰 Rime 用户目录。 -->
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
             <StackPanel>
                 <TextBlock Text="{l10n:L About.Language}" Style="{StaticResource SectionTitle}"/>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <ComboBox ItemsSource="{Binding LanguageOptions}"
-                              SelectedValue="{Binding SelectedLanguage}"
-                              SelectedValuePath="Code"
-                              DisplayMemberPath="DisplayName"
-                              Width="180" Height="32"
-                              VerticalContentAlignment="Center"/>
-                </StackPanel>
-                <TextBlock Text="{Binding LanguageNote}" FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           TextWrapping="Wrap"/>
+                <TextBlock Text="{l10n:L About.LanguageIntro}" Style="{StaticResource SectionIntro}"/>
+                <ComboBox ItemsSource="{Binding LanguageOptions}"
+                          SelectedValue="{Binding SelectedLanguage}"
+                          SelectedValuePath="Code"
+                          DisplayMemberPath="DisplayName"
+                          Width="220" HorizontalAlignment="Left"/>
+                <TextBlock Text="{Binding LanguageNote}" Style="{StaticResource FieldNote}"
+                           Margin="0,10,0,0"/>
             </StackPanel>
         </Border>
 
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
             <StackPanel>
                 <TextBlock Text="{l10n:L About.HowItWorks}" Style="{StaticResource SectionTitle}"/>
-                <TextBlock FontSize="12.5" TextWrapping="Wrap" LineHeight="20"
+                <TextBlock FontSize="{StaticResource FontBody}" TextWrapping="Wrap"
+                           LineHeight="{StaticResource LineBody}"
                            Foreground="{StaticResource TextPrimaryBrush}"
                            Text="{l10n:L About.HowItWorksBody}"/>
             </StackPanel>
@@ -103,9 +117,10 @@
         <Border Style="{StaticResource Card}">
             <StackPanel>
                 <TextBlock Text="{l10n:L About.Env}" Style="{StaticResource SectionTitle}"/>
-                <TextBlock Text="{Binding EnvironmentSummary}" FontSize="12"
-                           FontFamily="Consolas" TextWrapping="Wrap"
-                           Foreground="{StaticResource TextSecondaryBrush}"/>
+                <TextBlock Text="{Binding EnvironmentSummary}"
+                           Style="{StaticResource MonoText}" TextWrapping="Wrap"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           LineHeight="{StaticResource LineBody}"/>
             </StackPanel>
         </Border>
     </StackPanel>
