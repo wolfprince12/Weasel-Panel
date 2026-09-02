@@ -233,9 +233,22 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware
     }
 
     // ── 加载 ──────────────────────────────────────────────────
+    //
+    // ⚠️ 关键不变量：`_custom`（CustomYamlFile）必须在任何「读用户 patch」步骤之前
+    // 完成初始化。原版在 line 273 引用 `_custom.Patch`，却到 line 294 才赋值，导致
+    // ctor → LoadAll → line 273 抛 NullReferenceException、整窗崩在
+    // `MainWindow..ctor → AppearanceViewModel..ctor → LoadAll` 这条链上。
+    // 同时 v0.1.14 崩溃对话框走 L10n，L10n 全死时连真正的栈都看不到，只剩裸键。
+    //
+    // 修复：「先 custom、后 catalog、最后 style」线性流；`_custom = new CustomYamlFile(path)`
+    // 放在方法第一句，且 ctor 自带 Load()，第二次 Load() 删除。
     public void LoadAll()
     {
         SchemeNames.Clear();
+
+        // 0) 用户自定义 patch —— 总是先初始化。后续 catalog / style 都依赖它。
+        var customPath = Path.Combine(_userDirectory, "weasel.custom.yaml");
+        _custom = new CustomYamlFile(customPath);   // ctor 内自带 Load()
 
         // 1) 内置配色目录：优先共享数据的 weasel.yaml（随用户本机版本自动更新）
         ColorSchemeCatalog catalog = ColorSchemeCatalog.Empty;
@@ -290,13 +303,8 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware
             catch { /* 解析失败则退化为出厂空视图 */ }
         }
 
-        var customPath = Path.Combine(_userDirectory, "weasel.custom.yaml");
-        _custom = new CustomYamlFile(customPath);
-        if (File.Exists(customPath))
-        {
-            try { _custom.Load(); } catch { /* 解析失败则按出厂值处理 */ }
-        }
-
+        // _custom 已在方法开头初始化并 Load（见上「⚠️ 关键不变量」注释）。
+        // 任何后续对 _custom.Patch 的引用都是安全的。
         var merged = RimeConfigView.MergePatch(baseView, _custom.Patch);
         var style = WeaselStyleResolver.ResolveGlobal(merged);
 
