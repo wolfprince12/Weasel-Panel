@@ -12,6 +12,7 @@ public partial class MainWindow : Window
     private readonly DiagnosticsView _diagnosticsView;
     private readonly AppearanceView _appearanceView;
     private readonly SchemaView _schemaView;
+    private readonly BackupView _backupView;
     private readonly AboutView _aboutView;
 
     public MainWindow()
@@ -37,6 +38,7 @@ public partial class MainWindow : Window
         _diagnosticsView = new DiagnosticsView(new DiagnosticsViewModel());
         _appearanceView = new AppearanceView(new AppearanceViewModel(environment));
         _schemaView = new SchemaView(new SchemaViewModel(environment));
+        _backupView = new BackupView(new BackupViewModel(environment));
         _aboutView = new AboutView(environment);
 
         // ⚠️ 不要在 XAML 里写 ListBoxItem.IsSelected="True"，会在 InitializeComponent
@@ -62,16 +64,17 @@ public partial class MainWindow : Window
 
     private void Nav_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        // 兜底：如果将来发生 ctor 阶段回调（极端改造），所有 4 个 view 字段都非空就放行，
+        // 兜底：如果将来发生 ctor 阶段回调（极端改造），所有 view 字段都非空就放行，
         // 否则 return —— 永远不让 Nav_SelectionChanged 因为字段未就绪而 NRE。
         if (_diagnosticsView is null || _appearanceView is null
-            || _schemaView is null || _aboutView is null) return;
+            || _schemaView is null || _backupView is null || _aboutView is null) return;
 
         ContentHost.Content = Nav.SelectedIndex switch
         {
             1 => _appearanceView,
             2 => _schemaView,
-            3 => _aboutView,
+            3 => _backupView,
+            4 => _aboutView,
             _ => _diagnosticsView,
         };
     }

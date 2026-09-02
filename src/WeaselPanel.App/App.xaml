@@ -25,6 +25,10 @@
             <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}"/>
             <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
 
+        <!-- bool → Visibility。XAML 里判断 null / bool 很容易把条件写反，
+             这类显示与否的判断优先在 ViewModel 里算成 bool 属性，再由此转换器绑定。 -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+
             <FontFamily x:Key="UIFont">Segoe UI, Microsoft YaHei UI, Microsoft YaHei, PingFang SC</FontFamily>
 
             <!-- ── 全局字体 ─────────────────────────────── -->

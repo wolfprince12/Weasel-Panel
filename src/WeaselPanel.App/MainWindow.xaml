@@ -43,6 +43,7 @@
                     <ListBoxItem Content="环境诊断"/>
                     <ListBoxItem Content="外观"/>
                     <ListBoxItem Content="方案"/>
+                    <ListBoxItem Content="备份"/>
                     <ListBoxItem Content="关于"/>
                 </ListBox>
 
