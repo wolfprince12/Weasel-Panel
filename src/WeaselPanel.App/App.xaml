@@ -158,8 +158,13 @@
 
             <!-- 表单标签列宽。三个页面之前用了 96 / 110 / 130 三种，来回切换
                  时列会跳。统一一个值；取 150 是按最长的英文标签（
-                 "Candidates per page"）留的余量，中文更不会换行。 -->
-            <sys:Double x:Key="FieldLabelWidth">150</sys:Double>
+                 "Candidates per page"）留的余量，中文更不会换行。
+            ⚠️ 类型必须是 GridLength（不是 Double）：被 ColumnDefinition.Width=
+               {StaticResource FieldLabelWidth} 消费。sys:Double 在这里静默
+               触发 XAML 解析期 "不是属性 Width 的有效值"，整窗崩。
+               2026-09-03 真机踩坑：v0.2.1 修掉 NRE 后立刻炸这个，全 16 页带
+               这资源的都崩。GridLength 在默认 WPF 命名空间，无需前缀。 -->
+            <GridLength x:Key="FieldLabelWidth">150</GridLength>
 
             <!-- 内容区可读宽度上限。
                  这是本轮排版复审揪出的**最严重**的一处问题：内容区原来是 `*`，
