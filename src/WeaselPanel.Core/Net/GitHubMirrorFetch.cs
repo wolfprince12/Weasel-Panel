@@ -66,13 +66,14 @@ public sealed class GitHubMirrorFetchException : Exception
 public sealed class GitHubMirrorFetch
 {
     /// <summary>内置的 GitHub 镜像前缀列表（按优先级）。把原始 URL 拼到前缀后即可访问。</summary>
+    /// <remarks>
+    /// 2026-09 实测现状：ghproxy.com / mirror.ghproxy.com / github.moeyy.xyz / ghp.ci 均返回 502；
+    /// gh.api.99988866.xyz 只代理 api.github.com，不代理 release asset，对下载无意义。
+    /// 唯一实测可用的公共代理是 gh-proxy.com，故仅保留它。镜像会漂移，后续若失效需重新 curl 实测。
+    /// </remarks>
     public static readonly string[] MirrorPrefixes =
     [
-        "https://ghproxy.com/",
-        "https://mirror.ghproxy.com/",
-        "https://github.moeyy.xyz/",
-        "https://ghp.ci/",
-        "https://gh.api.99988866.xyz/",
+        "https://gh-proxy.com/",
     ];
 
     private const string UserAgent = "WeaselPanel/1.0.0";

@@ -365,7 +365,7 @@ public static class DictionaryPackageManager
             try { if (File.Exists(bak)) File.Delete(bak); File.Copy(schemaFile, bak); } catch { /* 忽略 */ }
         }
 
-        var fileUrl = await DownloadWithCandidatesAsync(GrammarCandidateUrls(pkg));
+        var fileUrl = await DownloadWithCandidatesAsync(GrammarCandidateUrls(pkg), timeoutSeconds: 300);
         var dst = Path.Combine(rime, asset);
         Directory.CreateDirectory(Path.GetDirectoryName(dst)!);
         if (File.Exists(dst)) { try { File.Delete(dst); } catch { /* 忽略 */ } }
@@ -404,7 +404,7 @@ public static class DictionaryPackageManager
         var asset = pkg.ReleaseAsset ?? "wanxiang-lts-zh-hans.gram";
         var language = pkg.GrammarLanguage;
 
-        var fileUrl = await DownloadWithCandidatesAsync(GrammarCandidateUrls(pkg));
+        var fileUrl = await DownloadWithCandidatesAsync(GrammarCandidateUrls(pkg), timeoutSeconds: 300);
         var dst = Path.Combine(rime, asset);
         if (File.Exists(dst)) { try { File.Delete(dst); } catch { /* 忽略 */ } }
         Directory.CreateDirectory(Path.GetDirectoryName(dst)!);
@@ -685,26 +685,30 @@ public static class DictionaryPackageManager
 
     // MARK: - 下载
 
-    /// <summary>依次尝试候选 URL 下载；任一成功即返回本地临时文件路径，全部失败抛错。</summary>
+    /// <summary>
+    /// 依次尝试候选 URL 下载；任一成功即返回本地临时文件路径，全部失败抛错。
+    /// 失败时把每个候选的失败原因一并收集进错误信息，便于用户 / 排查者一眼看出
+    /// 是网络问题还是某个镜像失效（而非只暴露最后一个 URL）。
+    /// </summary>
     private static async Task<string> DownloadWithCandidatesAsync(IReadOnlyList<string> candidates, int timeoutSeconds = 120)
     {
         if (candidates.Count == 0) throw new PackageManagerException("Packages.Error.Download", "");
-        var lastUrl = candidates[0];
+        var tried = new List<string>();
         foreach (var url in candidates)
         {
-            lastUrl = url;
             try
             {
                 var dest = Path.Combine(Path.GetTempPath(), $"weasel-panel-{Guid.NewGuid():N}.dl");
                 await Fetch.DownloadAsync(url, dest, timeoutSeconds);
                 return dest;
             }
-            catch
+            catch (Exception ex)
             {
-                // 继续尝试下一个候选
+                // 记录该候选的失败原因，全部失败后一并向用户暴露
+                tried.Add($"{url} → {ex.Message}");
             }
         }
-        throw new PackageManagerException("Packages.Error.Download", lastUrl);
+        throw new PackageManagerException("Packages.Error.Download", string.Join("；", tried));
     }
 
     private static bool UsesReleaseAsset(DictionaryPackage pkg) =>
@@ -733,14 +737,22 @@ public static class DictionaryPackageManager
         return new List<string> { pkg.SourceUrl };
     }
 
-    /// <summary>语法模型候选地址：CNB 大陆镜像优先，其次原始 URL 与其镜像前缀。</summary>
+    /// <summary>
+    /// 语法模型候选地址。国内优先顺序：
+    ///   1. CNB 大陆镜像（cnb.cool，2026-09 实测 200 / 420MB，最快最稳）；
+    ///   2. gh-proxy.com 公共代理（2026-09 实测 200 / 420MB）；
+    ///   3. GitHub 原始 URL（兜底，国内通常超时）。
+    /// 三者去重，且不再混入任何已失效镜像前缀（ghproxy.com / mirror.ghproxy.com /
+    /// moeyy / ghp.ci / gh.api.99988866.xyz 均已死），避免无意义的 120s 超时堆叠。
+    /// 实测依据见 GitHubMirrorFetch.MirrorPrefixes 注释。
+    /// </summary>
     private static IReadOnlyList<string> GrammarCandidateUrls(DictionaryPackage pkg)
     {
         var asset = pkg.ReleaseAsset ?? "wanxiang-lts-zh-hans.gram";
+        var original = pkg.SourceUrl;
         var cnb = $"https://cnb.cool/amzxyz/rime-wanxiang/-/releases/download/model/{asset}";
-        var candidates = new List<string> { cnb, pkg.SourceUrl };
-        candidates.AddRange(GitHubMirrorFetch.CandidateUrls(pkg.SourceUrl));
-        return candidates;
+        var mirror = "https://gh-proxy.com/" + original;
+        return new List<string> { cnb, mirror, original };
     }
 
     private static async Task<LatestRelease?> FetchLatestReleaseTagAsync(DictionaryPackage pkg)
