@@ -123,17 +123,27 @@ dotnet test  WeaselPanel.sln
 <EnableWindowsTargeting>true</EnableWindowsTargeting>
 ```
 
-发布双架构自包含单文件：
+一键构建（**只出 x64**，推荐）：
 
 ```bash
-dotnet publish src/WeaselPanel.App -c Release -r win-x64   -o dist/win-x64
-dotnet publish src/WeaselPanel.App -c Release -r win-arm64 -o dist/win-arm64
+./build.sh              # 跑测试 + 产出 dist/win-x64/WeaselPanel.exe
+./build.sh --no-test    # 跳过测试，改文案/资源时更快
+./build.sh --clean      # 清空 dist 后重建
 ```
 
-产物为 `WeaselPanel.exe`，自包含、免安装 .NET 运行时，双击即可运行：
-`dist/win-x64/` 为 x86-64，`dist/win-arm64/` 为 Aarch64（Apple Silicon 上的 Win11 用这个）。
+等价的原始命令（需要其他架构时用 `-r` 覆盖）：
 
-> `dist/` 已在 `.gitignore` 中排除 —— 单个 exe 约 150 MB，不可入库。
+```bash
+dotnet publish src/WeaselPanel.App -c Release -r win-x64 -o dist/win-x64
+```
+
+产物为 `WeaselPanel.exe`，**自包含、免安装 .NET 运行时，双击即可运行**。
+
+> **只交付 x64**（2026-09-02 拍板）：Win11 在 x64 上占绝对多数，
+> 且 x64 版 exe 在 ARM 版 Windows 上仍可靠模拟层运行。此前曾同时出 arm64，
+> 现已废弃 —— `build.sh` 遇到 `dist/win-arm64` 会主动删除，避免误拿。
+
+> `dist/` 已在 `.gitignore` 中排除 —— 单个 exe 约 156 MB，不可入库。
 > **Windows 机器仅用于运行验证，不用于构建。**
 
 ### WPF 项目的一个坑

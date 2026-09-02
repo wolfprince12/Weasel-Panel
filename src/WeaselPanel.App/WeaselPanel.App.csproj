@@ -22,6 +22,9 @@
     <!-- 单文件发布需要 -->
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
+    <!-- 只交付 x64（2026-09-02 用户拍板）。
+         默认即 win-x64；未写死，需要其他架构时用 `dotnet publish -r <RID>` 覆盖。
+         日常请用 ./build.sh，它固定产出 x64 并会顺手清掉已废弃的 win-arm64 产物。 -->
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
     <DebugType>embedded</DebugType>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>

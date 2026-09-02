@@ -6,12 +6,20 @@
 
 ## 1. 选哪个 exe
 
-| 文件 | 适用 | 说明 |
-|---|---|---|
-| `dist/win-arm64/WeaselPanel.exe` | Apple Silicon（M 系列）上的 Win11 | **首选**。原生 ARM64，性能最好 |
-| `dist/win-x64/WeaselPanel.exe` | 常规 x64 电脑 | ARM 版 Win11 也能靠模拟层跑它，但启动慢 |
+**只交付 x64 一个版本**：
 
-两者都是**自包含单文件**，不需要预先安装 .NET 运行时，双击即可运行。
+```
+dist/win-x64/WeaselPanel.exe
+```
+
+- 常规 64 位 Windows 直接用它。
+- 如果你在 Apple Silicon（M 系列）上跑 ARM 版 Win11，也用它 ——
+  x64 版可经系统模拟层运行，仅启动略慢，功能无差异。
+
+它是**自包含单文件**，不需要预先安装 .NET 运行时，双击即可运行。
+此前存在过的 `dist/win-arm64/` 已废弃并删除（构建脚本会自动清理）。
+
+构建方式：`./build.sh`（会跑测试，产出后打印路径与 md5）。
 
 ## 2. 拷进虚拟机
 
