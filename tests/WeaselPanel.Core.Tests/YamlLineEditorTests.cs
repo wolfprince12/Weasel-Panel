@@ -189,4 +189,76 @@ public class YamlLineEditorTests
         var literal = YamlScalar.HexColor(0xAABBCCDD).Payload;
         Assert.Equal("0xAABBCCDD", literal);
     }
+
+    // ── 嵌套 / 扁平双写法 ───────────────────────────────────────────────
+    // Rime 的 patch 键有两种等价写法（"menu/page_size": 与 menu: / page_size:）。
+    // 编辑器必须都认：只认扁平的话，用户手写的嵌套键「读得到却删不掉」，写的时候
+    // 还会往旁边再插一条同义扁平键形成双写。以下用例守这两类回归。
+
+    private const string NestedSample = """
+        patch:
+          menu:
+            page_size: 9
+          speller:
+            algebra:
+              - erase/^xx$/
+        """;
+
+    [Fact]
+    public void SetScalar_对手写嵌套写法就地改值_不新增扁平同义键()
+    {
+        var editor = new YamlLineEditor(NestedSample);
+        editor.SetScalar("patch", "menu/page_size", YamlScalar.Number("5"));
+
+        var text = editor.Text;
+        Assert.Contains("page_size: 5", text);
+        // 关键：不能出现第二条 "menu/page_size": 5 —— 那是双写
+        Assert.Equal(1, text.Split("page_size").Length - 1);
+    }
+
+    [Fact]
+    public void RemoveKeyAtPath_删掉嵌套键并清掉空壳容器()
+    {
+        var editor = new YamlLineEditor(NestedSample);
+        editor.RemoveKeyAtPath(new[] { "patch", "menu/page_size" });
+
+        var text = editor.Text;
+        Assert.DoesNotContain("page_size", text);
+        // menu: 已经空了，整条容器一并删掉，不能留下 "menu:" 这种空映射
+        Assert.DoesNotContain("menu:", text);
+        // 同文件里别处的内容不受影响
+        Assert.Contains("speller:", text);
+        Assert.Contains("erase/^xx$/", text);
+    }
+
+    [Fact]
+    public void RemoveKeyAtPath_容器下还有别的内容时只删目标键()
+    {
+        const string src = """
+            patch:
+              menu:
+                page_size: 9
+                alternative_select_keys: "[]"
+            """;
+        var editor = new YamlLineEditor(src);
+        editor.RemoveKeyAtPath(new[] { "patch", "menu/page_size" });
+
+        var text = editor.Text;
+        Assert.DoesNotContain("page_size", text);
+        Assert.Contains("menu:", text);                 // 容器保留
+        Assert.Contains("alternative_select_keys", text);
+    }
+
+    [Fact]
+    public void ReplaceBlockVerbatim_能改写嵌套列表块()
+    {
+        var editor = new YamlLineEditor(NestedSample);
+        editor.ReplaceBlockVerbatim(new[] { "patch", "speller/algebra" },
+            new[] { "- erase/^xx$/", "- abbrev/^([a-z]).+$/$1/" });
+
+        var text = editor.Text;
+        Assert.Contains("abbrev/^([a-z]).+$/$1/", text);
+        // 没有出现第二条 speller/algebra
+        Assert.Equal(1, text.Split("algebra").Length - 1);
+    }
 }

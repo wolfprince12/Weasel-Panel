@@ -332,10 +332,14 @@ public sealed class CustomYamlFile
         if (verifying is not null)
         {
             try { WriteVerifier.Verify(tmp, verifying); }
-            catch
+            catch (Exception ex)
             {
                 try { File.Delete(tmp); } catch { /* 忽略清理失败 */ }
-                throw PanelException.WriteVerificationFailed(Path.GetFileName(FilePath));
+                // 带上原始原因：只报「校验失败」、不报是哪个键、为什么，排查时只能靠猜。
+                // 错误码仍是 WriteVerificationFailed，App 层照旧按码渲染本地化文案。
+                throw new PanelException(PanelErrorCode.WriteVerificationFailed,
+                    "Write verification failed: " + Path.GetFileName(FilePath) + " — " + ex.Message,
+                    Path.GetFileName(FilePath));
             }
         }
 

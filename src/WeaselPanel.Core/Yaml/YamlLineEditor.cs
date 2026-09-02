@@ -346,8 +346,38 @@ public sealed partial class YamlLineEditor
             i++;
         }
 
+        // 扁平键没找到 —— 可能是用户手写的嵌套写法（menu: / page_size:）。
+        // 这时若直接追加一条扁平同义键，就形成双写：两条对 Rime 都生效、谁在后谁赢，
+        // 面板读回来的值可能不是刚写的那个。必须先按嵌套路径找一遍。
+        if (SetScalarNested(sectionIndex, targetKey, value)) return;
+
         _lines.Insert(lastBodyLine + 1,
             new string(' ', baseIndent) + keyText + ": " + Emit(value));
+    }
+
+    /// <summary>
+    /// 尝试按嵌套写法（section / a / b:）就地改值。成功返回 true。
+    /// 只在键本身含斜杠时才可能命中；单级键的扁平查找已经覆盖了，无需重复。
+    /// </summary>
+    private bool SetScalarNested(int sectionIndex, string targetKey, YamlScalar value)
+    {
+        if (!targetKey.Contains('/')) return false;
+
+        var sectionKey = ParseLine(_lines[sectionIndex])?.Key;
+        if (string.IsNullOrEmpty(sectionKey)) return false;
+
+        var nestedPath = new List<string> { sectionKey };
+        nestedPath.AddRange(targetKey.Split('/', StringSplitOptions.RemoveEmptyEntries));
+        if (nestedPath.Count < 3) return false;
+
+        var index = FindPathKeyIndexCore(nestedPath);
+        if (!index.HasValue) return false;
+
+        var info = ParseLine(_lines[index.Value]);
+        if (info is null) return false;
+
+        _lines[index.Value] = ReplaceValue(_lines[index.Value], info.KeyText, value);
+        return true;
     }
 
     /// <summary>替换键行上的值：保留键名样式、行内引号风格、行尾注释及注释前的空白。</summary>
@@ -392,7 +422,24 @@ public sealed partial class YamlLineEditor
         _lines.AddRange(block);
     }
 
+    /// <summary>
+    /// 按路径查找键行。Rime 的 patch 键有两种等价写法：
+    ///   扁平：<c>"speller/algebra":</c>   —— 官方 custom.yaml 的惯例
+    ///   嵌套：<c>speller:</c> / <c>algebra:</c> —— 手写 yaml 的常见写法
+    /// 两者对 Rime 完全等价。先按字面（扁平）找，找不到再按斜杠展开找 ——
+    /// 只认扁平的后果是：嵌套写的键「读得到却删不掉」，写的时候还会往旁边
+    /// 再插入一条同义的扁平键，形成双写（两条都生效，谁在后谁赢）。
+    /// </summary>
     private int? FindPathKeyIndex(IReadOnlyList<string> path)
+    {
+        var direct = FindPathKeyIndexCore(path);
+        if (direct.HasValue) return direct;
+
+        var expanded = ExpandPath(path, out _);
+        return expanded.Count == path.Count ? null : FindPathKeyIndexCore(expanded);
+    }
+
+    private int? FindPathKeyIndexCore(IReadOnlyList<string> path)
     {
         if (path.Count == 0) return null;
         var expectedIndent = -2;
@@ -414,6 +461,28 @@ public sealed partial class YamlLineEditor
             if (segment == path[^1]) return found;
         }
         return null;
+    }
+
+    /// <summary>
+    /// 把含斜杠的路径段展开成多级段（"menu/page_size" → ["menu","page_size"]）。
+    /// <paramref name="intermediate"/> 标记每一级是否只是「通往真键的容器」：
+    /// 最后一个子段是真键（false），前面的都是容器（true）。删键后要靠它判断
+    /// 哪些空壳容器是该一起清掉的 —— 不该清的是用户自己写的容器。
+    /// </summary>
+    private static List<string> ExpandPath(IReadOnlyList<string> path, out List<bool> intermediate)
+    {
+        var parts = new List<string>();
+        intermediate = new List<bool>();
+        foreach (var segment in path)
+        {
+            var split = segment.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            for (var i = 0; i < split.Length; i++)
+            {
+                parts.Add(split[i]);
+                intermediate.Add(i < split.Length - 1);
+            }
+        }
+        return parts;
     }
 
     // MARK: 值发射

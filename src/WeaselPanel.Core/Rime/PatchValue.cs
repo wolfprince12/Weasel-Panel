@@ -277,4 +277,30 @@ public sealed class PatchSet
         // 按键排序，保证写入顺序确定（等价于 Swift 版字典遍历后再由 Yams sortKeys 归一）
         return _items.OrderBy(kv => kv.Key, StringComparer.Ordinal).ToList();
     }
+
+    /// <summary>
+    /// 按**值**比较两份补丁集（脏值判断要用）。
+    ///
+    /// 同一个键在两边都是 null（删键）算相等；一边 null 一边有值算不等。
+    /// 键的数量不同直接判不等 —— 少了某个键意味着那一项不会写盘，语义完全不同。
+    /// </summary>
+    public bool ValueEquals(PatchSet other)
+    {
+        if (Count != other.Count) return false;
+
+        foreach (var (key, value) in _items)
+        {
+            if (!other._items.TryGetValue(key, out var otherValue)) return false;
+
+            if (value is null || otherValue is null)
+            {
+                if (value is not null || otherValue is not null) return false;
+                continue;
+            }
+
+            if (!value.ValueEquals(otherValue)) return false;
+        }
+
+        return true;
+    }
 }

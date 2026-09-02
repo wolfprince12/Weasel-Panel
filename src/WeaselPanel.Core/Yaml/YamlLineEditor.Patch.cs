@@ -158,17 +158,68 @@ public sealed partial class YamlLineEditor
     /// </summary>
     public void RemoveKeyAtPath(IReadOnlyList<string> path)
     {
-        var keyIndex = FindPathKeyIndex(path);
-        if (!keyIndex.HasValue) return;
+        // 用展开后的路径定位：文件里可能是嵌套写法（menu: / page_size:），
+        // 只看字面路径会找不到、删不掉。
+        var resolved = ResolvePath(path);
+        if (resolved is null) return;
+        var (keyIndex, resolvedPath, intermediate) = resolved.Value;
 
-        var keyInfo = ParseLine(_lines[keyIndex.Value]) ?? new LineInfo
+        var keyInfo = ParseLine(_lines[keyIndex]) ?? new LineInfo
         {
-            Indent = (path.Count - 1) * 2,
-            Key = path[^1],
-            KeyText = path[^1]
+            Indent = (resolvedPath.Count - 1) * 2,
+            Key = resolvedPath[^1],
+            KeyText = resolvedPath[^1]
         };
-        var bodyEnd = BlockBodyEnd(keyIndex.Value, keyInfo.Indent);
-        RemoveRangePreservingComments(keyIndex.Value, keyInfo, bodyEnd);
+        var bodyEnd = BlockBodyEnd(keyIndex, keyInfo.Indent);
+        RemoveRangePreservingComments(keyIndex, keyInfo, bodyEnd);
+
+        // 删完之后，若某级容器因此变成空壳（menu: 下面再没有任何键），连它一起删。
+        // 留下 menu: 这种空映射不是「无害的空白」—— Rime 读到的是「把 menu 整个设为
+        // null」，比留着原值更糟。
+        PruneEmptyContainers(resolvedPath, intermediate);
+    }
+
+    /// <summary>定位路径：先按字面（扁平写法），再按斜杠展开（嵌套写法）。返回行号、生效路径与中间级标记。</summary>
+    private (int Index, List<string> Path, List<bool> Intermediate)? ResolvePath(IReadOnlyList<string> path)
+    {
+        var direct = FindPathKeyIndexCore(path);
+        // 扁平写法命中的话，"menu/page_size" 本身就是文件里的真键，没有中间级可清。
+        if (direct.HasValue) return (direct.Value, path.ToList(), new List<bool>(new bool[path.Count]));
+
+        var expanded = ExpandPath(path, out var intermediate);
+        if (expanded.Count == path.Count) return null;
+        var nested = FindPathKeyIndexCore(expanded);
+        return nested.HasValue ? (nested.Value, expanded, intermediate) : null;
+    }
+
+    /// <summary>
+    /// 自下而上清掉「只是通往真键的容器、且已经空了」的中间级。
+    /// 只清由斜杠展开产生的中间级：用户自己手写的容器即便空了也保留。
+    /// 块里还有注释时不删 —— 宁可留个空壳，也不删用户写的字。
+    /// </summary>
+    private void PruneEmptyContainers(IReadOnlyList<string> resolvedPath, IReadOnlyList<bool> intermediate)
+    {
+        if (resolvedPath.Count != intermediate.Count) return;
+
+        for (var depth = resolvedPath.Count - 1; depth >= 1; depth--)
+        {
+            if (!intermediate[depth]) continue;
+
+            var parent = resolvedPath.Take(depth + 1).ToList();
+            var index = FindPathKeyIndexCore(parent);
+            if (!index.HasValue) continue;
+
+            var info = ParseLine(_lines[index.Value]);
+            if (info is null) continue;
+
+            var bodyEnd = BlockBodyEnd(index.Value, info.Indent);
+            var hasBody = false;
+            for (var i = index.Value + 1; i < bodyEnd; i++)
+                if (_lines[i].Trim().Length != 0) { hasBody = true; break; }
+
+            if (hasBody) break;          // 底下还有东西，再往上也不该动
+            _lines.RemoveAt(index.Value);
+        }
     }
 
     /// <summary>
