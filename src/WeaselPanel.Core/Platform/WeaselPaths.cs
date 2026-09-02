@@ -34,6 +34,17 @@
 //  5) 日志目录：librime 写 %TEMP%\rime.weasel\rime.weasel.*.INFO / .ERROR
 //     （macOS 版是 $TMPDIR/rime.squirrel）。
 //
+//  6) ⚠️ **真正的安装目录是 `Program Files\Rime\weasel-<版本>`，不是 `Program Files\Rime`**。
+//     源码：output/install.nsi 第 21 行 `!define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}`
+//     + 第 212 行 `StrCpy $INSTDIR "${WEASEL_ROOT}"` —— 脚本先把 INSTDIR 写进注册表，
+//     **随后才把 INSTDIR 重置成带版本号的 WEASEL_ROOT**，文件实际装在后者的位置。
+//     因此注册表里的 InstallDir 与文件真实落点可能不一致，且 `Rime\` 这一层往往是
+//     只有版本号子目录的**空壳**。真机验证（2026-09-02，weasel-0.17.4）已确认：
+//     只检查 `Rime\` 目录存在 → 误报「已安装」但共享目录与部署器全部找不到。
+//
+//  7) 共享数据目录另有 `%ProgramData%\Rime` 这一可能落点（部分发行包/便携版），
+//     虽非上游默认，但真机环境差异大，作为补充候选一并尝试。
+//
 
 using System;
 using System.IO;
@@ -125,8 +136,7 @@ public static class WeaselPaths
 
         if (programDirectory is not null)
         {
-            var data = Path.Combine(programDirectory, "data");
-            if (Directory.Exists(data)) shared = data;
+            shared = DetectSharedDataDirectory(programDirectory);
 
             // 架构分支：Win11 + (ARM64|AMD64) 装在根，其余装在 Win32\ 子目录。
             deployer = FirstExisting(
@@ -145,6 +155,28 @@ public static class WeaselPaths
             DeployerPath = deployer,
             ServerPath = server,
         };
+    }
+
+    /// <summary>
+    /// 共享数据目录。首选上游规则（模块同级 <c>data</c>），
+    /// 找不到时补试 <c>%ProgramData%\Rime</c>（部分发行包/便携版的实际落点，
+    /// 见文件头第 7 条）。
+    /// </summary>
+    public static string? DetectSharedDataDirectory(string? programDirectory)
+    {
+        if (!string.IsNullOrWhiteSpace(programDirectory))
+        {
+            var data = Path.Combine(programDirectory!, "data");
+            if (Directory.Exists(data)) return data;
+        }
+
+        var programData = Environment.GetEnvironmentVariable("ProgramData");
+        if (!string.IsNullOrEmpty(programData))
+        {
+            var candidate = Path.Combine(programData, "Rime");
+            if (Directory.Exists(candidate)) return candidate;
+        }
+        return null;
     }
 
     /// <summary>
@@ -173,29 +205,154 @@ public static class WeaselPaths
     /// <summary>
     /// 程序目录：HKLM\Software\Rime\Weasel\WeaselRoot → InstallDir → %PROGRAMFILES%\Rime 系列候选。
     /// </summary>
+    /// <remarks>
+    /// ⚠️ 所有候选（含注册表值）都必须通过 <see cref="LooksLikeWeaselInstallDir"/> 验证。
+    /// 仅凭「目录存在」判定已安装会把 `Program Files\Rime` 这种**只有版本号子目录的空壳**
+    /// 误判为安装目录 —— 后果是共享目录与部署器全部报「未找到」，而面板却说「已安装」。
+    /// 这是 2026-09-02 真机测试暴露的第 1 个 bug。
+    /// </remarks>
     public static string? DetectProgramDirectory()
     {
         if (OperatingSystem.IsWindows())
         {
             var root = WindowsRegistry.TryGetString(
                 RegistryHive.LocalMachine, WeaselRegKey, WeaselRootValue);
-            if (IsUsableDir(root)) return root;
+            if (LooksLikeWeaselInstallDir(root)) return root;
 
             var installDir = WindowsRegistry.TryGetString(
                 RegistryHive.LocalMachine, WeaselRegKey, InstallDirValue);
-            if (IsUsableDir(installDir)) return installDir;
+            if (LooksLikeWeaselInstallDir(installDir)) return installDir;
+            // 注册表值本身不像安装目录时，仍可能是「外层目录」（见文件头第 6 条），
+            // 继续在它下面找 weasel-<版本> 子目录。
+            if (IsUsableDir(installDir))
+            {
+                var nested = FindInRoots(new[] { installDir! });
+                if (nested is not null) return nested;
+            }
         }
 
-        // 回退：按 Windows 惯例逐个试。注意 64 位系统 ProgramFiles 即 Program Files，
-        // ProgramFiles(x86) 即 Program Files (x86)；32 位安装可能落在后者。
+        return FindInRoots(ProgramFileRoots());
+    }
+
+    /// <summary>本机所有 Program Files 根目录下的 <c>Rime</c> 目录。</summary>
+    private static IEnumerable<string> ProgramFileRoots()
+    {
+        // 64 位系统 ProgramFiles 即 Program Files，ProgramFiles(x86) 即 Program Files (x86)；
+        // 32 位安装可能落在后者。
         foreach (var variable in new[] { "ProgramFiles", "ProgramFiles(x86)", "ProgramW6432" })
         {
             var dir = Environment.GetEnvironmentVariable(variable);
             if (string.IsNullOrEmpty(dir)) continue;
-            var candidate = Path.Combine(dir, "Rime");
-            if (IsUsableDir(candidate)) return candidate;
+            yield return Path.Combine(dir, "Rime");
+        }
+    }
+
+    /// <summary>
+    /// 在给定的候选根目录中寻找真正的 Weasel 安装目录。抽出为纯函数以便测试注入 fixture。
+    /// </summary>
+    /// <remarks>
+    /// 查找顺序（每条都对得上真机或上游事实）：
+    /// 1. 根目录自身就是安装目录（老版本/自定义安装路径）；
+    /// 2. 根目录下 <c>weasel-&lt;版本&gt;</c> 子目录，取**版本号最大**的那个 ——
+    ///    上游 install.nsi 第 21 行定义 <c>WEASEL_ROOT = $INSTDIR\weasel-${WEASEL_VERSION}</c>，
+    ///    多个版本可并存（升级不删旧版），必须挑最新，否则面板读的是旧版配置。
+    /// </remarks>
+    public static string? FindInRoots(IEnumerable<string> roots)
+    {
+        foreach (var root in roots)
+        {
+            if (!IsUsableDir(root)) continue;
+
+            if (LooksLikeWeaselInstallDir(root)) return root;
+
+            var newest = NewestVersionedSubdirectory(root);
+            if (newest is not null) return newest;
         }
         return null;
+    }
+
+    /// <summary>
+    /// 在 <paramref name="root"/> 下找 <c>weasel-&lt;版本&gt;</c> 形式且**确为安装目录**的子目录，
+    /// 按版本号倒序取第一个。子目录同样要通过特征验证，避免残留的空目录被选中。
+    /// </summary>
+    public static string? NewestVersionedSubdirectory(string root)
+    {
+        if (!IsUsableDir(root)) return null;
+
+        var best = (Version: Array.Empty<int>(), Path: (string?)null);
+        try
+        {
+            foreach (var dir in Directory.EnumerateDirectories(root, "weasel-*"))
+            {
+                if (!LooksLikeWeaselInstallDir(dir)) continue;
+                var version = ParseVersion(Path.GetFileName(dir));
+                if (Comparer.Compare(version, best.Version) > 0) best = (version, dir);
+            }
+        }
+        catch (IOException) { return null; }
+        catch (UnauthorizedAccessException) { return null; }
+
+        return best.Path;
+    }
+
+    /// <summary>
+    /// 从目录名 <c>weasel-0.17.4</c> 解析出可比较的版本数组 <c>[0,17,4]</c>。
+    /// 无法解析（如 <c>weasel-dev</c>）时返回空数组 —— 语义是「版本未知，排在任何已知版本之前」，
+    /// 这样纯数字版本永远优先于命名版本，不会因为解析失败反而胜出。
+    /// </summary>
+    internal static int[] ParseVersion(string directoryName)
+    {
+        var dash = directoryName.IndexOf('-');
+        var tail = dash >= 0 ? directoryName[(dash + 1)..] : directoryName;
+
+        var parts = tail.Split('.');
+        var numbers = new List<int>(parts.Length);
+        foreach (var part in parts)
+        {
+            if (!int.TryParse(part, out var n)) return Array.Empty<int>();
+            numbers.Add(n);
+        }
+        return numbers.Count == 0 ? Array.Empty<int>() : numbers.ToArray();
+    }
+
+    private static readonly VersionArrayComparer Comparer = new();
+
+    /// <summary>逐段比较版本号数组，长度不等时按 0 补齐（<c>1.2</c> == <c>1.2.0</c>，<c>1.10</c> &gt; <c>1.9</c>）。</summary>
+    private sealed class VersionArrayComparer : IComparer<int[]>
+    {
+        public int Compare(int[]? x, int[]? y)
+        {
+            var a = x ?? Array.Empty<int>();
+            var b = y ?? Array.Empty<int>();
+            var max = Math.Max(a.Length, b.Length);
+            for (var i = 0; i < max; i++)
+            {
+                var va = i < a.Length ? a[i] : 0;
+                var vb = i < b.Length ? b[i] : 0;
+                if (va != vb) return va.CompareTo(vb);
+            }
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// 该目录是否**确实**是小狼毫安装目录。这是防止「空壳目录误报已安装」的关键判断。
+    /// 满足任一特征即算：含 WeaselServer.exe / WeaselDeployer.exe / rime.dll / data 子目录。
+    /// </summary>
+    public static bool LooksLikeWeaselInstallDir(string? path)
+    {
+        if (!IsUsableDir(path)) return false;
+        try
+        {
+            if (File.Exists(Path.Combine(path!, "WeaselServer.exe"))) return true;
+            if (File.Exists(Path.Combine(path!, "WeaselDeployer.exe"))) return true;
+            if (File.Exists(Path.Combine(path!, "rime.dll"))) return true;
+            if (File.Exists(Path.Combine(path!, "Win32", "WeaselServer.exe"))) return true;
+            if (Directory.Exists(Path.Combine(path!, "data"))) return true;
+        }
+        catch (IOException) { return false; }
+        catch (UnauthorizedAccessException) { return false; }
+        return false;
     }
 
     private static bool IsUsableDir(string? path) =>

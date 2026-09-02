@@ -14,8 +14,8 @@
     <RootNamespace>WeaselPanel.App</RootNamespace>
     <!-- ⚠️ 每次重新发 exe 都 +1。标题栏显示这个版本号，是判断「VM 上跑的是哪一版」
          的最快凭据 —— 之前连续两轮修复都栽在「以为测的是新版、其实是旧 exe」。 -->
-    <Version>0.1.3</Version>
-    <InformationalVersion>0.1.3-preview</InformationalVersion>
+    <Version>0.1.4</Version>
+    <InformationalVersion>0.1.4-preview</InformationalVersion>
     <Company>大狼导演工作室</Company>
     <Product>小狼毫控制面板</Product>
     <Copyright>GPL-3.0</Copyright>

@@ -93,16 +93,36 @@ public static class ProbeService
         }
 
         var asciiOnly = CurrentUserName.All(c => c < 128);
+
+        // 区分两种截然不同的成因，给出可操作的下一步：
+        // (a) WeaselServer 进程根本没跑 → 去启动小狼毫；
+        // (b) 进程在跑但连不上 → 才是管道名/权限问题。
+        // 真机验证（2026-09-02）：VM 上小狼毫未启动时报此失败，启动后立即连通，
+        // 属成因 (a)。此前文案只说「可能未运行」，用户不知道该做什么。
+        var serverRunning = IsProcessRunning("WeaselServer");
+        var advice = serverRunning
+            ? "WeaselServer 进程在运行但管道连不上 —— 请检查是否以不同用户身份运行，或重启小狼毫后再测。"
+            : "WeaselServer 进程未运行。请先启动小狼毫（任务栏出现 Rime 图标 / 切换到小狼毫输入法），再重新诊断。";
+        tried.Add("→ " + advice);
+
         return new ProbeResult
         {
             Name = "命名管道",
             Status = ProbeStatus.Fail,
             Summary = asciiOnly
-                ? "全部候选均无法连通（小狼毫可能未运行）"
+                ? (serverRunning ? "管道无法连通（WeaselServer 在运行，属管道/权限问题）"
+                                 : "管道无法连通 —— 小狼毫未运行")
                 : $"全部候选均无法连通 —— 当前用户名「{CurrentUserName}」含非 ASCII 字符，重点怀疑编码问题",
             Details = tried,
         };
     }
+
+    /// <summary>
+    /// 指定名称的进程是否在运行。仅用于诊断提示，失败一律视为「没在跑」
+    /// （宁可给出保守建议，也不该因为查询失败就报出误导性结论）。
+    /// </summary>
+    private static bool IsProcessRunning(string processName) =>
+        System.Diagnostics.Process.GetProcessesByName(processName).Length > 0;
 
     private static string PipeNameWithoutPrefix(string fullName)
     {
@@ -226,27 +246,47 @@ public static class ProbeService
     /// 上游用 google-glog，文件名形如 rime.weasel.<机器名>.<用户名>.log.<级别>.<日期>-<时间>.<pid>
     /// 但具体格式要实测确认，面板的错误正则必须与之匹配。
     /// </summary>
+    /// <summary>
+    /// 日志文件探测。
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ **只认 librime 自己的日志命名**：<c>rime.weasel.&lt;主机&gt;.&lt;用户&gt;.log.&lt;级别&gt;.&lt;日期&gt;.&lt;pid&gt;.log</c>。
+    /// 绝不能用裸 <c>*.log</c> 去扫 <c>%TEMP%</c> —— 那是全系统的临时目录，Chrome 安装器、
+    /// Tauri 构建脚本等都会往里写 .log。2026-09-02 真机报告里就混进了
+    /// <c>chrome_installer.log</c>、<c>tauri-build-final6.log</c>、<c>push.log</c>
+    /// 等 6 个无关文件，而真正的 rime 日志只有 3 个 —— 用户根本无法据此判断。
+    /// </remarks>
     public static ProbeResult ProbeLogFiles(string? logDirectory)
     {
         var dir = string.IsNullOrWhiteSpace(logDirectory)
             ? Path.Combine(Path.GetTempPath(), "rime.weasel")
             : logDirectory;
 
+        // 三个候选：约定的 rime.weasel 子目录 → %TEMP% 根 → %TEMP%\Rime。
+        // 后两者仅作兜底（部分便携版会改变日志落点），且一律只用 rime.weasel* 匹配。
         var candidates = new List<string> { dir, Path.GetTempPath(), Path.Combine(Path.GetTempPath(), "Rime") };
+
         var found = new List<string>();
+        var scanned = new List<string>();
 
         foreach (var d in candidates.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (!Directory.Exists(d)) continue;
+            scanned.Add(d);
             try
             {
-                var files = Directory.GetFiles(d, "rime.weasel*", SearchOption.TopDirectoryOnly)
-                    .Concat(Directory.GetFiles(d, "*.log", SearchOption.TopDirectoryOnly))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                // 只取 librime 日志；不递归（日志不分层）
+                var files = Directory
+                    .GetFiles(d, "rime.weasel*", SearchOption.TopDirectoryOnly)
                     .OrderByDescending(File.GetLastWriteTime)
                     .Take(6);
+
                 foreach (var f in files)
-                    found.Add($"{Path.GetFileName(f)}    ({new FileInfo(f).Length / 1024} KB, {File.GetLastWriteTime(f):yyyy-MM-dd HH:mm})");
+                {
+                    var size = new FileInfo(f).Length;
+                    var when = File.GetLastWriteTime(f);
+                    found.Add($"{Path.GetFileName(f)}    ({size / 1024} KB, {when:yyyy-MM-dd HH:mm})  ← {d}");
+                }
             }
             catch (Exception ex)
             {
@@ -258,16 +298,18 @@ public static class ProbeService
             return new ProbeResult
             {
                 Name = "日志文件",
+                // 没有日志不是错误：librime 只在确有内容时才写文件，
+                // 全新部署且未出错时本就一个都没有。故降级为提示。
                 Status = ProbeStatus.Warn,
-                Summary = "未找到任何 rime.weasel 日志（可能尚未产生错误，或日志目录不在预期位置）",
-                Details = new[] { "已扫描：" + string.Join(" | ", candidates) },
+                Summary = "未找到 rime.weasel 日志（无错误时属正常，不代表异常）",
+                Details = new[] { "已扫描：" + string.Join(" | ", scanned) },
             };
 
         return new ProbeResult
         {
             Name = "日志文件",
             Status = ProbeStatus.Ok,
-            Summary = $"找到 {found.Count} 个相关文件",
+            Summary = $"找到 {found.Count} 个 rime 日志",
             Details = found,
         };
     }
@@ -287,11 +329,17 @@ public static class ProbeService
             searchDirs.Add(Path.Combine(p, "plugins"));
             searchDirs.Add(Path.Combine(p, "lib", "rime-plugins"));
             searchDirs.Add(Path.Combine(p, "data", "plugins"));
+            searchDirs.Add(Path.Combine(p, "data", "lua"));
+            searchDirs.Add(Path.Combine(p, "lua"));
+            searchDirs.Add(Path.Combine(p, "lua", "lib"));
         }
         Add(programDirectory);
         Add(sharedDataDirectory);
         if (!string.IsNullOrWhiteSpace(sharedDataDirectory))
             Add(Path.GetDirectoryName(sharedDataDirectory));
+        // 程序目录的父目录：weasel-<版本>\ 之上一层有时放共享的 plugins
+        if (!string.IsNullOrWhiteSpace(programDirectory))
+            Add(Path.GetDirectoryName(programDirectory));
         Add(userDirectory);
 
         var found = new List<string>();
@@ -348,16 +396,38 @@ public static class ProbeService
             details.AddRange(luaRefs.Take(8));
         }
 
+        // 状态判定的关键：**未发现 lua 插件本身不是故障**。
+        // librime-lua 是可选插件，官方发行包并不必然内置（上游 rime/weasel 仓内
+        // 根本没有 lua 相关文件，它由 librime 侧单独提供）。真正的故障只有一种 ——
+        // 配置里引用了 lua（如 rime_ice 的 lua_filter）却找不到插件，那会导致部署失败。
         var ok = found.Count > 0;
+        var configuredButMissing = !ok && luaRefs.Count > 0;
+
+        if (ok)
+        {
+            details.Add("紫毫纠错等 lua 功能具备启用条件。");
+        }
+        else if (configuredButMissing)
+        {
+            details.Add("⚠️ 配置引用了 lua 但插件不在：部署会失败，需安装 librime-lua 或移除 lua 引用。");
+        }
+        else
+        {
+            details.Add("说明：librime-lua 是可选插件，未安装不影响小狼毫本体与面板的正常使用。");
+            details.Add("只有需要「紫毫纠错」等 lua 功能时才需要它；届时应安装含 lua 的 librime 构建。");
+        }
+
         return new ProbeResult
         {
             Name = "librime-lua 插件",
-            Status = ok ? ProbeStatus.Ok : (luaRefs.Count > 0 ? ProbeStatus.Warn : ProbeStatus.Fail),
+            Status = ok ? ProbeStatus.Ok
+                        : configuredButMissing ? ProbeStatus.Fail
+                        : ProbeStatus.Warn,
             Summary = ok
                 ? "发现 lua 插件文件，紫毫纠错具备启用条件"
-                : luaRefs.Count > 0
-                    ? "未发现插件文件，但配置中已有 lua 引用 —— 需人工确认插件实际位置"
-                    : "未发现 lua 插件，紫毫纠错不可用（面板应禁用相关功能）",
+                : configuredButMissing
+                    ? "未发现插件文件，但配置中已有 lua 引用 —— 部署会失败"
+                    : "未安装 lua 插件（可选，不影响本体与面板使用）",
             Details = details,
         };
     }
