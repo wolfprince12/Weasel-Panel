@@ -72,8 +72,9 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        // 第一件事：立刻写一行启动哨兵，让日志能定位是哪次构建崩了。
+        // 第一件事：立刻写启动哨兵 + 覆盖 LAST_RUN 哨兵文件，双重定位崩溃构建。
         // 这行必须写在任何可能抛异常的代码之前。
+        WriteLastRunSentinel();
         Log($"=== startup {DateTime.Now:yyyy-MM-dd HH:mm:ss} " +
             $"v{ExecutableVersion} build_at={ExecutableBuildTime:yyyy-MM-dd HH:mm:ss} " +
             $"hash={ExecutableHashPrefix} ===");
@@ -167,5 +168,39 @@ public partial class App : Application
         {
             // 日志写不进去就算了，不能影响主流程
         }
+    }
+
+    /// <summary>
+    /// 在 exe 同目录写一份 <c>LAST_RUN.txt</c>，每次启动都会覆盖更新。
+    /// 用户肉眼验证方式：打开 dist 文件夹看一眼这个文件的「修改日期」——
+    /// • 如果是「刚才」（你刚双击 exe 那刻）= 你跑的就是新 exe；
+    /// • 如果是构建时间（00:01 那刻）= 你跑的是某个旧 exe，新版根本没被执行。
+    ///
+    /// v0.1.15 ~ v0.2.0 连续三版用户反馈「没效果」，但字节搜索证明 exe 里硬编码中文全在；
+    /// 唯一解释是 VM 上跑了别的副本。本方法让这种事一目了然、零猜测。
+    /// </summary>
+    public static void WriteLastRunSentinel()
+    {
+        try
+        {
+            var exe = Environment.ProcessPath ?? "";
+            if (string.IsNullOrEmpty(exe)) return;
+            var dir = Path.GetDirectoryName(exe);
+            if (string.IsNullOrEmpty(dir)) return;
+            var path = Path.Combine(dir, "LAST_RUN.txt");
+            File.WriteAllText(path,
+                $"last_run_at_utc:  {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}\n" +
+                $"last_run_at_loc:  {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
+                $"executed_exe:     {exe}\n" +
+                $"version:          {ExecutableVersion}\n" +
+                $"exe_build_time:   {ExecutableBuildTime:yyyy-MM-dd HH:mm:ss}\n" +
+                $"sha256_prefix:    {ExecutableHashPrefix}\n" +
+                "\n" +
+                "If this file's mtime is OLD (not your just-clicked time), the new WeaselPanel.exe\n" +
+                "was NEVER executed — you are running a cached old copy somewhere on the VM.\n" +
+                "Open dist/BUILD_INFO.txt or dist/win-x64/*_v0.2.0_*.exe and run THAT instead.\n",
+                Encoding.UTF8);
+        }
+        catch { /* 不能影响启动 */ }
     }
 }

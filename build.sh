@@ -111,26 +111,51 @@ echo "✅ 构建完成"
 ls -lh "$EXE"
 echo "   md5: $(md5 -q "$EXE")"
 
+# ── 把 dist 里的 exe 改名带版本号 + 哈希前 8 位 ─────────────────────────
+# 历史教训：v0.1.15/v0.1.16/v0.2.0 三版用户都报"修复无效"，但字节搜索证明
+# 新 exe 里硬编码中文全在——根因是 VM 跑的旧副本（Start 菜单/任务栏/资源管理器
+# 缓存/快捷方式都可能）。本次构建后**彻底去掉 dist 里的纯名 WeaselPanel.exe**，
+# 强制用户只能打开带版本号的文件：任何旧快捷方式字符都匹配不上，
+# 双击必然「找不到文件」而不是静默跑旧版。
+EXE_DIR="$(dirname "$EXE")"
+VER="$(grep -oE '<Version>[^<]+' src/WeaselPanel.App/WeaselPanel.App.csproj | sed 's/<Version>//')"
+HASH8="$(shasum -a 256 "$EXE" | awk '{print $1}' | cut -c1-8)"
+VERSIONED_NAME="WeaselPanel_v${VER}_${HASH8}.exe"
+VERSIONED_PATH="${EXE_DIR}/${VERSIONED_NAME}"
+
+# 清掉 dist 里上一次构建留下的版本号副本（避免老副本和新副本同名冲突）
+rm -f "${EXE_DIR}"/WeaselPanel_v*.exe
+
+mv "$EXE" "$VERSIONED_PATH"
+echo "   已重命名: WeaselPanel.exe -> ${VERSIONED_NAME}"
+
 # ── 写一份「给用户在 Windows 资源管理器里看」的版本哨兵 ─────────────────
-# 历史上 v0.1.15 / v0.1.16 两次修复都因为「VM 上跑的根本不是新 exe」而误判，
-# 现在把构建产物写到 dist 根目录，方便用户肉眼确认「我打开的是这版」。
 {
     echo "WeaselPanel EXE marker"
     echo "========================="
-    echo "version:        $(grep -oE '<Version>[^<]+' src/WeaselPanel.App/WeaselPanel.App.csproj | sed 's/<Version>//')"
+    echo "version:        ${VER}"
     echo "built_at:       $(date '+%Y-%m-%d %H:%M:%S %Z')"
-    echo "executable:     $EXE"
-    echo "size_bytes:     $(stat -f '%z' "$EXE")"
-    echo "size_human:     $(ls -lh "$EXE" | awk '{print $5}')"
-    echo "md5:            $(md5 -q "$EXE")"
-    echo "sha256_prefix:  $(shasum -a 256 "$EXE" | awk '{print $1}' | cut -c1-16)"
+    echo "executable:     ${VERSIONED_PATH}"
+    echo "filename:       ${VERSIONED_NAME}"
+    echo "size_bytes:     $(stat -f '%z' "$VERSIONED_PATH")"
+    echo "size_human:     $(ls -lh "$VERSIONED_PATH" | awk '{print $5}')"
+    echo "md5:            $(md5 -q "$VERSIONED_PATH")"
+    echo "sha256_prefix:  $(shasum -a 256 "$VERSIONED_PATH" | awk '{print $1}' | cut -c1-16)"
     echo ""
-    echo "If the title bar of the running WeaselPanel.exe does NOT show:"
-    echo "  小狼毫控制面板 vX.Y.Z · MM-DD HH:MM · #abcdef"
-    echo "then you're running an OLD exe — please close all instances and re-open the one in this folder."
-} > "$(dirname "$EXE")/../BUILD_INFO.txt"
+    echo "How to verify which build you're actually running:"
+    echo "  1. Make sure you double-clicked ${VERSIONED_NAME}"
+    echo "     (NOT a Start menu shortcut or pinned taskbar entry)"
+    echo "  2. Title bar MUST show:"
+    echo "     小狼毫控制面板 v${VER} · MM-DD HH:MM · #${HASH8}"
+    echo "  3. After run, ${EXE_DIR}/LAST_RUN.txt must have a mtime from 'just now'"
+    echo "     (not the build time). If not, the new exe didn't run."
+} > "${EXE_DIR}/../BUILD_INFO.txt"
 
-echo "   BUILD_INFO.txt: $(dirname "$EXE")/../BUILD_INFO.txt"
+# 同步写一份到 dist 根目录方便单层查看
+cp "${EXE_DIR}/../BUILD_INFO.txt" "${EXE_DIR}/BUILD_INFO.txt"
+
+echo "   BUILD_INFO.txt: ${EXE_DIR}/BUILD_INFO.txt"
 echo ""
-echo "Windows 上直接打开：${OUT}/WeaselPanel.exe"
-echo "                    （同目录还有 BUILD_INFO.txt 标记文件，肉眼确认版本/哈希）"
+echo "Windows 上必须打开（不要打开 Start 菜单里的旧快捷方式）："
+echo "  ${VERSIONED_PATH}"
+echo "  （dist 根目录有 BUILD_INFO.txt，开 LAST_RUN.txt 还能验是否真跑了新 exe）"
