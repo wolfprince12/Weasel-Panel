@@ -267,6 +267,11 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware
             }
         }
 
+        // 3) 把用户自定义配色并入目录。
+        //    没这一步的话，「自定义配色」页建出来的方案虽然已经写进 YAML，
+        //    下拉框（只解析 weasel.yaml）里却看不到它 —— 建了也选不上。
+        catalog = catalog.Appending(PresetColorSchemes.Extract(_custom.Patch));
+
         foreach (var n in catalog.Names) SchemeNames.Add(n);
         _catalog = catalog;
         _catalogSourcePath = source ?? "";

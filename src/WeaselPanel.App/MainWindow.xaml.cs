@@ -15,6 +15,7 @@ public partial class MainWindow : Window
     private readonly WeaselEnvironment _environment;
     private readonly DiagnosticsView _diagnosticsView;
     private readonly AppearanceView _appearanceView;
+    private readonly ColorSchemesView _colorSchemesView;
     private readonly SchemaView _schemaView;
     private readonly InputView _inputView;
     private readonly BehaviorView _behaviorView;
@@ -48,6 +49,7 @@ public partial class MainWindow : Window
         _environment = environment;
         _diagnosticsView = new DiagnosticsView(new DiagnosticsViewModel());
         _appearanceView = new AppearanceView(new AppearanceViewModel(environment));
+        _colorSchemesView = new ColorSchemesView(environment);
         _schemaView = new SchemaView(new SchemaViewModel(environment));
         _inputView = new InputView(new InputViewModel(environment));
         _behaviorView = new BehaviorView(new BehaviorViewModel(environment));
@@ -106,7 +108,7 @@ public partial class MainWindow : Window
     {
         UserControl[] views =
         {
-            _diagnosticsView, _appearanceView, _schemaView,
+            _diagnosticsView, _appearanceView, _colorSchemesView, _schemaView,
             _inputView, _behaviorView, _appOptionsView, _dictionaryView,
             _maintenanceView, _inspectorView,
             _backupView, _aboutView,
@@ -123,28 +125,45 @@ public partial class MainWindow : Window
         // 兜底：如果将来发生 ctor 阶段回调（极端改造），所有 view 字段都非空就放行，
         // 否则 return —— 永远不让 Nav_SelectionChanged 因为字段未就绪而 NRE。
         if (_diagnosticsView is null || _appearanceView is null
+            || _colorSchemesView is null
             || _schemaView is null || _inputView is null
             || _behaviorView is null || _appOptionsView is null
             || _dictionaryView is null
             || _maintenanceView is null || _inspectorView is null
             || _backupView is null || _aboutView is null) return;
 
-        // ⚠️ 索引必须与 MainWindow.xaml 里 ListBoxItem 的顺序严格一致。
-        // 侧栏是「纯 ListBox + 索引 switch」，加/删/换位都要两边同时改 ——
-        // 一旦错位，点「维护」会跳出「词典」，而且不报错，很难发现。
-        ContentHost.Content = Nav.SelectedIndex switch
-        {
-            1 => _appearanceView,
-            2 => _schemaView,
-            3 => _inputView,
-            4 => _behaviorView,
-            5 => _appOptionsView,
-            6 => _dictionaryView,
-            7 => _maintenanceView,
-            8 => _inspectorView,
-            9 => _backupView,
-            10 => _aboutView,
-            _ => _diagnosticsView,
-        };
+        ContentHost.Content = ViewAtIndex(Nav.SelectedIndex);
     }
+
+    /// <summary>
+    /// 导航顺序表。
+    /// ⚠️ 顺序必须与 MainWindow.xaml 里 ListBoxItem 的顺序严格一致。
+    /// </summary>
+    /// <remarks>
+    /// 原来是 <c>SelectedIndex switch { 1 => …, 10 => … }</c>。那样每加一页都要把
+    /// 后面所有 case 的索引手动 +1；漏一个就会「点『维护』跳出『词典』」，
+    /// 而且既不报错也不崩，只能靠肉眼发现。改成顺序数组后，加页只要在
+    /// XAML 和这里各插一行，索引由数组位置自己算出来，没有数字可漏。
+    /// </remarks>
+    private UserControl ViewAtIndex(int index) => index switch
+    {
+        >= 0 and < 12 => NavViews[index],
+        _ => _diagnosticsView,
+    };
+
+    private UserControl[] NavViews =>
+    [
+        _diagnosticsView,   // 0 环境诊断
+        _appearanceView,    // 1 外观
+        _colorSchemesView,  // 2 自定义配色
+        _schemaView,        // 3 输入方案
+        _inputView,         // 4 按键与输入
+        _behaviorView,      // 5 行为
+        _appOptionsView,    // 6 应用选项
+        _dictionaryView,    // 7 词典
+        _maintenanceView,   // 8 维护
+        _inspectorView,     // 9 配置查看器
+        _backupView,        // 10 备份与恢复
+        _aboutView,         // 11 关于
+    ];
 }

@@ -4,6 +4,12 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <!-- 只为借用 System.Windows.Forms.ColorDialog 这一个类。
+         WPF 至今没有内置取色器，自己撸一组 RGB/Alpha 滑块既难用又不好看；
+         原生颜色对话框用户熟悉、支持自定义色板，是 Windows 上该有的样子。
+         System.Drawing.Common 随 Microsoft.WindowsDesktop.App.WindowsForms 一起提供，
+         不需要额外包引用；两个 Use* 开关可以同开，官方支持 WPF/WinForms 混用。 -->
+    <UseWindowsForms>true</UseWindowsForms>
     <!-- 允许在非 Windows 主机上构建 Windows 桌面应用。
          这是本项目能在 macOS 上直接产出 exe 的关键开关，不要删除。 -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
@@ -13,9 +19,11 @@
     <AssemblyName>WeaselPanel</AssemblyName>
     <RootNamespace>WeaselPanel.App</RootNamespace>
     <!-- ⚠️ 每次重新发 exe 都 +1。标题栏显示这个版本号，是判断「VM 上跑的是哪一版」
-         的最快凭据 —— 之前连续两轮修复都栽在「以为测的是新版、其实是旧 exe」。 -->
-    <Version>0.1.10</Version>
-    <InformationalVersion>0.1.10-preview</InformationalVersion>
+         的最快凭据 —— 之前连续两轮修复都栽在「以为测的是新版、其实是旧 exe」。
+         别只改这里：./build.sh 出包时会用 tools/verify_lang_packs.py 拿每包里
+         最长的若干条原文当哨兵真搜 exe，搜不到就让构建失败。 -->
+    <Version>0.1.11</Version>
+    <InformationalVersion>0.1.11-preview</InformationalVersion>
     <Company>大狼导演工作室</Company>
     <Product>小狼毫控制面板</Product>
     <Copyright>GPL-3.0</Copyright>
@@ -33,6 +41,16 @@
          运行时窗口图标见 MainWindow.xaml 的 Icon 属性 —— ApplicationIcon 单独不显示在窗口上。 -->
     <ApplicationIcon>Resources/app.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <!-- ⚠️ 开 WinForms 会让 SDK 自动加上 `global using System.Windows.Forms;`，
+       于是 System.Windows.Forms.UserControl / Application 与 WPF 的同名类型
+       全面歧义，12 个已有视图直接编译不过。这里把它的全局 using 摘掉 ——
+       只是去掉「自动引入命名空间」，不影响运行时，ColorDialog 照常可用，
+       本项目里唯一需要 WinForms 的地方全部用全名书写（见 ColorSchemesViewModel）。 -->
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WeaselPanel.Core\WeaselPanel.Core.csproj" />

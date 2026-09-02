@@ -57,6 +57,41 @@ public sealed class ResolvedColorScheme
     public uint HilitedCommentTextColor { get; internal set; }
     public uint HilitedMarkColor { get; internal set; }
 
+    /// <summary>
+    /// 按配置键取本方案的最终 ABGR 值（0xAABBGGRR）；未知键返回 null。
+    /// </summary>
+    /// <remarks>
+    /// 与下面 22 个属性放在一起而不是另建映射表，是为了让两者无法悄悄失配 ——
+    /// 自定义配色编辑器（<c>UserColorScheme.FromResolved</c>）与预览都走这个方法。
+    /// 测试「可编辑通道与解析器一一对应」守着它与 ColorSchemeFields.ColorKeys 的一致性。
+    /// </remarks>
+    public uint? AbgrForKey(string key) => key switch
+    {
+        "back_color" => BackColor,
+        "shadow_color" => ShadowColor,
+        "prevpage_color" => PrevPageColor,
+        "nextpage_color" => NextPageColor,
+        "text_color" => TextColor,
+        "candidate_text_color" => CandidateTextColor,
+        "candidate_back_color" => CandidateBackColor,
+        "border_color" => BorderColor,
+        "hilited_text_color" => HilitedTextColor,
+        "hilited_back_color" => HilitedBackColor,
+        "hilited_candidate_text_color" => HilitedCandidateTextColor,
+        "hilited_candidate_back_color" => HilitedCandidateBackColor,
+        "hilited_candidate_shadow_color" => HilitedCandidateShadowColor,
+        "hilited_shadow_color" => HilitedShadowColor,
+        "candidate_shadow_color" => CandidateShadowColor,
+        "candidate_border_color" => CandidateBorderColor,
+        "hilited_candidate_border_color" => HilitedCandidateBorderColor,
+        "label_color" => LabelTextColor,
+        "hilited_label_color" => HilitedLabelTextColor,
+        "comment_text_color" => CommentTextColor,
+        "hilited_comment_text_color" => HilitedCommentTextColor,
+        "hilited_mark_color" => HilitedMarkColor,
+        _ => null
+    };
+
     /// <summary>本方案最终采用的字节序（供回写时使用）。</summary>
     public RimeColorFormat Format { get; internal set; }
 }

@@ -1,0 +1,587 @@
+<UserControl x:Class="WeaselPanel.App.Views.ColorSchemesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
+    <!--
+        ── 排版约定（与 ui-ux-pro-max 对齐，改动前先读）─────────────────────
+        · 层次：页面标题 22 → 卡片小标题 14.5 → 分组标题 13 半粗 → 正文 13 → 说明 11.5。
+          分组标题是这一页独有的一级，用「字号回到正文 + 加字重 + 换色」来做，
+          不再往上加字号 —— 再大就抢卡片标题了。
+        · 间距一律走 Sp/Gap token（8px 网格），页面里不出现裸数字 Margin。
+        · 能用留白就不用分割线：分组之间用 20px 留白，只有「方案元数据」与
+          「22 个通道」这两个语义无关的小节之间才画一条线。
+        · 圆角只有三档：卡片 8 / 控件 4 / 色块 4，不另起一档。
+    -->
+    <UserControl.Resources>
+        <!-- 半透明色值需要棋盘格底才看得出来。alpha 是这一页的一等公民：
+             半透明高亮底色是常见做法，没有底纹的话 0x80 与 0xFF 在色块上完全一样。 -->
+        <DrawingBrush x:Key="AlphaGrid" TileMode="Tile" Viewport="0,0,8,8" ViewportUnits="Absolute">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#FFFFFFFF">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,8,8"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#FFDDE2E7">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,4,4"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#FFDDE2E7">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="4,4,4,4"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
+        <!-- 色块 = 取色按钮。外圈是描边，内圈才是颜色，中间夹一层棋盘格。 -->
+        <Style x:Key="SwatchButton" TargetType="Button">
+            <Setter Property="Width" Value="26"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="ToolTip" Value="{l10n:L ColorSchemes.PickTip}"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ring" Width="26" Height="26"
+                                CornerRadius="{StaticResource RadiusSm}"
+                                BorderBrush="{StaticResource BorderBrushStrong}" BorderThickness="1"
+                                Background="{StaticResource AlphaGrid}">
+                            <!-- 继承态用 0.45 透明度：一眼能看出「这个值不是我设的」 -->
+                            <Border CornerRadius="3"
+                                    Background="{Binding Swatch}"
+                                    Opacity="{Binding SwatchOpacity}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ring" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="ring" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                                <Setter TargetName="ring" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 清除按钮。用 Path 画叉而不是「×」字符 —— 字符在不同字体下大小和基线都不一样，
+             而且鼠标悬停时要整体变红（危险提示），用 Foreground + TemplateBinding 才好改。 -->
+        <Style x:Key="IconClearButton" TargetType="Button">
+            <Setter Property="Width" Value="26"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="ToolTip" Value="{l10n:L ColorSchemes.ClearTip}"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="Transparent"
+                                CornerRadius="{StaticResource RadiusSm}">
+                            <Path Data="M 3,3 L 11,11 M 11,3 L 3,11"
+                                  Stroke="{TemplateBinding Foreground}" StrokeThickness="1.6"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  Width="14" Height="14"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource ErrorSoftBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.28"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 色值输入框。等宽字体 + 合法/非法两态。
+             非法态必须看得见：写进 YAML 后 Rime 会把解析失败的值当 0（全透明）处理，
+             界面上却什么都不会说，只有部署后候选窗糊了才发现。 -->
+        <Style x:Key="LiteralBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="FontFamily" Value="{StaticResource MonoFont}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="MaxLength" Value="18"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsValid}" Value="False">
+                    <Setter Property="BorderBrush" Value="{StaticResource ErrorBrush}"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 分组标题 -->
+        <Style x:Key="GroupTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{StaticResource FontBody}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLabelBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <!-- 一行通道 -->
+        <DataTemplate x:Key="ChannelRowTemplate">
+            <Grid Height="38">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="26"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="126"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="26"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Style="{StaticResource SwatchButton}"
+                        Command="{Binding DataContext.PickColorCommand,
+                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding}"/>
+
+                <!-- 名称。继承态把字色调淡，与「我显式设过的值」区分开。 -->
+                <TextBlock Grid.Column="2" Text="{Binding Label}"
+                           FontSize="{StaticResource FontBody}"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           ToolTip="{Binding Tip}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsInherited}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <!-- 色值。空框 + 继承态时，把回退链算出来的生效值以浅色垫在下面 ——
+                     不这么做的话，「这一项现在是继承的、继承到的是什么」完全看不见。 -->
+                <Grid Grid.Column="4">
+                    <TextBox Text="{Binding Literal, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource LiteralBox}"
+                             ToolTip="{Binding Tip}"/>
+                    <TextBlock Text="{Binding EffectiveLiteral}"
+                               Style="{StaticResource MonoText}"
+                               FontSize="12" Margin="9,0,0,0"
+                               Foreground="{StaticResource TextDisabledBrush}"
+                               VerticalAlignment="Center" HorizontalAlignment="Left"
+                               IsHitTestVisible="False"
+                               Visibility="{Binding IsInherited, Converter={StaticResource BoolToVisibility}}"/>
+                </Grid>
+
+                <Button Grid.Column="6" Style="{StaticResource IconClearButton}"
+                        IsEnabled="{Binding HasValue}"
+                        Command="{Binding DataContext.ClearChannelCommand,
+                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding}"/>
+            </Grid>
+        </DataTemplate>
+
+        <!-- 一组通道 -->
+        <DataTemplate x:Key="ChannelGroupTemplate">
+            <StackPanel Margin="{StaticResource GapSection}">
+                <TextBlock Text="{Binding Title}" Style="{StaticResource GroupTitle}"/>
+                <ItemsControl ItemsSource="{Binding Rows}"
+                              ItemTemplate="{StaticResource ChannelRowTemplate}"/>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <TextBlock Text="{l10n:L ColorSchemes.Title}" Style="{StaticResource PageTitle}"/>
+        <TextBlock Text="{l10n:L ColorSchemes.Intro}" Style="{StaticResource PageIntro}"/>
+
+        <!-- ── 两栏：左「预览 + 方案列表」，右「22 个通道」─────────────────
+             预览放左边而不放右边顶上：右边是 22 行、比一屏高得多，
+             放右边顶上一滚就没了。 -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ══ 左栏 ═══════════════════════════════════════════════ -->
+            <StackPanel Grid.Column="0">
+
+                <!-- ── 预览 ──────────────────────────────────────────── -->
+                <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
+                    <StackPanel>
+                        <TextBlock Text="{l10n:L ColorSchemes.PreviewTitle}"
+                                   Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="{Binding ActiveSchemeText}"
+                                   Style="{StaticResource FieldNote}"/>
+
+                        <!-- 模拟候选窗。字号不跟配置走（这一页不编辑字体），
+                             取一套固定值让预览始终可看。 -->
+                        <Border Background="{Binding BackBrush}" BorderBrush="{Binding BorderBrush}"
+                                BorderThickness="2" CornerRadius="{StaticResource RadiusSm}"
+                                Padding="12,10" Margin="0,14,0,0"
+                                HorizontalAlignment="Left" MinWidth="236">
+                            <StackPanel>
+                                <TextBlock Text="wang" FontSize="{Binding FontPoint}"
+                                           FontFamily="{Binding FontFace}"
+                                           Foreground="{Binding TextBrush}" Margin="2,0,0,7"/>
+
+                                <!-- 高亮候选：标记符 + 序号 + 词 + 注释 -->
+                                <Border Background="{Binding HilitedBackBrush}"
+                                        CornerRadius="3" Padding="7,4">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding PreviewMarkText}"
+                                                   FontSize="{Binding FontPoint}" FontFamily="{Binding FontFace}"
+                                                   Foreground="{Binding HilitedMarkBrush}" Margin="0,0,4,0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding PreviewLabel1}"
+                                                   FontSize="{Binding PreviewLabelFontPoint}" FontFamily="{Binding FontFace}"
+                                                   Foreground="{Binding HilitedLabelBrush}" Margin="0,0,6,0"/>
+                                        <TextBlock Grid.Column="2" Text="王"
+                                                   FontSize="{Binding FontPoint}" FontFamily="{Binding FontFace}"
+                                                   Foreground="{Binding HilitedTextBrush}"/>
+                                        <TextBlock Grid.Column="3" Text="wáng" FontSize="11"
+                                                   Foreground="{Binding HilitedTextBrush}" Opacity="0.75"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- 普通候选 -->
+                                <Grid Margin="7,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Width="16"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding PreviewLabel2}"
+                                               FontSize="{Binding PreviewLabelFontPoint}" FontFamily="{Binding FontFace}"
+                                               Foreground="{Binding LabelBrush}" Margin="0,0,6,0"/>
+                                    <TextBlock Grid.Column="2" Text="往"
+                                               FontSize="{Binding FontPoint}" FontFamily="{Binding FontFace}"
+                                               Foreground="{Binding CandidateTextBrush}"/>
+                                </Grid>
+                                <Grid Margin="7,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Width="16"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding PreviewLabel3}"
+                                               FontSize="{Binding PreviewLabelFontPoint}" FontFamily="{Binding FontFace}"
+                                               Foreground="{Binding LabelBrush}" Margin="0,0,6,0"/>
+                                    <TextBlock Grid.Column="2" Text="网"
+                                               FontSize="{Binding FontPoint}" FontFamily="{Binding FontFace}"
+                                               Foreground="{Binding CandidateTextBrush}"/>
+                                </Grid>
+
+                                <!-- 注释行 -->
+                                <TextBlock Text="〔，。〕 0 分" FontSize="{Binding PreviewCommentFontPoint}"
+                                           Margin="7,7,0,0" Foreground="{Binding CommentBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="{l10n:L ColorSchemes.PreviewNote}"
+                                   Style="{StaticResource FieldNote}"
+                                   Margin="0,14,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── 方案列表 ──────────────────────────────────────── -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="{l10n:L ColorSchemes.ListTitle}"
+                                   Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="{Binding CountText}"
+                                   Style="{StaticResource FieldNote}"
+                                   Margin="{StaticResource GapHeader}"/>
+
+                        <Border Style="{StaticResource ListFrame}" Height="228">
+                            <Grid>
+                                <ListBox ItemsSource="{Binding Schemes}"
+                                         SelectedItem="{Binding Selected}"
+                                         ItemContainerStyle="{StaticResource SchemaItem}"
+                                         Background="Transparent" BorderThickness="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"
+                                                           FontSize="{StaticResource FontBody}"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource OriginChip}"
+                                                        Margin="{StaticResource Sp2}"
+                                                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+                                                    <TextBlock Text="{l10n:L ColorSchemes.Badge.Active}"
+                                                               Style="{StaticResource StatusChipText}"/>
+                                                </Border>
+                                                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                           Text="{Binding Subtitle}"
+                                                           FontSize="{StaticResource FontMicro}"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           Margin="0,2,0,0"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <TextBlock Text="{l10n:L ColorSchemes.NoSchemes}"
+                                           Style="{StaticResource EmptyState}"
+                                           IsHitTestVisible="False"
+                                           Visibility="{Binding ShowNoSchemes, Converter={StaticResource BoolToVisibility}}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- 操作。新建是这一栏的主操作，所以给它一个下拉（可任选底子）
+                             加一个按钮；复制/删除紧随其后；导入导出清空降到第三级。 -->
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Column="0" ItemsSource="{Binding Templates}"
+                                      SelectedValuePath="Id" DisplayMemberPath="Name"
+                                      SelectedValue="{Binding TemplatePick, Mode=OneWayToSource}"
+                                      ToolTip="{l10n:L ColorSchemes.TemplateTip}"/>
+                            <Button Grid.Column="1" Content="{l10n:L ColorSchemes.New}"
+                                    Command="{Binding NewCommand}"
+                                    Style="{StaticResource SecondaryButton}" Margin="{StaticResource Sp2}"/>
+                        </Grid>
+
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="{l10n:L ColorSchemes.Duplicate}"
+                                    Command="{Binding DuplicateCommand}"
+                                    Style="{StaticResource SecondaryButton}"/>
+                            <Button Grid.Column="1" Content="{l10n:L ColorSchemes.Delete}"
+                                    Command="{Binding DeleteCommand}"
+                                    Style="{StaticResource DangerButton}" Margin="{StaticResource Sp2}"/>
+                        </Grid>
+
+                        <Border Style="{StaticResource Divider}"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="{l10n:L ColorSchemes.Import}"
+                                    Command="{Binding ImportCommand}"
+                                    Style="{StaticResource TertiaryButton}"
+                                    ToolTip="{l10n:L ColorSchemes.ImportTip}"/>
+                            <Button Grid.Column="1" Content="{l10n:L ColorSchemes.Export}"
+                                    Command="{Binding ExportCommand}"
+                                    Style="{StaticResource TertiaryButton}"
+                                    ToolTip="{l10n:L ColorSchemes.ExportTip}"/>
+                            <Button Grid.Column="2" Content="{l10n:L ColorSchemes.ClearAll}"
+                                    Command="{Binding ClearAllCommand}"
+                                    Style="{StaticResource TertiaryButton}"
+                                    ToolTip="{l10n:L ColorSchemes.ClearAllTip}"/>
+                        </Grid>
+
+                        <TextBlock Text="{Binding RegistryPath}" Style="{StaticResource MonoText}"
+                                   FontSize="{StaticResource FontMicro}" Margin="0,14,0,0"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding RegistryPath}"/>
+                        <TextBlock Text="{Binding TemplateSourceText}" Style="{StaticResource FieldNote}"
+                                   Margin="0,4,0,0" TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding TemplateSourceText}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- ══ 右栏：编辑区 ═══════════════════════════════════════ -->
+            <Border Grid.Column="2" Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="{Binding EditorTitle}" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="{Binding IdText}" Style="{StaticResource MonoText}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="{StaticResource GapHeader}"/>
+
+                    <!-- 没有选中方案时的空状态：给一句人话，而不是留一片空白
+                         —— 用户分不清「没有数据」和「加载失败了」。 -->
+                    <TextBlock Text="{l10n:L ColorSchemes.NoSelection}" Style="{StaticResource EmptyState}"
+                               Margin="0,8,0,0"
+                               Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}"/>
+
+                    <StackPanel Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
+
+                        <!-- ── 方案元数据 ──────────────────────────────── -->
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="64"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="64"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{l10n:L ColorSchemes.Field.Name}"
+                                       Style="{StaticResource FieldLabel}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1"
+                                     Text="{Binding NameText, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="{l10n:L ColorSchemes.Field.NameTip}"/>
+
+                            <TextBlock Grid.Row="0" Grid.Column="3" Text="{l10n:L ColorSchemes.Field.Author}"
+                                       Style="{StaticResource FieldLabel}"/>
+                            <TextBox Grid.Row="0" Grid.Column="4"
+                                     Text="{Binding AuthorText, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="{l10n:L ColorSchemes.Field.AuthorTip}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{l10n:L ColorSchemes.Field.Format}"
+                                       Style="{StaticResource FieldLabel}" Margin="0,12,12,0"/>
+                            <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,12,0,0"
+                                      ItemsSource="{Binding FormatOptions}"
+                                      SelectedValuePath="Id" DisplayMemberPath="Name"
+                                      SelectedValue="{Binding Format}"
+                                      ToolTip="{l10n:L ColorSchemes.Field.FormatTip}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="3" Text="{l10n:L ColorSchemes.Field.Space}"
+                                       Style="{StaticResource FieldLabel}" Margin="0,12,12,0"/>
+                            <ComboBox Grid.Row="1" Grid.Column="4" Margin="0,12,0,0"
+                                      ItemsSource="{Binding SpaceOptions}"
+                                      SelectedValuePath="Id" DisplayMemberPath="Name"
+                                      SelectedValue="{Binding ColorSpace}"
+                                      ToolTip="{l10n:L ColorSchemes.Field.SpaceTip}"/>
+                        </Grid>
+
+                        <!-- 元数据与通道是两件事，这里才需要一条线 -->
+                        <Border Style="{StaticResource Divider}"/>
+
+                        <!-- ── 22 个通道，分四组 ──────────────────────── -->
+                        <ItemsControl ItemsSource="{Binding ChannelGroups}"
+                                      ItemTemplate="{StaticResource ChannelGroupTemplate}"/>
+
+                        <!-- ── 非法色值警告 ───────────────────────────── -->
+                        <Border Background="{StaticResource ErrorSoftBrush}"
+                                BorderBrush="{StaticResource ErrorBrush}" BorderThickness="1"
+                                CornerRadius="{StaticResource RadiusSm}" Padding="12,10"
+                                Margin="0,0,0,16"
+                                Visibility="{Binding HasInvalidChannels, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <TextBlock Text="{l10n:L ColorSchemes.InvalidTitle}"
+                                           FontSize="{StaticResource FontBody}" FontWeight="SemiBold"
+                                           Foreground="{StaticResource ErrorBrush}"/>
+                                <TextBlock Text="{Binding InvalidChannelsText}"
+                                           Style="{StaticResource FieldNote}" Margin="0,4,0,0"/>
+                                <TextBlock Text="{l10n:L ColorSchemes.InvalidNote}"
+                                           Style="{StaticResource FieldNote}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ── 底部操作条 ──────────────────────────────── -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"
+                                        Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+                                <Border Style="{StaticResource BusySpinner}" Margin="0,0,8,0"/>
+                                <TextBlock Text="{l10n:L ColorSchemes.Working}"
+                                           FontSize="{StaticResource FontCaption}"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="2" Content="{l10n:L Common.Refresh}"
+                                    Command="{Binding ReloadCommand}"
+                                    Style="{StaticResource SecondaryButton}"/>
+                            <Button Grid.Column="3" Content="{l10n:L ColorSchemes.Deploy}"
+                                    Command="{Binding DeployCommand}"
+                                    Style="{StaticResource SecondaryButton}" Margin="{StaticResource Sp2}"/>
+                            <Button Grid.Column="4" Content="{l10n:L ColorSchemes.Save}"
+                                    Command="{Binding SaveCommand}"
+                                    Style="{StaticResource PrimaryButton}" Margin="{StaticResource Sp2}"/>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Border Style="{StaticResource StatusStrip}" Margin="0,16,0,0">
+            <TextBlock Text="{Binding StatusText}" FontSize="{StaticResource FontBody}"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"/>
+        </Border>
+
+        <!-- ── 说明 ────────────────────────────────────────────────────
+             三件事必须写清楚：值写到哪、本页不负责切换、清空即继承。 -->
+        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+            <StackPanel>
+                <TextBlock Text="{l10n:L ColorSchemes.NoteTitle}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L ColorSchemes.NoteIntro}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNote}"/>
+
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="preset_color_schemes"
+                               Style="{StaticResource MonoText}" Margin="0,0,14,0" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{l10n:L ColorSchemes.NoteInject}"
+                               Style="{StaticResource FieldNote}" Margin="0,0,0,10"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="style/color_scheme"
+                               Style="{StaticResource MonoText}" Margin="0,0,14,0" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{l10n:L ColorSchemes.NoteSwitch}"
+                               Style="{StaticResource FieldNote}" Margin="0,0,0,10"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="color_format"
+                               Style="{StaticResource MonoText}" Margin="0,0,14,0" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{l10n:L ColorSchemes.NoteFormat}"
+                               Style="{StaticResource FieldNote}"/>
+                </Grid>
+
+                <TextBlock Text="{l10n:L ColorSchemes.NoteDeploy}" Style="{StaticResource FieldNote}"
+                           Margin="0,14,0,0"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

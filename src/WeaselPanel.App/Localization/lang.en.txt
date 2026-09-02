@@ -34,6 +34,7 @@ App.DetectFailed = Environment detection failed:\n{0}
 # ── Sidebar navigation ─────────────────────────────────────────────────────────────────────
 Nav.Diagnostics = Diagnostics
 Nav.Appearance = Appearance
+Nav.ColorSchemes = Colour Schemes
 Nav.Schema = Schemas
 Nav.Input = Keys & Input
 Nav.Behavior = Behavior
@@ -239,6 +240,159 @@ Appearance.CatalogMissing = (weasel.yaml not found — colour scheme catalogue i
 
 Appearance.Title = Appearance
 Appearance.Intro = Fonts, colours and layout of the candidate window. Every value is derived with the same rules as Weasel itself - what you see here is what actually gets rendered.
+
+# ── Custom colour schemes page ──────────────────────────────────────────────────────────────
+# Ch.* / ChTip.* keys are addressed by the raw YAML key name (ColorSchemes.Ch.back_color),
+# so the key suffix must stay byte-identical to the config key — renaming one silently
+# falls back to printing "ColorSchemes.Ch.back_color" on screen.
+ColorSchemes.Title = Custom colour schemes
+ColorSchemes.Intro = Build your own candidate-window colour schemes. The panel writes the scheme definitions into user_color_schemes.json and injects them into weasel.custom.yaml — built-in schemes are never touched.
+
+ColorSchemes.PreviewTitle = Preview
+ColorSchemes.PreviewNote = Resolved with the same fallback chain and alpha blending Weasel uses, including the values this scheme inherits. Font size here is fixed for legibility.
+
+ColorSchemes.ListTitle = My schemes
+ColorSchemes.Count = {0} schemes · currently applied is marked on the right
+ColorSchemes.NoSchemes = No custom schemes yet — pick a base below and press "New", or import a YAML file
+ColorSchemes.Badge.Active = in use
+
+ColorSchemes.Row.Channels = {0} / 22 channels set
+ColorSchemes.Row.ChannelsFormat = {0} / 22 channels · {1}
+
+ColorSchemes.DefaultName = New scheme
+ColorSchemes.CopySuffix = {0} copy
+
+ColorSchemes.New = New
+ColorSchemes.Duplicate = Duplicate
+ColorSchemes.Delete = Delete
+ColorSchemes.Import = Import
+ColorSchemes.Export = Export
+ColorSchemes.ClearAll = Clear all
+ColorSchemes.Save = Save
+ColorSchemes.Deploy = Deploy
+ColorSchemes.Working = Working…
+
+ColorSchemes.TemplateTip = Base for the new scheme. Leave it on a built-in scheme to start from that look; pick nothing to start empty.
+ColorSchemes.ImportTip = Import preset_color_schemes from a .yaml file
+ColorSchemes.ExportTip = Export the selected scheme as YAML
+ColorSchemes.ClearAllTip = Remove every scheme created by this panel from both the registry and weasel.custom.yaml
+
+ColorSchemes.PickTip = Pick a colour
+ColorSchemes.ClearTip = Clear this channel — Weasel falls back to its own default
+
+ColorSchemes.Editor.Title = Editing “{0}”
+ColorSchemes.Editor.Empty = No scheme selected
+ColorSchemes.NoSelection = Nothing selected. Create a scheme on the left, or pick one from the list.
+
+ColorSchemes.Field.Name = Name
+ColorSchemes.Field.NameTip = Display name. Non-ASCII names are fine — the scheme id stays ASCII regardless.
+ColorSchemes.Field.Author = Author
+ColorSchemes.Field.AuthorTip = Optional. Written to the scheme for attribution only.
+ColorSchemes.Field.Format = Byte order
+ColorSchemes.Field.FormatTip = How the hex value is laid out. Switching this rewrites the literals so the colours themselves do not change.
+ColorSchemes.Field.Space = Colour space
+ColorSchemes.Field.SpaceTip = sRGB handles the wide gamut; display-p3 uses it. Needs a display that can show it.
+
+ColorSchemes.Format.Abgr = abgr (Weasel default)
+ColorSchemes.Format.Argb = argb
+ColorSchemes.Format.Rgba = rgba
+ColorSchemes.Space.Srgb = sRGB
+ColorSchemes.Space.DisplayP3 = Display P3
+
+ColorSchemes.Group.Frame = Window frame
+ColorSchemes.Group.Text = Code & candidates
+ColorSchemes.Group.Hilite = Highlighted candidate
+ColorSchemes.Group.Extra = Labels, comments & paging
+
+ColorSchemes.Ch.back_color = Window background
+ColorSchemes.ChTip.back_color = Background of the whole candidate window.
+ColorSchemes.Ch.shadow_color = Window shadow
+ColorSchemes.ChTip.shadow_color = Shadow behind the window. Most layouts on Windows do not draw it.
+ColorSchemes.Ch.prevpage_color = Previous-page arrow
+ColorSchemes.ChTip.prevpage_color = The “up” arrow, shown only when there are more candidates than one page.
+ColorSchemes.Ch.nextpage_color = Next-page arrow
+ColorSchemes.ChTip.nextpage_color = The “down” arrow, shown only when there are more candidates than one page.
+ColorSchemes.Ch.text_color = Input code
+ColorSchemes.ChTip.text_color = The pinyin you are typing, shown above the candidates.
+ColorSchemes.Ch.candidate_text_color = Candidate text
+ColorSchemes.ChTip.candidate_text_color = Falls back to the input-code colour when unset.
+ColorSchemes.Ch.candidate_back_color = Candidate background
+ColorSchemes.ChTip.candidate_back_color = Falls back to the window background when unset.
+ColorSchemes.Ch.border_color = Window border
+ColorSchemes.ChTip.border_color = Outline around the candidate window.
+ColorSchemes.Ch.hilited_text_color = Highlighted text (legacy)
+ColorSchemes.ChTip.hilited_text_color = Legacy key. Falls back to the highlighted candidate text; set that one instead.
+ColorSchemes.Ch.hilited_back_color = Highlighted background (legacy)
+ColorSchemes.ChTip.hilited_back_color = Legacy key. Falls back to the highlighted candidate background; set that one instead.
+ColorSchemes.Ch.hilited_candidate_text_color = Highlighted candidate text
+ColorSchemes.ChTip.hilited_candidate_text_color = Text of the candidate currently selected.
+ColorSchemes.Ch.hilited_candidate_back_color = Highlighted candidate background
+ColorSchemes.ChTip.hilited_candidate_back_color = Filled bar behind the selected candidate.
+ColorSchemes.Ch.hilited_candidate_shadow_color = Highlighted text shadow
+ColorSchemes.ChTip.hilited_candidate_shadow_color = Shadow under the selected candidate's text.
+ColorSchemes.Ch.hilited_shadow_color = Highlighted bar shadow
+ColorSchemes.ChTip.hilited_shadow_color = Shadow behind the highlighted bar.
+ColorSchemes.Ch.candidate_shadow_color = Candidate text shadow
+ColorSchemes.ChTip.candidate_shadow_color = Shadow under ordinary candidate text.
+ColorSchemes.Ch.candidate_border_color = Candidate border
+ColorSchemes.ChTip.candidate_border_color = Outline around the candidate area.
+ColorSchemes.Ch.hilited_candidate_border_color = Highlighted border
+ColorSchemes.ChTip.hilited_candidate_border_color = Outline around the highlighted candidate.
+ColorSchemes.Ch.label_color = Ordinal label
+ColorSchemes.ChTip.label_color = The “1.” / “2.” in front of each candidate. Blended from text and background when unset.
+ColorSchemes.Ch.hilited_label_color = Highlighted ordinal
+ColorSchemes.ChTip.hilited_label_color = Ordinal of the candidate currently selected.
+ColorSchemes.Ch.comment_text_color = Comment text
+ColorSchemes.ChTip.comment_text_color = The pinyin or hint trailing a candidate.
+ColorSchemes.Ch.hilited_comment_text_color = Highlighted comment
+ColorSchemes.ChTip.hilited_comment_text_color = Comment of the candidate currently selected.
+ColorSchemes.Ch.hilited_mark_color = Highlight marker
+ColorSchemes.ChTip.hilited_mark_color = The “*” (or whatever style/mark_text is) in front of the selected candidate.
+
+ColorSchemes.Active.Unknown = Currently applied: unknown
+ColorSchemes.Active.Value = Currently applied: {0}
+ColorSchemes.TemplateMissing = (weasel.yaml not found — built-in schemes cannot be used as a base)
+
+ColorSchemes.InvalidTitle = Some colour values cannot be parsed
+ColorSchemes.InvalidNote = Weasel reads an unparsable value as 0, which is fully transparent — the panel refuses to save until these are fixed.
+ColorSchemes.Invalid.Item = {0} · {1}
+ColorSchemes.Invalid.More = and {0} more
+
+ColorSchemes.ConfirmDeleteTitle = Delete scheme
+ColorSchemes.ConfirmDeleteBody = Delete “{0}”? It is also removed from weasel.custom.yaml. This cannot be undone.
+ColorSchemes.ConfirmClearTitle = Clear all schemes
+ColorSchemes.ConfirmClearBody = Remove all {0} schemes created by this panel? Schemes you wrote by hand in weasel.custom.yaml are left alone.
+
+ColorSchemes.ImportTitle = Import colour schemes
+ColorSchemes.ExportTitle = Export colour scheme
+ColorSchemes.FileFilter = YAML files (*.yaml;*.yml)|*.yaml;*.yml|All files (*.*)|*.*
+
+ColorSchemes.Status.Ready = Ready
+ColorSchemes.Status.Loaded = Loaded {0} custom schemes
+ColorSchemes.Status.RegistryCorrupt = user_color_schemes.json could not be read ({0}). Saving is blocked so the file is not overwritten.
+ColorSchemes.Status.Added = Added “{0}”
+ColorSchemes.Status.Deleted = Deleted “{0}”
+ColorSchemes.Status.Cleared = Cleared {0} schemes
+ColorSchemes.Status.ParseFailed = weasel.custom.yaml could not be parsed ({0})
+ColorSchemes.Status.Imported = Imported {0} schemes, skipped {1}
+ColorSchemes.Status.ImportFailed = Import failed: {0}
+ColorSchemes.Status.Exported = Exported to {0}
+ColorSchemes.Status.ExportFailed = Export failed: {0}
+ColorSchemes.Status.Writing = Writing…
+ColorSchemes.Status.Written = Wrote {0} schemes, removed {1} · {2}
+ColorSchemes.Status.WriteFailed = Write failed: {0}
+ColorSchemes.Status.InvalidValue = Not saved — fix these first: {0}
+ColorSchemes.Status.Deploying = Deploying…
+ColorSchemes.Status.DeployOk = Deploy finished — switch input method to see the new scheme
+ColorSchemes.Status.DeployResult = Deployer returned: {0}
+ColorSchemes.Status.DeployException = Deploy error: {0}
+
+ColorSchemes.NoteTitle = How this page writes
+ColorSchemes.NoteIntro = Two files are involved, and they are not the same kind of thing:
+ColorSchemes.NoteInject = Scheme definitions are injected as patch/preset_color_schemes/<id>. This page only ever touches ids it created itself — schemes you wrote by hand are left untouched.
+ColorSchemes.NoteSwitch = style/color_scheme decides which scheme is in use. That key belongs to the Appearance page; this page only reads it to show the “in use” badge. Two pages must never fight over the same key.
+ColorSchemes.NoteFormat = Byte order is stored per scheme. Switching it rewrites every literal, so the colours stay the same — 0x112233 in abgr becomes 0x332211 in argb, not a different colour.
+ColorSchemes.NoteDeploy = Saving only writes the files. Press Deploy (or redeploy from Weasel's menu) to make the new scheme take effect.
 
 # ── Schema page ─────────────────────────────────────────────────────────────────────
 Schema.Title = Input schemas

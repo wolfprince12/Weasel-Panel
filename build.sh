@@ -48,6 +48,18 @@ for arg in "$@"; do
   esac
 done
 
+# python3 有两个用途：构建前校验本地化键位、出包后验收语言包是否进了 exe。
+# 缺 python3 时硬失败而不是静默跳过 —— 会静默跳过的关卡等于没有关卡。
+PY=""
+for cand in python3 /Users/wolfprince/.workbuddy/binaries/python/versions/3.13.12/bin/python3; do
+  if command -v "$cand" >/dev/null 2>&1; then PY="$cand"; break; fi
+  [ -x "$cand" ] && { PY="$cand"; break; }
+done
+if [ -z "$PY" ]; then
+  echo "找不到 python3。校验与验收都需要它，装好再跑。" >&2
+  exit 1
+fi
+
 # 旧的多架构产物不再维护，遇到就清掉，避免误拿
 if [ -d "dist/win-arm64" ]; then
   echo "发现已废弃的 dist/win-arm64，删除（本项目只交付 x64）"
@@ -57,6 +69,13 @@ fi
 if [ "$RUN_TESTS" -eq 1 ]; then
   echo "═══ 运行 Core 测试 ═══"
   dotnet test tests/WeaselPanel.Core.Tests -c Release --nologo 2>&1 | tail -3
+  echo ""
+  echo "═══ 校验本地化键位 ═══"
+  "$PY" tools/check_lang_keys.py || {
+    echo "" >&2
+    echo "本地化键位校验未通过 —— 缺键会在界面上印出裸键名，本次不出包。" >&2
+    exit 1
+  }
 fi
 
 echo "═══ 发布 ${RID} ═══"
@@ -69,19 +88,10 @@ if [ ! -f "$EXE" ]; then
 fi
 
 # ── 出包验收：语言包必须真的在 exe 里 ────────────────────────────────
-# 缺省开启。缺 python3 时硬失败而不是静默跳过 —— 会静默跳过的关卡等于没有关卡。
+# 缺省开启（$PY 已在脚本前段定位并校验过）。
 if [ "$RUN_VERIFY" -eq 1 ]; then
   echo ""
   echo "═══ 验收语言包是否嵌入 exe ═══"
-  PY=""
-  for cand in python3 /Users/wolfprince/.workbuddy/binaries/python/versions/3.13.12/bin/python3; do
-    if command -v "$cand" >/dev/null 2>&1; then PY="$cand"; break; fi
-    [ -x "$cand" ] && { PY="$cand"; break; }
-  done
-  if [ -z "$PY" ]; then
-    echo "找不到 python3，无法验收语言包。装好 python3 再跑，或用 --no-verify 显式跳过。" >&2
-    exit 1
-  fi
   if ! "$PY" tools/verify_lang_packs.py "$EXE"; then
     echo "" >&2
     echo "出包验收未通过 —— 本次 exe 不可交付。" >&2

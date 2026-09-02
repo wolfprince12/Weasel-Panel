@@ -20,9 +20,62 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 APP = ROOT / "src" / "WeaselPanel.App"
+CORE = ROOT / "src" / "WeaselPanel.Core"
 LANG_DIR = APP / "Localization"
 PACKS = ["lang.en.txt", "lang.zh-Hans.txt", "lang.zh-Hant.txt"]
 SCAN_SUFFIX = (".cs", ".xaml")
+
+# ── 动态键：前缀 + 变量拼出来的键 ──────────────────────────────────────
+# 扫描器在源码里只看得到前缀（"ColorSchemes.Ch." + Key），看不到完整键名，
+# 不登记就会：该键缺了查不出来（假绿），同时又被当成孤儿键（噪音）。
+# 清单以 Core 的 UserColorSchemes.cs 为准 —— 通道改名时体检自己跟上，
+# 不用在两处维护同一份名单。
+DYNAMIC_PREFIXES = [
+    ("ColorSchemes.Ch.", "ColorKeys"),      # 22 个通道的显示名
+    ("ColorSchemes.ChTip.", "ColorKeys"),   # 22 个通道的悬浮提示
+    ("ColorSchemes.Group.", "Groups"),      # 4 个分组标题
+]
+
+
+def dynamic_keys():
+    """按 Core 里的通道 / 分组清单展开成完整键名。"""
+    src_path = CORE / "Rime" / "UserColorSchemes.cs"
+    if not src_path.is_file():
+        return {}
+
+    src = src_path.read_text(encoding="utf-8")
+    out = {}
+    for prefix, field in DYNAMIC_PREFIXES:
+        block = re.search(rf"public static readonly .*?\b{field} =\s*\{{(.*?)\n    \}};",
+                          src, re.S)
+        if not block:
+            print(f"[警告] 在 {src_path.name} 里读不到 {field}，{prefix}* 无法体检",
+                  file=sys.stderr)
+            continue
+
+        where = f"{src_path.relative_to(ROOT)}:{field}"
+        body = block.group(1)
+
+        # ⚠️ 两个清单的内部形态不同，不能用同一条提取式：
+        #   ColorKeys = { "back_color", … }            → 块里每个引号串都是通道名
+        #   Groups    = { ("Frame", new[]{ "back_color", … }), … }
+        #                                                → 块里除了 4 个组名，还有 22 个通道名
+        # 对 Groups 一律抓引号串的话，22 个通道名会被拼成
+        # ColorSchemes.Group.back_color 这种不存在的键，报一屏假「缺键」。
+        if field == "Groups":
+            names = re.findall(r'\(\s*"([A-Za-z0-9_]+)"\s*,\s*new\[\]', body)
+        else:
+            names = re.findall(r'"([A-Za-z0-9_]+)"', body)
+
+        if not names:
+            print(f"[警告] {field} 块里一个名字都没抓到，{prefix}* 无法体检",
+                  file=sys.stderr)
+            continue
+
+        for item in names:
+            out[prefix + item] = where
+    return out
+
 
 def load_pack(path):
     pack, dup = {}, []
@@ -43,7 +96,10 @@ def load_pack(path):
 # 只认明确的调用点，不猜 —— 宁可漏报几个孤儿键，也不要几百条噪音。
 #   C#  : T("Key")  /  L10n.Instance.T("Key")  /  StatusFromKey("Key")  /  Add("Key")
 #   XAML: {l10n:L Key}
-CALL_NAME_RES = re.compile(r"\b(T|StatusFromKey|Add)\(")
+# SetText 是各 ViewModel 里「按 id 找到选项、把 Name 换成 T(key)」的局部函数，
+# 键以字面量落在它的实参里。别把它改回泛泛的 Set( 之类 —— 一改名这几个键
+# 就从引用变成孤儿，体检不再校验，键拼错也查不出来。
+CALL_NAME_RES = re.compile(r"\b(T|StatusFromKey|Add|SetText)\(")
 XAML_RES = re.compile(r"\{l10n:L\s+([A-Za-z0-9_.\-]+)\s*\}")
 
 # 键形字面量：至少含一个点，且首段首字母大写 —— 本仓库所有键无一例外都是
@@ -133,6 +189,9 @@ def scan_keys():
         for m in XAML_RES.finditer(body):
             record(m.group(1), m.start())
 
+    # 拼出来的键（前缀 + Core 清单）补进来，让它们也进「缺键」体检。
+    found.update(dynamic_keys())
+
     return found
 
 
@@ -192,7 +251,9 @@ def main():
     if not (dups or missing or gaps):
         print("\nOK：无缺键、无重复、三包齐全。")
 
-    return 1 if (dups or missing) else 0
+    # 中文包缺键也判失败：它的后果是「那一处静默掉回英文」，
+    # 比英文包缺键（界面上印出裸键名）更难被发现 —— 后者一眼就能看见。
+    return 1 if (dups or missing or gaps) else 0
 
 
 if __name__ == "__main__":

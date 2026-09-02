@@ -2,6 +2,32 @@ using System.Windows.Input;
 
 namespace WeaselPanel.App.Infrastructure;
 
+/// <summary>带参数的同步命令。列表行里的「改这一行」「清这一行」要用它 ——
+/// 没有参数版本的话，只能去代码后置里翻 DataContext 再强转，绑不住也测不了。</summary>
+public sealed class DelegateCommand<T> : ICommand
+{
+    private readonly Action<T> _execute;
+    private readonly Func<T, bool>? _canExecute;
+
+    public DelegateCommand(Action<T> execute, Func<T, bool>? canExecute = null)
+    {
+        _execute = execute;
+        _canExecute = canExecute;
+    }
+
+    public event EventHandler? CanExecuteChanged;
+
+    public bool CanExecute(object? parameter) =>
+        parameter is T value && (_canExecute?.Invoke(value) ?? true);
+
+    public void Execute(object? parameter)
+    {
+        if (parameter is T value) _execute(value);
+    }
+
+    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+}
+
 public sealed class RelayCommand : ICommand
 {
     private readonly Func<Task> _execute;

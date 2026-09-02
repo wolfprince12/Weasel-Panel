@@ -51,6 +51,9 @@
                          null，直接 NRE。改由 ctor 末尾在所有 view 就绪后直接赋首屏。 -->
                     <ListBoxItem Content="{l10n:L Nav.Diagnostics}"/>
                     <ListBoxItem Content="{l10n:L Nav.Appearance}"/>
+                    <!-- 自定义配色紧挨「外观」：两页都管配色，
+                         外观是「选哪一套」，这里是「造一套」。 -->
+                    <ListBoxItem Content="{l10n:L Nav.ColorSchemes}"/>
                     <ListBoxItem Content="{l10n:L Nav.Schema}"/>
                     <ListBoxItem Content="{l10n:L Nav.Input}"/>
                     <ListBoxItem Content="{l10n:L Nav.Behavior}"/>

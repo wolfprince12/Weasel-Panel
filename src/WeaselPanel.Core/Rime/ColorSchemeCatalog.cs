@@ -89,6 +89,30 @@ public sealed class ColorSchemeCatalog
             : null;
 
     /// <summary>
+    /// 在目录末尾追加自定义方案（来自 weasel.custom.yaml 的 patch/preset_color_schemes）。
+    /// 同名方案由自定义方覆盖内置方 —— 与 Rime 的补丁语义一致。
+    /// </summary>
+    /// <remarks>
+    /// 不加这一层的话，用户在「自定义配色」页新建的方案虽然在 YAML 里，
+    /// 「外观」页的下拉框（只解析 weasel.yaml）却看不到它 —— 建了选不上。
+    /// </remarks>
+    public ColorSchemeCatalog Appending(IReadOnlyDictionary<string, Dictionary<string, object?>> extra)
+    {
+        if (extra.Count == 0) return this;
+
+        var schemes = new Dictionary<string, Dictionary<string, object?>>(_schemes, StringComparer.Ordinal);
+        var order = new List<string>(_order);
+
+        foreach (var kv in extra)
+        {
+            if (!schemes.ContainsKey(kv.Key)) order.Add(kv.Key);
+            schemes[kv.Key] = kv.Value;
+        }
+
+        return new ColorSchemeCatalog(schemes, order);
+    }
+
+    /// <summary>
     /// 解析为可直接预览的配色（套用完整回退链）。方案不存在返回 null。
     /// </summary>
     public ResolvedColorScheme? Resolve(string name)

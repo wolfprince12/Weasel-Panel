@@ -19,6 +19,7 @@ App.DetectFailed = 環境探測失敗：\n{0}
 # ── 側邊導航 ─────────────────────────────────────────────────────────────────────
 Nav.Diagnostics = 環境診斷
 Nav.Appearance = 外觀
+Nav.ColorSchemes = 自訂配色
 Nav.Schema = 輸入方案
 Nav.Input = 按鍵與輸入
 Nav.Behavior = 行為
@@ -224,6 +225,158 @@ Appearance.CatalogMissing = （未找到 weasel.yaml，配色目錄為空）
 
 Appearance.Title = 外觀
 Appearance.Intro = 候選窗口的字體、配色與排版。所有取值都用與小狼毫本體同一套規則推導，這裏看到的就是實際渲染結果。
+
+# ── 自訂配色頁 ───────────────────────────────────────────────────────────────
+# Ch.* / ChTip.* 的鍵後綴必須和設定裏的原始鍵名逐位元組一致（ColorSchemes.Ch.back_color）。
+# 改錯了不會報錯，介面上會直接把鍵名 ColorSchemes.Ch.back_color 印出來。
+ColorSchemes.Title = 自訂配色
+ColorSchemes.Intro = 自己造候選窗口的配色方案。方案定義寫入 user_color_schemes.json，再注入 weasel.custom.yaml 的 preset_color_schemes；內建方案一個都不動。
+
+ColorSchemes.PreviewTitle = 預覽
+ColorSchemes.PreviewNote = 按小狼毫本體的回退鏈與 alpha 混合算出，含這一套繼承來的值。字號為固定值，只為看得清。
+
+ColorSchemes.ListTitle = 我的配色
+ColorSchemes.Count = 共 {0} 套 · 目前生效的那套右側有標記
+ColorSchemes.NoSchemes = 還沒有自訂配色 —— 在下面挑個底子點「新增」，或者匯入一個 YAML 檔案
+ColorSchemes.Badge.Active = 生效中
+
+ColorSchemes.Row.Channels = 已設 {0} / 22 個通道
+ColorSchemes.Row.ChannelsFormat = 已設 {0} / 22 個通道 · {1}
+
+ColorSchemes.DefaultName = 新配色
+ColorSchemes.CopySuffix = {0} 副本
+
+ColorSchemes.New = 新增
+ColorSchemes.Duplicate = 複製
+ColorSchemes.Delete = 刪除
+ColorSchemes.Import = 匯入
+ColorSchemes.Export = 匯出
+ColorSchemes.ClearAll = 清空
+ColorSchemes.Save = 儲存
+ColorSchemes.Deploy = 部署
+ColorSchemes.Working = 處理中……
+
+ColorSchemes.TemplateTip = 新增時以哪一套為底子。選內建方案就從那個樣子起步，不選就是空白方案。
+ColorSchemes.ImportTip = 從 .yaml 檔案匯入 preset_color_schemes
+ColorSchemes.ExportTip = 把選中的方案匯出成 YAML
+ColorSchemes.ClearAllTip = 把本面板建立的所有配色一併刪除 —— 清冊檔案（user_color_schemes.json）與 weasel.custom.yaml 兩邊都清乾淨
+
+ColorSchemes.PickTip = 選個顏色
+ColorSchemes.ClearTip = 清空這個通道 —— 交回小狼毫自己的預設值
+
+ColorSchemes.Editor.Title = 正在編輯「{0}」
+ColorSchemes.Editor.Empty = 未選取方案
+ColorSchemes.NoSelection = 沒有選取方案。在左邊新增一套，或者從清單裏選一套。
+
+ColorSchemes.Field.Name = 名稱
+ColorSchemes.Field.NameTip = 顯示名稱，中文沒問題 —— 方案 id 始終是 ASCII，不受影響。
+ColorSchemes.Field.Author = 作者
+ColorSchemes.Field.AuthorTip = 選填。只寫進方案做署名用。
+ColorSchemes.Field.Format = 位元組順序
+ColorSchemes.Field.FormatTip = 十六進位值怎麼排。切換時字面值會一起換算，所以顏色本身不會變。
+ColorSchemes.Field.Space = 色彩空間
+ColorSchemes.Field.SpaceTip = sRGB 不用寬色域；display-p3 才用。需要螢幕支援才看得出差別。
+
+ColorSchemes.Format.Abgr = abgr（小狼毫預設）
+ColorSchemes.Format.Argb = argb
+ColorSchemes.Format.Rgba = rgba
+ColorSchemes.Space.Srgb = sRGB
+ColorSchemes.Space.DisplayP3 = Display P3
+
+ColorSchemes.Group.Frame = 窗口外框
+ColorSchemes.Group.Text = 編碼與候選
+ColorSchemes.Group.Hilite = 高亮候選
+ColorSchemes.Group.Extra = 序號、註解與翻頁
+
+ColorSchemes.Ch.back_color = 窗口背景
+ColorSchemes.ChTip.back_color = 整個候選窗口的底色。
+ColorSchemes.Ch.shadow_color = 窗口陰影
+ColorSchemes.ChTip.shadow_color = 窗口背後的陰影。Windows 上多數排版並不畫它。
+ColorSchemes.Ch.prevpage_color = 上翻頁箭頭
+ColorSchemes.ChTip.prevpage_color = 向上的箭頭，候選多於一頁時才出現。
+ColorSchemes.Ch.nextpage_color = 下翻頁箭頭
+ColorSchemes.ChTip.nextpage_color = 向下的箭頭，候選多於一頁時才出現。
+ColorSchemes.Ch.text_color = 輸入碼
+ColorSchemes.ChTip.text_color = 正在敲的拼音，顯示在候選上方。
+ColorSchemes.Ch.candidate_text_color = 候選文字
+ColorSchemes.ChTip.candidate_text_color = 不設時回退到輸入碼的顏色。
+ColorSchemes.Ch.candidate_back_color = 候選區背景
+ColorSchemes.ChTip.candidate_back_color = 不設時回退到窗口背景。
+ColorSchemes.Ch.border_color = 窗口邊框
+ColorSchemes.ChTip.border_color = 候選窗口外沿的描邊。
+ColorSchemes.Ch.hilited_text_color = 高亮文字（舊鍵）
+ColorSchemes.ChTip.hilited_text_color = 舊版遺留鍵，會回退到「高亮候選文字」。要改直接改那一個。
+ColorSchemes.Ch.hilited_back_color = 高亮底色（舊鍵）
+ColorSchemes.ChTip.hilited_back_color = 舊版遺留鍵，會回退到「高亮候選底色」。要改直接改那一個。
+ColorSchemes.Ch.hilited_candidate_text_color = 高亮候選文字
+ColorSchemes.ChTip.hilited_candidate_text_color = 目前選取那一條的候選文字。
+ColorSchemes.Ch.hilited_candidate_back_color = 高亮候選底色
+ColorSchemes.ChTip.hilited_candidate_back_color = 選取那一條背後的色條。
+ColorSchemes.Ch.hilited_candidate_shadow_color = 高亮文字陰影
+ColorSchemes.ChTip.hilited_candidate_shadow_color = 選取候選的文字陰影。
+ColorSchemes.Ch.hilited_shadow_color = 高亮色條陰影
+ColorSchemes.ChTip.hilited_shadow_color = 高亮色條背後的陰影。
+ColorSchemes.Ch.candidate_shadow_color = 候選文字陰影
+ColorSchemes.ChTip.candidate_shadow_color = 一般候選文字的陰影。
+ColorSchemes.Ch.candidate_border_color = 候選區邊框
+ColorSchemes.ChTip.candidate_border_color = 候選區外沿的描邊。
+ColorSchemes.Ch.hilited_candidate_border_color = 高亮候選邊框
+ColorSchemes.ChTip.hilited_candidate_border_color = 選取那一條外沿的描邊。
+ColorSchemes.Ch.label_color = 序號
+ColorSchemes.ChTip.label_color = 候選前面那個「1.」「2.」。不設時由候選文字色與底色混合得出。
+ColorSchemes.Ch.hilited_label_color = 高亮序號
+ColorSchemes.ChTip.hilited_label_color = 目前選取那一條的序號。
+ColorSchemes.Ch.comment_text_color = 註解文字
+ColorSchemes.ChTip.comment_text_color = 候選後面跟的拼音或提示。
+ColorSchemes.Ch.hilited_comment_text_color = 高亮註解
+ColorSchemes.ChTip.hilited_comment_text_color = 目前選取那一條的註解。
+ColorSchemes.Ch.hilited_mark_color = 高亮標記符
+ColorSchemes.ChTip.hilited_mark_color = 選取候選前面那個「*」（即 style/mark_text 設的那個符號）。
+
+ColorSchemes.Active.Unknown = 目前生效：未知
+ColorSchemes.Active.Value = 目前生效：{0}
+ColorSchemes.TemplateMissing = （未找到 weasel.yaml，不能用內建方案當底子）
+
+ColorSchemes.InvalidTitle = 有色彩值解析不了
+ColorSchemes.InvalidNote = 小狼毫把解析失敗的值當 0 處理，也就是全透明 —— 面板不改正就不給存。
+ColorSchemes.Invalid.Item = {0} · {1}
+ColorSchemes.Invalid.More = 等另外 {0} 處
+
+ColorSchemes.ConfirmDeleteTitle = 刪除配色
+ColorSchemes.ConfirmDeleteBody = 確定刪除「{0}」？weasel.custom.yaml 裏那一條也會一併摘掉，此操作無法復原。
+ColorSchemes.ConfirmClearTitle = 清空配色
+ColorSchemes.ConfirmClearBody = 確定刪掉本面板建的 {0} 套配色？你自己在 weasel.custom.yaml 裏手寫的方案不會被碰。
+
+ColorSchemes.ImportTitle = 匯入配色方案
+ColorSchemes.ExportTitle = 匯出配色方案
+ColorSchemes.FileFilter = YAML 檔案 (*.yaml;*.yml)|*.yaml;*.yml|所有檔案 (*.*)|*.*
+
+ColorSchemes.Status.Ready = 就緒
+ColorSchemes.Status.Loaded = 已載入 {0} 套自訂配色
+ColorSchemes.Status.RegistryCorrupt = user_color_schemes.json 讀不出來（{0}）。已禁止儲存，免得把檔案蓋掉。
+ColorSchemes.Status.Added = 已新增「{0}」
+ColorSchemes.Status.Deleted = 已刪除「{0}」
+ColorSchemes.Status.Cleared = 已清除 {0} 套配色
+ColorSchemes.Status.ParseFailed = weasel.custom.yaml 解析不了（{0}）
+ColorSchemes.Status.Imported = 已匯入 {0} 套，跳過 {1} 套
+ColorSchemes.Status.ImportFailed = 匯入失敗：{0}
+ColorSchemes.Status.Exported = 已匯出到 {0}
+ColorSchemes.Status.ExportFailed = 匯出失敗：{0}
+ColorSchemes.Status.Writing = 正在寫入……
+ColorSchemes.Status.Written = 已寫入 {0} 套、移除 {1} 套 · {2}
+ColorSchemes.Status.WriteFailed = 寫入失敗：{0}
+ColorSchemes.Status.InvalidValue = 沒儲存 —— 先把這幾處改對：{0}
+ColorSchemes.Status.Deploying = 正在部署……
+ColorSchemes.Status.DeployOk = 部署完成 —— 切一下輸入法就能看到新配色
+ColorSchemes.Status.DeployResult = 部署程式回傳：{0}
+ColorSchemes.Status.DeployException = 部署異常：{0}
+
+ColorSchemes.NoteTitle = 這一頁怎麼寫檔案
+ColorSchemes.NoteIntro = 涉及兩個檔案，性質完全不同：
+ColorSchemes.NoteInject = 方案定義以 patch/preset_color_schemes/<id> 注入。本頁只碰自己建出來的 id —— 你手寫的方案一個字都不動。
+ColorSchemes.NoteSwitch = style/color_scheme 決定目前用哪一套，那是「外觀」頁的鍵。本頁只讀它，用來標「生效中」。兩個頁面絕不能搶同一個鍵。
+ColorSchemes.NoteFormat = 位元組順序按方案各自存。切換時全部字面值一起換算，所以顏色不變 —— abgr 下的 0x112233 到 argb 是 0x332211，不是變成了另一個顏色。
+ColorSchemes.NoteDeploy = 儲存只寫檔案。要生效請點「部署」，或者從小狼毫選單裏重新部署。
 
 # ── 方案頁 ─────────────────────────────────────────────────────────────────────
 Schema.Title = 輸入方案
