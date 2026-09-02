@@ -44,8 +44,12 @@ public partial class MainWindow : Window
             environment = WeaselEnvironment.WithUserDirectory(
                 System.IO.Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Rime"));
-            MessageBox.Show(L10n.Instance.T("App.DetectFailed", ex.Message),
-                L10n.Instance.T("App.Name"),
+            // 完全硬编码：不依赖 L10n / Safe —— 探测失败发生在 OnStartup 早期，
+            // 语言包未必就绪；硬编码保证用户至少看懂「探测失败 + 看哪儿」。
+            MessageBox.Show(
+                "环境探测失败：\n\n" + ex.Message +
+                "\n\n已退化为本地用户目录模式，请在「环境诊断」页查看详情。",
+                "小狼毫控制面板 — 警告",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
@@ -89,12 +93,17 @@ public partial class MainWindow : Window
     /// <summary>标题栏 + 侧栏版本号。语言切换时也会重跑（见 OnLanguageChanged）。</summary>
     private void ApplyLocalizedText()
     {
+        // 标题栏不再依赖 L10n：
+        // 程序名走硬编码常量（L10n 全死也只是错版本号，绝不会出现裸键）；
+        // 版本号 + 构建时间 + 哈希前 6 位都打印出来，让用户肉眼确认「这是哪次构建」——
+        // v0.1.15 / v0.1.16 两次修复都因为「VM 上跑的不是新 exe」而误判过，
+        // 现在把哈希写进标题栏，任何版本混用都能立刻看出来。
         var v = App.ExecutableVersion;
-        var version = $"{L10n.Instance.T("App.VersionPrefix")}{v.Major}.{v.Minor}.{v.Build}";
-        var build = $"{L10n.Instance.T("App.BuildPrefix")} {App.ExecutableBuildTime:MM-dd HH:mm}";
-
-        Title = $"{L10n.Instance.T("App.Name")} — {version} ({build})";
-        VersionLabel.Text = $"{version} {L10n.Instance.T("App.Preview")}";
+        var version = $"{v.Major}.{v.Minor}.{v.Build}";
+        var build = App.ExecutableBuildTime.ToString("MM-dd HH:mm");
+        var hash = App.ExecutableHashPrefix;
+        Title = $"小狼毫控制面板 v{version} · {build} · #{hash}";
+        VersionLabel.Text = $"v{version} · {build} · #{hash}";
     }
 
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)

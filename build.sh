@@ -110,5 +110,27 @@ echo ""
 echo "✅ 构建完成"
 ls -lh "$EXE"
 echo "   md5: $(md5 -q "$EXE")"
+
+# ── 写一份「给用户在 Windows 资源管理器里看」的版本哨兵 ─────────────────
+# 历史上 v0.1.15 / v0.1.16 两次修复都因为「VM 上跑的根本不是新 exe」而误判，
+# 现在把构建产物写到 dist 根目录，方便用户肉眼确认「我打开的是这版」。
+{
+    echo "WeaselPanel EXE marker"
+    echo "========================="
+    echo "version:        $(grep -oE '<Version>[^<]+' src/WeaselPanel.App/WeaselPanel.App.csproj | sed 's/<Version>//')"
+    echo "built_at:       $(date '+%Y-%m-%d %H:%M:%S %Z')"
+    echo "executable:     $EXE"
+    echo "size_bytes:     $(stat -f '%z' "$EXE")"
+    echo "size_human:     $(ls -lh "$EXE" | awk '{print $5}')"
+    echo "md5:            $(md5 -q "$EXE")"
+    echo "sha256_prefix:  $(shasum -a 256 "$EXE" | awk '{print $1}' | cut -c1-16)"
+    echo ""
+    echo "If the title bar of the running WeaselPanel.exe does NOT show:"
+    echo "  小狼毫控制面板 vX.Y.Z · MM-DD HH:MM · #abcdef"
+    echo "then you're running an OLD exe — please close all instances and re-open the one in this folder."
+} > "$(dirname "$EXE")/../BUILD_INFO.txt"
+
+echo "   BUILD_INFO.txt: $(dirname "$EXE")/../BUILD_INFO.txt"
 echo ""
 echo "Windows 上直接打开：${OUT}/WeaselPanel.exe"
+echo "                    （同目录还有 BUILD_INFO.txt 标记文件，肉眼确认版本/哈希）"

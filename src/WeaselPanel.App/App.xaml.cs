@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Windows;
 using System.Windows.Threading;
@@ -16,10 +17,7 @@ public partial class App : Application
     public static string LogFilePath =>
         Path.Combine(Path.GetTempPath(), "WeaselPanel", "startup.log");
 
-    /// <summary>
-    /// 程序集版本。MainWindow 标题栏显示它，让用户（和我）一眼确认跑的是哪一版 ——
-    /// 之前连续两轮修复都因为「不知道 VM 上跑的是哪个 exe」而误判过。
-    /// </summary>
+    /// <summary>程序集版本。MainWindow 标题栏显示它，让用户（和我）一眼确认跑的是哪一版。</summary>
     public static Version ExecutableVersion =>
         Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
 
@@ -33,8 +31,53 @@ public partial class App : Application
         }
     }
 
+    /// <summary>
+    /// 进程可执行文件的 sha256 前 12 位。每次构建唯一，用来肉眼确认「我打开的是这版 exe」。
+    /// 不用全哈希是因为 64 位的指纹对人类太长了，前 12 位碰撞概率 2^48 ≈ 没问题。
+    /// </summary>
+    public static string ExecutableHashPrefix
+    {
+        get
+        {
+            try
+            {
+                var path = Environment.ProcessPath ?? "";
+                if (string.IsNullOrEmpty(path) || !File.Exists(path)) return "nohash";
+                using var sha = SHA256.Create();
+                using var fs = File.OpenRead(path);
+                var bytes = sha.ComputeHash(fs);
+                var sb = new StringBuilder(12);
+                for (var i = 0; i < 6; i++) sb.Append(bytes[i].ToString("x2"));
+                return sb.ToString();
+            }
+            catch { return "hashfail"; }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    //  崩溃对话框硬编码常量
+    // ─────────────────────────────────────────────────────────────────────
+    // 这些常量完全独立于 L10n、语言包、EmbeddedResource、内联常量字典、HumanizeKey
+    // 任何一处。即整条本地化链路全断（哪怕 ResourceManager、LangResources.g.cs、L10n
+    // 实例本身都抛 NullRef），OnStartup 的崩溃对话框也能正确显示。
+    //
+    // 为什么这么极端？v0.1.15 / v0.1.16 两次修复都假定「Safe() 兜底 + HumanizeKey
+    // 兜底」够用，但 VM 上仍看到裸键 "App.Name"/"App.CrashBody" —— 唯一能解释这
+    // 现象的是「VM 跑的根本不是新版 exe」。修复思路从「让兜底更厚」转向
+    // 「让兜底无懈可击 + 让用户无法打开错版」两条并行。
+    // ─────────────────────────────────────────────────────────────────────
+    private const string HARDCODED_APP_NAME       = "小狼毫控制面板";
+    private const string HARDCODED_CRASH_TITLE    = "小狼毫控制面板 — 启动失败";
+    private const string HARDCODED_CRASH_BODY_PRE = "程序启动失败：\n\n";
+
     protected override void OnStartup(StartupEventArgs e)
     {
+        // 第一件事：立刻写一行启动哨兵，让日志能定位是哪次构建崩了。
+        // 这行必须写在任何可能抛异常的代码之前。
+        Log($"=== startup {DateTime.Now:yyyy-MM-dd HH:mm:ss} " +
+            $"v{ExecutableVersion} build_at={ExecutableBuildTime:yyyy-MM-dd HH:mm:ss} " +
+            $"hash={ExecutableHashPrefix} ===");
+
         try
         {
             RunStartup(e);
@@ -42,13 +85,14 @@ public partial class App : Application
         catch (Exception ex)
         {
             // 启动早期（L10n/设置还没就绪）就崩：不能依赖 L10n 弹窗（它可能自己也废了），
-            // 直接用硬编码中文文本，保证用户至少看懂「启动失败 + 日志在哪」。
+            // 完全用硬编码中文弹窗，保证用户至少看懂「启动失败 + 日志在哪」。
             Log("!!! OnStartup 顶层异常：" + ex);
             try
             {
                 MessageBox.Show(
-                    $"程序启动失败：\n\n{ex.GetType().Name}: {ex.Message}\n\n日志已写入：\n{LogFilePath}",
-                    "小狼毫控制面板",
+                    HARDCODED_CRASH_BODY_PRE + ex.GetType().Name + ": " + ex.Message +
+                    "\n\n日志已写入：\n" + LogFilePath,
+                    HARDCODED_CRASH_TITLE,
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
@@ -61,8 +105,6 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        Log($"=== startup {DateTime.Now:yyyy-MM-dd HH:mm:ss} " +
-            $"v{ExecutableVersion} exe_mtime={ExecutableBuildTime:yyyy-MM-dd HH:mm:ss} ===");
         Log($"exe_path = {Environment.ProcessPath}");
         Log($"os = {Environment.OSVersion} arch = {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}");
 
@@ -79,11 +121,14 @@ public partial class App : Application
             Log("!!! DispatcherUnhandledException: " + args.Exception);
             try
             {
-                // L10n 优先；万一它也没加载成功，用硬编码中文兜底，绝不显示裸键名。
-                var body = Safe(() => L10n.Instance.T("App.CrashBody", args.Exception, LogFilePath),
-                    $"发生未处理的异常：\n\n{args.Exception}\n\n日志已写入：\n{LogFilePath}");
-                var title = Safe(() => L10n.Instance.T("App.Name"), "小狼毫控制面板");
-                MessageBox.Show(body, title, MessageBoxButton.OK, MessageBoxImage.Error);
+                // 完全不依赖 L10n / Safe / HumanizeKey —— 直接硬编码中文，
+                // 把 v0.1.15 / v0.1.16 「L10n 全死时 Safe 兜底也不够」这种坑彻底堵死。
+                MessageBox.Show(
+                    "发生未处理的异常：\n\n" + args.Exception +
+                    "\n\n日志已写入：\n" + LogFilePath,
+                    HARDCODED_APP_NAME + " — 错误",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
             catch { /* 连 MessageBox 都弹不出来时（例如资源初始化失败），至少日志已经落盘 */ }
 
@@ -101,13 +146,6 @@ public partial class App : Application
 
         // 进程退出时补一行，便于判断「崩了」还是「正常关」。
         AppDomain.CurrentDomain.ProcessExit += (_, _) => Log("--- exit ---");
-    }
-
-    /// <summary>L10n 可能自己没加载成功，取值时必须套一层，失败就退回硬编码文本。</summary>
-    private static T Safe<T>(Func<T> getter, T fallback)
-    {
-        try { return getter(); }
-        catch { return fallback; }
     }
 
     /// <summary>首屏成功呈现后由 MainWindow 调用。日志里有这行 = 窗口已能正常显示。</summary>
