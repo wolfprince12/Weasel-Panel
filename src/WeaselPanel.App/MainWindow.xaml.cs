@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private readonly ColorSchemesView _colorSchemesView;
     private readonly SchemaView _schemaView;
     private readonly RimeIceView _rimeIceView;
+    private readonly CorrectionView _correctionView;
     private readonly InputView _inputView;
     private readonly BehaviorView _behaviorView;
     private readonly AppOptionsView _appOptionsView;
@@ -53,6 +54,7 @@ public partial class MainWindow : Window
         _colorSchemesView = new ColorSchemesView(environment);
         _schemaView = new SchemaView(new SchemaViewModel(environment));
         _rimeIceView = new RimeIceView(environment);
+        _correctionView = new CorrectionView(environment);
         _inputView = new InputView(new InputViewModel(environment));
         _behaviorView = new BehaviorView(new BehaviorViewModel(environment));
         _appOptionsView = new AppOptionsView(environment);
@@ -111,7 +113,7 @@ public partial class MainWindow : Window
         UserControl[] views =
         {
             _diagnosticsView, _appearanceView, _colorSchemesView, _schemaView,
-            _rimeIceView, _inputView, _behaviorView, _appOptionsView, _dictionaryView,
+            _rimeIceView, _correctionView, _inputView, _behaviorView, _appOptionsView, _dictionaryView,
             _maintenanceView, _inspectorView,
             _backupView, _aboutView,
         };
@@ -129,6 +131,7 @@ public partial class MainWindow : Window
         if (_diagnosticsView is null || _appearanceView is null
             || _colorSchemesView is null
             || _schemaView is null || _rimeIceView is null
+            || _correctionView is null
             || _inputView is null
             || _behaviorView is null || _appOptionsView is null
             || _dictionaryView is null
@@ -163,13 +166,14 @@ public partial class MainWindow : Window
         _colorSchemesView,  // 2 自定义配色
         _schemaView,        // 3 输入方案
         _rimeIceView,       // 4 雾凇拼音
-        _inputView,         // 5 按键与输入
-        _behaviorView,      // 6 行为
-        _appOptionsView,    // 7 应用选项
-        _dictionaryView,    // 8 词典
-        _maintenanceView,   // 9 维护
-        _inspectorView,     // 10 配置查看器
-        _backupView,        // 11 备份与恢复
-        _aboutView,         // 12 关于
+        _correctionView,    // 5 紫毫纠错
+        _inputView,         // 6 按键与输入
+        _behaviorView,      // 7 行为
+        _appOptionsView,    // 8 应用选项
+        _dictionaryView,    // 9 词典
+        _maintenanceView,   // 10 维护
+        _inspectorView,     // 11 配置查看器
+        _backupView,        // 12 备份与恢复
+        _aboutView,         // 13 关于
     ];
 }

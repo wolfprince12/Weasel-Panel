@@ -65,6 +65,9 @@
                     <!-- 雾凇拼音紧挨「输入方案」：rime_ice 本身是一个拼音方案，
                          方案页管「装哪些、谁在前」，这里管「这一套内部的词库/模糊音/繁简」。 -->
                     <ListBoxItem Content="{l10n:L Nav.RimeIce}"/>
+                    <!-- 紫毫纠错紧挨「雾凇拼音」：纠错引擎挂在 rime_ice 方案上，
+                         两者同属「输入」分组。纠错只此一页可改，避免与雾凇页互相回滚。 -->
+                    <ListBoxItem Content="{l10n:L Nav.Correction}"/>
                     <ListBoxItem Content="{l10n:L Nav.Input}"/>
                     <ListBoxItem Content="{l10n:L Nav.Behavior}"/>
                     <ListBoxItem Content="{l10n:L Nav.AppOptions}"/>

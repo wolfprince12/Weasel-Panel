@@ -1,0 +1,208 @@
+<UserControl x:Class="WeaselPanel.App.Views.CorrectionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:WeaselPanel.App.ViewModels">
+    <!--
+        紫毫纠错页 — 排版约定（与雾凇拼音页一致，ui-ux-pro-max 验收口径）：
+        · 层次：页面标题 22 → 卡片小标题 14.5 → 段落说明 13 → 正文 13 → 脚注 11.5
+        · 间距一律走 Sp/Gap token；能用留白就不用分割线
+        · 圆角三档：Sm 4 / Md 8 / Lg 12
+        · 未安装 rime_ice 时整页置灰，但能力照常展示
+        · 位置/数量两个下拉只在纠错开启时（DetailEnabled）才可调
+    -->
+    <StackPanel>
+        <TextBlock Text="{l10n:L Correction.Title}" Style="{StaticResource PageTitle}"/>
+        <TextBlock Text="{l10n:L Correction.Intro}" Style="{StaticResource PageIntro}"/>
+
+        <!-- 未安装横幅：整段置灰，但能力先让用户看清 -->
+        <Border Style="{StaticResource StatusStrip}" Margin="{StaticResource GapCard}"
+                Background="{StaticResource WarningSoftBrush}"
+                Visibility="{Binding IsInstalled, Converter={StaticResource InverseBoolToVisibility}}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Correction.NotInstalled}" FontSize="{StaticResource FontBody}"
+                           FontWeight="SemiBold" Foreground="{StaticResource WarningBrush}"
+                           TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"/>
+                <TextBlock Text="{l10n:L Correction.NotInstalled.Hint}" Style="{StaticResource FieldNote}"
+                           Margin="0,6,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ── 总开关 ──────────────────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}"
+                IsEnabled="{Binding IsInstalled}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Correction.Enabled.Title}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Correction.Enabled.Note}" Style="{StaticResource SectionIntro}"/>
+                <CheckBox Content="{l10n:L Correction.Enabled}" IsChecked="{Binding Enabled}"
+                          Margin="0,16,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ── 插入设置（仅开启时可用）────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}"
+                IsEnabled="{Binding DetailEnabled}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Correction.Injection.Title}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Correction.Injection.Note}" Style="{StaticResource SectionIntro}"/>
+
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{l10n:L Correction.Position.Title}"
+                               Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding PositionOptions}"
+                              SelectedValuePath="Id" DisplayMemberPath="Name"
+                              SelectedValue="{Binding Position}" VerticalAlignment="Center"/>
+                </Grid>
+                <TextBlock Text="{l10n:L Correction.Position.Note}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNoteIndent}"/>
+
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{l10n:L Correction.Count.Title}"
+                               Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding CountOptions}"
+                              SelectedValuePath="Id" DisplayMemberPath="Name"
+                              SelectedValue="{Binding CandidateCount}" VerticalAlignment="Center"/>
+                </Grid>
+                <TextBlock Text="{l10n:L Correction.Count.Note}" Style="{StaticResource FieldNote}"
+                           Margin="{StaticResource GapNoteIndent}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ── 纠错规则（只读展示）────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}"
+                IsEnabled="{Binding IsInstalled}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Correction.Rules.Title}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Correction.Rules.Note}" Style="{StaticResource SectionIntro}"/>
+                <TextBlock Text="{Binding RuleCountText}" FontSize="{StaticResource FontCaption}"
+                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,12,0,0"/>
+                <TextBlock Text="{Binding ForcedFuzzyText}" Style="{StaticResource FieldNote}"
+                           Margin="0,6,0,0"/>
+
+                <Border Style="{StaticResource ListFrame}" Margin="0,14,0,0" MaxHeight="260">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12,10">
+                        <ItemsControl ItemsSource="{Binding Rules}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:CorrectionRuleRow}">
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Label}"
+                                                   FontSize="{StaticResource FontBody}"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Rule}"
+                                                   Style="{StaticResource MonoText}"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   TextWrapping="Wrap"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- ── 纠错引擎 ───────────────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}"
+                IsEnabled="{Binding IsInstalled}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Correction.Engine.Title}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Correction.Engine.Note}" Style="{StaticResource SectionIntro}"/>
+
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{l10n:L Correction.Engine.State}"
+                               Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding EngineStateText}"
+                               FontSize="{StaticResource FontBody}" VerticalAlignment="Center"/>
+                </Grid>
+
+                <Border Style="{StaticResource CodeBlock}" Margin="0,16,0,0">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{l10n:L Correction.Engine.LuaPath}"
+                                       Style="{StaticResource FieldNote}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding DeployedLuaPath}"
+                                       Style="{StaticResource MonoText}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{l10n:L Correction.Engine.DictPath}"
+                                       Style="{StaticResource FieldNote}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding DeployedDictPath}"
+                                       Style="{StaticResource MonoText}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{l10n:L Correction.Engine.UserDictPath}"
+                                       Style="{StaticResource FieldNote}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding UserDictPath}"
+                                       Style="{StaticResource MonoText}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- ── 应用 ─────────────────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="{StaticResource GapActionRow}">
+                    <Button Content="{l10n:L Common.Apply}" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding ApplyCommand}" IsEnabled="{Binding IsInstalled}"
+                            Margin="0,0,10,0"/>
+                    <Button Content="{l10n:L Common.Reload}" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding ReloadCommand}"/>
+                </StackPanel>
+
+                <Border Style="{StaticResource StatusStrip}">
+                    <TextBlock Text="{Binding StatusText}" FontSize="{StaticResource FontBody}"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"/>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <TextBlock Text="{l10n:L Correction.FilePath}" Style="{StaticResource FieldNote}"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding FilePath}" Style="{StaticResource MonoText}"
+                               Margin="8,0,0,0" Foreground="{StaticResource TextSecondaryBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

@@ -22,8 +22,8 @@
          的最快凭据 —— 之前连续两轮修复都栽在「以为测的是新版、其实是旧 exe」。
          别只改这里：./build.sh 出包时会用 tools/verify_lang_packs.py 拿每包里
          最长的若干条原文当哨兵真搜 exe，搜不到就让构建失败。 -->
-    <Version>0.1.13</Version>
-    <InformationalVersion>0.1.13-preview</InformationalVersion>
+    <Version>0.1.14</Version>
+    <InformationalVersion>0.1.14-preview</InformationalVersion>
     <Company>大狼导演工作室</Company>
     <Product>小狼毫控制面板</Product>
     <Copyright>GPL-3.0</Copyright>
@@ -78,6 +78,16 @@
          <Product> 写进 PE 版本信息的假阳性，语言包其实一个字节都没进去。
          防复发靠 build.sh 的 verify_language_packs()，出包时会拿每包的哨兵串真搜 exe。 -->
     <EmbeddedResource Include="Localization\lang.*.txt" />
+
+    <!-- ⚠️ 紫毫纠错引擎资源（lua 脚本 + 1MB 正向词表）也必须走 EmbeddedResource。
+         本项目是 PublishSingleFile 发布、用户只从 dist/ 拿走一个 exe，
+         用 <Content CopyToOutputDirectory> 的话文件只会躺在 dist/ 里，
+         被落单的 exe 一辈子找不到 —— 表现是「纠错开关能开、但一条纠错候选都不出」，
+         完全静默。运行时由 Services/CorrectionAssets.cs 解到
+         %LOCALAPPDATA%\WeaselPanel\CorrectionEngine 再交给 Core 部署。
+         同理，词表体积（约 1MB）对已经 156MB 的自包含 exe 可以忽略。 -->
+    <EmbeddedResource Include="Assets\CorrectionEngine\lua\amethyst_corrector.lua" />
+    <EmbeddedResource Include="Assets\CorrectionEngine\data\correction_pinyin.txt" />
     <!-- app.ico 不再声明为 <Resource>：<ApplicationIcon> 已经足够让图标进 PE 资源
          （任务栏 / 资源管理器读的就是它）。多声明一个 WPF Resource 反而会在
          single-file 下多出一条 pack 解析路径，是已知的 NRE 风险源。 -->
