@@ -89,15 +89,20 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 
 ### 构建质量门禁
 
-`./build.sh` 包含 5 道关卡，缺一不放过：
+`./build.sh` 包含 **7 道关卡**，缺一不放过（外加 GitHub CI 第 8 道）：
 
 1. **Core 单元测试**（xunit，389+ 用例）
 2. **本地化键位体检**（三包齐校验：`tools/check_lang_keys.py`）
 3. **语言包内联常量生成**（`tools/embed_lang.py` ——  单文件 L10n 兜底）
 4. **XAML 静态资源引用体检**（`tools/check_xaml_resources.py`，拦 `{StaticResource X}` 引用未声明 Key 这类编译期不报、运行期才崩的错）
-5. **出包验收**（`tools/verify_lang_packs.py` 拿每包哨兵原文真搜 exe）
+5. **VM URL 字面量声明体检**（`tools/check_uri_consts.py`，拦 `const string X = "https://..."` 这类被 XAML 给 Uri 类型属性引用时 runtime TypeConverter 异常的雷区）
+6. **XAML `{Binding}` 路径体检**（`tools/check_binding_paths.py`，拦 VM 字段改名未同步、绑了 static 字段、拼写错这类运行期 silently no-op 的雷区——真机上整行空白）
+7. **出包验收**（`tools/verify_lang_packs.py` 拿每包哨兵原文真搜 exe）
 
-> v0.2.4 / v0.2.5 真机连栽两次同类 XAML 错（Hyperlink 容器、`{StaticResource}` 误用 VM const）才加了这道关——macOS 交叉编译**完全看不见**纯运行时 XAML 错，这道 lint 拦第二类（资源引用），第一类（容器类型）还得靠真机。
+外加一道 CI：
+8. **GitHub Actions Windows 真机启动冒烟**（`.github/workflows/wpf-smoke.yml`，`windows-latest` runner 启动 8s，抓 `InitializeComponent()` 阶段 XamlParseException 启动崩溃）
+
+> v0.2.4 / v0.2.5 真机连续栽了 4 类「编译期不报真机才炸」的 XAML 错（Hyperlink 容器类型、`{StaticResource}` 误用 VM const、VM string 给 XAML Uri、Binding 路径错）才把这 4 道 lint 配齐。macOS 交叉编译**完全看不见**纯运行时 XAML 错，这 4 道 lint + CI 是唯一兜底。
 
 ---
 
