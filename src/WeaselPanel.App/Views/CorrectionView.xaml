@@ -211,7 +211,7 @@
                 </Grid>
 
                 <TextBlock Margin="0,14,0,0">
-                    <Hyperlink NavigateUri="{Binding LuaDownloadUrl}"
+                    <Hyperlink NavigateUri="{x:Static vm:CorrectionViewModel.LuaDownloadUrl}"
                                RequestNavigate="Hyperlink_RequestNavigate">
                         <!-- ⚠️ Hyperlink.Inlines 只接受 Inline 子节点。
                              之前用 <TextBlock Text="..."> 会抛 XamlParseException

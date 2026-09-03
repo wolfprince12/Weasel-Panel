@@ -126,6 +126,22 @@ echo "═══ 校验 XAML {Binding} 路径 ═══"
   exit 1
 }
 
+# ── XAML 默认 TwoWay 绑定 vs VM 只读属性 体检 ─────────────────────────
+# 拦 {Binding X} 默认 TwoWay 撞 VM get-only 属性或 static 字段。
+# 即 <Run Text="{Binding X}"/>（Run.Text 默认 TwoWay）+ `public T X => ...;` /
+# `public T X { get; }` / `public static readonly T X = ...;` 等。
+# 启动时 BindingExpression.AttachToContext 抛 InvalidOperationException
+# （实例表达体属性 CheckReadOnly）或 silently 不显示（静态字段，instance 反射
+# 不解析）。v0.2.5 真机栽过：AboutViewModel.RepoDisplay 之前是 expression-bodied，
+# 改成 `public static readonly string RepoDisplay = ...;` + XAML `{x:Static}`
+# 才修。详见 docs/RELEASE_v0.2.5.md 第⑤类盲区。
+echo "═══ 校验 XAML 默认 TwoWay 绑定 × VM 只读属性 ═══"
+"$PY" tools/check_binding_readonly.py || {
+  echo "" >&2
+  echo "XAML 默认 TwoWay 绑定撞只读属性 —— 启动抛 InvalidOperationException 或 blank，不出包。" >&2
+  exit 1
+}
+
 echo "═══ 发布 ${RID} ═══"
 dotnet publish src/WeaselPanel.App -c Release -r "$RID" -o "$OUT" --nologo 2>&1 | tail -2
 

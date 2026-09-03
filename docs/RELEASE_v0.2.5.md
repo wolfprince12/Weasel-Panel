@@ -54,8 +54,8 @@ were fixed that the macOS cross-compile build couldn't detect at all:
 
 ## Build system
 
-The macOS `dotnet build` cannot validate any of the four XAML runtime
-classes above. To prevent recurrence, `build.sh` now runs **three
+The macOS `dotnet build` cannot validate any of the five XAML runtime
+classes above. To prevent recurrence, `build.sh` now runs **four
 additional lint scripts** before publish, and the repo has a
 **GitHub Actions Windows runner** workflow for a real-machine smoke
 launch:
@@ -65,6 +65,7 @@ launch:
 | `tools/check_xaml_resources.py` | `{StaticResource X}` references not in `x:Key` pool | `faf5fd8` |
 | `tools/check_uri_consts.py` | `const string X = "https://…"` / `static readonly string X = "https://…"` (latent URI-vs-string bug) | `088b906` |
 | `tools/check_binding_paths.py` | `{Binding X}` where `X` is not an instance public member of the ViewModel (field renamed, static field, typo) | `4827cc5` |
+| `tools/check_binding_readonly.py` | `{Binding X}` against a default-TwoWay target (`Run.Text` / `TextBox.Text` / `CheckBox.IsChecked` / …) when `X` is an expression-bodied property, a `{ get; }` property, or a `public static readonly` field | 2026-09-03 |
 | `.github/workflows/wpf-smoke.yml` | `InitializeComponent()`-time crashes on a real Windows machine | `088b906` |
 
 To activate the Windows smoke CI, the repo owner needs to enable

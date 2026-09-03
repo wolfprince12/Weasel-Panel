@@ -88,7 +88,7 @@
                                Margin="0,4" VerticalAlignment="Center">
                         <Hyperlink NavigateUri="{x:Static vm:AboutViewModel.RepoUrl}"
                                    RequestNavigate="Hyperlink_RequestNavigate">
-                            <Run Text="{Binding RepoDisplay}"/>
+                            <Run Text="{x:Static vm:AboutViewModel.RepoDisplay}"/>
                         </Hyperlink>
                     </TextBlock>
                 </Grid>
@@ -200,7 +200,7 @@
                         </Hyperlink>
                     </TextBlock>
                     <TextBlock Margin="0,0,16,0">
-                        <Hyperlink NavigateUri="{Binding IssuesUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                        <Hyperlink NavigateUri="{x:Static vm:AboutViewModel.IssuesUrl}" RequestNavigate="Hyperlink_RequestNavigate">
                             <Run Text="{l10n:L About.Link.Issues}"/>
                         </Hyperlink>
                     </TextBlock>

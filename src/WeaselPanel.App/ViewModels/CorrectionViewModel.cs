@@ -190,7 +190,15 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
 
     // ── librime-lua 状态（检测 + 指引，不写系统目录）──────────────────
 
-    private static readonly Uri LucEngineDownloadUrl = new("https://github.com/hchunhui/librime-lua/releases/");
+    /// <summary>librime-lua 官方 release 页 URL。
+    /// XAML 端必须 <c>{x:Static vm:CorrectionViewModel.LuaDownloadUrl}</c> 喂给 Hyperlink.NavigateUri，
+    /// 不能 {Binding}：Hyperlink.NavigateUri 默认走 TwoWay（某些 WPF 版本下 TwoWay / OneWay
+    /// 行为不一致），实例 computed 属性（`public Uri Foo => ...`）没 setter，
+    /// 启动时会抛 InvalidOperationException（"无法对只读属性 Foo 进行 TwoWay 绑定"）。
+    /// 修法两步：① 改 VM 端 `public static readonly Uri Foo = new(...)`（Uri 不是 const 编译期常量）；
+    /// ② XAML 端改 `NavigateUri="{x:Static vm:Class.Foo}"`。任意一步缺失 v0.2.5 真机启动即崩。
+    /// 详见 docs/RELEASE_v0.2.5.md 第⑤类盲区。</summary>
+    public static readonly Uri LuaDownloadUrl = new("https://github.com/hchunhui/librime-lua/releases/");
 
     /// <summary>判定 Lua 运行时是否在场的文件名特征（librime-lua 会随 rime.dll 一起带来这些）。</summary>
     private static readonly string[] LuaRuntimeMarkers =
@@ -237,7 +245,8 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
     public string LuaInstallDir => _environment.ProgramDirectory ?? "";
 
     /// <summary>librime-lua 预编译下载页（GitHub Releases）。</summary>
-    public Uri LuaDownloadUrl => LucEngineDownloadUrl;
+    /// <remarks>XAML 已用 {x:Static vm:CorrectionViewModel.LuaDownloadUrl}，
+    /// 本类内可在 C# 端直接引用同一静态字段（无需实例别名）。</remarks>
 
     /// <summary>分步安装指引（随语言切换重建，最多 5 步）。</summary>
     public ObservableCollection<string> LuaGuideLines { get; } = new();

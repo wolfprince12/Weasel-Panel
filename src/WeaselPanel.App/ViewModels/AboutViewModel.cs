@@ -165,10 +165,14 @@ public sealed class AboutViewModel : ViewModelBase, ILanguageAware
     /// 完全不走 string→Uri TypeConverter，避免「"https://rime.im" 不是属性
     /// 'NavigateUri' 的有效值」之类的运行时崩盘。URL 一律带尾斜杠，避免
     /// UriTypeConverter 对无路径主机名的边界 case 拒识别。
+    ///
+    /// ⚠️ RepoUrl / IssuesUrl 共享 host 路径，要改必须同步两边。
+    /// 为什么不拼插（$".../{...}/..."）：static readonly 字段初始化顺序由 CLR 保证，
+    /// 但插值要在 IL 里走 string.Concat，并非所有人都熟；字面量更不容易踩坑。
     /// </remarks>
     public static readonly Uri RepoUrl = new("https://github.com/wolfprince12/Weasel-Panel/");
-    public string RepoDisplay => "github.com/wolfprince12/Weasel-Panel";
-    public Uri IssuesUrl => new(RepoUrl, "/issues");
+    public static readonly string RepoDisplay = "github.com/wolfprince12/Weasel-Panel";
+    public static readonly Uri IssuesUrl = new("https://github.com/wolfprince12/Weasel-Panel/issues");
 
     public static readonly Uri RimeUrl = new("https://rime.im/");
     public static readonly Uri WeaselUrl = new("https://github.com/rime/weasel/");
