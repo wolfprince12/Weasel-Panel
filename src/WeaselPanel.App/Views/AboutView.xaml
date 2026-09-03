@@ -1,7 +1,8 @@
 <UserControl x:Class="WeaselPanel.App.Views.AboutView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization"
+             xmlns:vm="clr-namespace:WeaselPanel.App.ViewModels">
     <StackPanel>
 
         <!-- ── 身份区 ──────────────────────────────────────────────
@@ -204,12 +205,12 @@
                         </Hyperlink>
                     </TextBlock>
                     <TextBlock Margin="0,0,16,0">
-                        <Hyperlink NavigateUri="{StaticResource RimeUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                        <Hyperlink NavigateUri="{x:Static vm:AboutViewModel.RimeUrl}" RequestNavigate="Hyperlink_RequestNavigate">
                             <Run Text="{l10n:L About.Link.Rime}"/>
                         </Hyperlink>
                     </TextBlock>
                     <TextBlock>
-                        <Hyperlink NavigateUri="{StaticResource WeaselUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                        <Hyperlink NavigateUri="{x:Static vm:AboutViewModel.WeaselUrl}" RequestNavigate="Hyperlink_RequestNavigate">
                             <Run Text="{l10n:L About.Link.Weasel}"/>
                         </Hyperlink>
                     </TextBlock>
