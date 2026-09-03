@@ -85,6 +85,20 @@ echo "═══ 生成语言包内联常量（L10n 单文件兜底）═══"
   exit 1
 }
 
+# ── XAML 资源引用体检 ──────────────────────────────────────────────────
+# 拦 {StaticResource X} / {DynamicResource X} 引用了不存在的 x:Key。
+# 这类错编译期不报、dotnet build 也过，但真机 InitializeComponent() 阶段才抛
+# XamlParseException → 启动崩溃。v0.2.5 真机栽过两次：
+  #   · <Hyperlink 放 <WrapPanel>（容器类型错，本 lint 不覆盖）
+  #   · {StaticResource RimeUrl}（VM 的 const 不是资源字典的 x:Key，本 lint 拦的就是这个）
+# 写在 publish 之前，fail fast。
+echo "═══ 校验 XAML 资源引用 ═══"
+"$PY" tools/check_xaml_resources.py || {
+  echo "" >&2
+  echo "XAML 资源引用未通过 —— 真机启动会因 InitializeComponent() 抛 XamlParseException 而崩，不出包。" >&2
+  exit 1
+}
+
 echo "═══ 发布 ${RID} ═══"
 dotnet publish src/WeaselPanel.App -c Release -r "$RID" -o "$OUT" --nologo 2>&1 | tail -2
 
