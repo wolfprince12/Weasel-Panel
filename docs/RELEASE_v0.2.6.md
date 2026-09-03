@@ -1,4 +1,4 @@
-# Weasel Panel v0.2.5 — Release Notes (DRAFT)
+# Weasel Panel v0.2.6 — Release Notes (DRAFT)
 
 > ⚠️ **DRAFT — not yet published.** This file is pre-staged in `docs/` so the
 > notes are ready to copy into a GitHub release the moment you decide to ship.
@@ -93,6 +93,26 @@ collection-change handlers, each doing
 interface has no such method, so the field must be cast to the concrete
 type). Selecting an item now immediately enables the relevant buttons.
 
+## 8. 外观字体列表：打开卡顿 + 看不到系统字体
+
+用户真机报外观面板「看不到系统字体」且「面板特别卡顿」。
+
+Root cause: `AppearanceViewModel.FontFamilies` 原是 `static readonly`，在
+**类型加载时于 UI 线程同步枚举** `Fonts.SystemFontFamilies`（几百~上千字体，
+每个 `FontFamily.Source` 访问会触发字体元数据加载）。字体多的机器上阻塞 UI
+数秒 → 面板卡顿；字体服务未就绪或个别字体 `Source` 抛异常时，整个
+`.ToArray()` 失败 / 返回空 → 下拉列表为空（「看不到系统字体」）。
+
+Fix:
+- 改为 ctor 触发 `LoadFontFamiliesAsync()`：在 `Task.Run` 后台线程枚举系统字体，
+  **不再阻塞 UI**（解决卡顿）。
+- 枚举内对每个字体 `try/catch` 容错，单个损坏字体不再拖垮整张列表。
+- 若系统字体一个都没拿到（字体服务未就绪等），**兜底**填充常用字体
+  （Microsoft YaHei / SimSun / Segoe UI / PingFang SC / Consolas 等），
+  保证下拉不为空。
+- XAML 字体 ComboBox 加 `VirtualizingStackPanel` + `MaxDropDownHeight="320"`，
+  几百项下拉不再卡。
+
 ## Build system
 
 The macOS `dotnet build` cannot validate any of the five XAML runtime
@@ -132,12 +152,12 @@ launch path automatically.
 
 ## How to verify which build you're actually running
 
-The `dist/win-x64/WeaselPanel_v0.2.5_<hash>.exe` filename embeds the
+The `dist/win-x64/WeaselPanel_v0.2.6_<hash>.exe` filename embeds the
 git short hash. After double-clicking, the title bar must read
 exactly:
 
 ```
-小狼毫控制面板 v0.2.5 · MM-DD HH:MM · #<hash>
+小狼毫控制面板 v0.2.6 · MM-DD HH:MM · #<hash>
 ```
 
 The version line in the sidebar's footer will show the same `#<hash>`.
@@ -153,10 +173,10 @@ Once you cut the release, attach the single-file self-contained
 executable:
 
 ```
-dist/win-x64/WeaselPanel_v0.2.5_66ecac02.exe
+dist/win-x64/WeaselPanel_v0.2.6_7b80ee44.exe
 ```
 
-(`66ecac02` is the hash of the most recent rebuild that includes every
+(`7b80ee44` is the hash of the most recent rebuild that includes every
 hotfix and lint. Rebuild with `./build.sh` to refresh the hash on
 demand.)
 

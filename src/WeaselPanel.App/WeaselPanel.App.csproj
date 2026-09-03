@@ -26,9 +26,13 @@
          0.2.5（2026-09-03）：紧急 hotfix —— 修掉 v0.2.4 启动崩溃。
          5 处 XAML 违规：Hyperlink 错放在 UIElementCollection 容器里、或内嵌了
          非 Inline 子节点。MainWindow ctor 一调 InitializeComponent() 即崩，
-         真机无法打开。Commit 553f91a 修复，详情见 git log。 -->
-    <Version>0.2.5</Version>
-    <InformationalVersion>0.2.5-hotfix</InformationalVersion>
+         真机无法打开。Commit 553f91a 修复，详情见 git log。
+         0.2.6（2026-09-03）：外观面板系统字体列表修复 —— FontFamilies 原在 UI 线程
+         同步枚举 Fonts.SystemFontFamilies（几百~上千字体），导致面板打开卡顿、
+         字体服务未就绪时列表为空。改为后台线程异步枚举 + 单字体容错 + 空列表兜底
+         常用字体，下拉加虚拟化。详见 git log。 -->
+    <Version>0.2.6</Version>
+    <InformationalVersion>0.2.6</InformationalVersion>
     <Company>大狼导演工作室</Company>
     <Product>小狼毫控制面板</Product>
     <Copyright>GPL-3.0</Copyright>

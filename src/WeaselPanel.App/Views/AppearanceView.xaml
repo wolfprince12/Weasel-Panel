@@ -114,7 +114,16 @@
                                   Text="{Binding FontFace, UpdateSourceTrigger=PropertyChanged}"
                                   IsEditable="True"
                                   IsTextSearchEnabled="True"
-                                  IsTextSearchCaseSensitive="False"/>
+                                  IsTextSearchCaseSensitive="False"
+                                  MaxDropDownHeight="320">
+                            <!-- ⚠️ v0.2.6：系统字体几百项，默认 ItemsPanel 不虚拟化，
+                                 下拉会卡。显式 VirtualizingStackPanel 让下拉只实例化可视项。 -->
+                            <ComboBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ComboBox.ItemsPanel>
+                        </ComboBox>
                     </Grid>
 
                     <!-- 候选字号 -->

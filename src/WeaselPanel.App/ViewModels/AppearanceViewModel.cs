@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 using WeaselPanel.App.Infrastructure;
 using WeaselPanel.App.Localization;
@@ -46,6 +48,7 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
 
         StatusText = StatusFromKey("Appearance.Status.Ready");
         LoadAll();
+        _ = LoadFontFamiliesAsync();
     }
 
     public WeaselEnvironment Environment { get; }
@@ -55,16 +58,86 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
     public ObservableCollection<SchemeCardItem> SchemeCards { get; } = new();
 
     /// <summary>
-    /// 系统字体族列表（一次性快照）。绑到候选字体的可编辑 ComboBox，
-    /// 让用户既能选现成字体，也能直接粘自己写的家族名。
-    /// 静态数组 + 实例字段：所有实例共享同一份，避免每次打开外观页重枚举。
-    /// 用 <see cref="IReadOnlyList{T}"/> 而非 <see cref="ObservableCollection{T}"/>：
-    /// 列表构造后永不变化，没必要浪费通知开销，绑定也只读一次。
+    /// 系统字体族列表。绑到候选字体的可编辑 ComboBox，让用户既能选现成字体，
+    /// 也能直接粘自己写的家族名。
+    /// ⚠️ v0.2.6 关键修复：原先是 <c>static readonly</c> 在类型加载时于 UI 线程
+    /// 同步枚举 <see cref="Fonts.SystemFontFamilies"/>（几百~上千字体，每个
+    /// <c>.Source</c> 会触发字体元数据加载）。字体多的机器上阻塞 UI 数秒 →
+    /// 面板卡顿；字体服务未就绪或个别字体 <c>.Source</c> 抛异常时整段
+    /// <c>.ToArray()</c> 失败/返回空 → 「看不到系统字体」。
+    /// 现改为：构造时后台线程异步枚举 + 单字体容错 + 空列表兜底常用字体，
+    /// 填充完成用 Dispatcher 回 UI 线程写集合。详见 #外观字体。
     /// </summary>
-    public IReadOnlyList<string> FontFamilies { get; } = StaticFontFamilies;
+    public ObservableCollection<string> FontFamilies { get; } = new();
 
-    private static readonly string[] StaticFontFamilies =
-        Fonts.SystemFontFamilies.Select(f => f.Source).Distinct().OrderBy(s => s, StringComparer.OrdinalIgnoreCase).ToArray();
+    /// <summary>系统字体一个都拿不到时，也要保证用户至少能看到这些常用字体，下拉不为空。</summary>
+    private static readonly string[] FallbackFonts =
+    {
+        "Microsoft YaHei", "Microsoft YaHei UI", "SimSun", "SimHei",
+        "Segoe UI", "Segoe UI Variable Text", "PingFang SC",
+        "Microsoft JhengHei", "Microsoft JhengHei UI", "Consolas",
+    };
+
+    /// <summary>后台线程异步枚举系统字体：避免 UI 冻结；单字体容错 + 空列表兜底。</summary>
+    private async Task LoadFontFamiliesAsync()
+    {
+        List<string> names;
+        try
+        {
+            // 枚举移到线程池，打开外观面板不再卡 UI。
+            names = await Task.Run(() =>
+            {
+                var collected = new List<string>();
+                try
+                {
+                    foreach (var f in Fonts.SystemFontFamilies)
+                    {
+                        try
+                        {
+                            var src = f.Source;
+                            if (!string.IsNullOrWhiteSpace(src)) collected.Add(src);
+                        }
+                        catch { /* 跳过损坏/读不了的字体，不能一个坏字体拖垮整张列表 */ }
+                    }
+                }
+                catch { /* 整个枚举失败（字体服务未就绪等）→ 落兜底 */ }
+                return collected;
+            });
+        }
+        catch
+        {
+            names = new List<string>();
+        }
+
+        if (names.Count == 0)
+        {
+            // 系统字体一个都没拿到：直接给兜底，保证下拉不为空。
+            names.AddRange(FallbackFonts);
+        }
+        else
+        {
+            // 把兜底里系统列表缺失的常用字体并回去，保证它们始终可选。
+            foreach (var fb in FallbackFonts)
+                if (!names.Contains(fb, StringComparer.OrdinalIgnoreCase)) names.Add(fb);
+        }
+
+        var ordered = names.Distinct(StringComparer.OrdinalIgnoreCase)
+                           .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
+                           .ToList();
+
+        var app = Application.Current;
+        if (app is not null && !app.Dispatcher.CheckAccess())
+            app.Dispatcher.Invoke(() => FillFontList(ordered));
+        else
+            FillFontList(ordered);
+    }
+
+    private void FillFontList(List<string> ordered)
+    {
+        FontFamilies.Clear();
+        foreach (var n in ordered) FontFamilies.Add(n);
+        OnPropertyChanged(nameof(FontFamilies));
+    }
 
     private SchemeCardItem? _selectedCard;
 
