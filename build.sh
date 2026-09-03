@@ -113,6 +113,19 @@ echo "═══ 校验 VM 端 URL 字面量声明 ═══"
   exit 1
 }
 
+# ── XAML {Binding} 路径 vs VM 真实属性 体检 ─────────────────────────
+# 拦 {Binding Xxx} 引用了 VM 上不存在的 public 成员 / 绑了 static 字段 /
+# VM 字段改名后 XAML 端没跟改。这三类错编译期不报、运行期 silently no-op，
+# 真机上相关行直接空白、不崩但严重。v0.2.5 真机排查时补这道：
+#   DeveloperRole（VM 实际叫 DeveloperTitle）+ RepoUrl（static 字段不能 Binding）。
+# 修法是改 VM 字段名同步 XAML，或 static 字段改 {x:Static} 引用。
+echo "═══ 校验 XAML {Binding} 路径 ═══"
+"$PY" tools/check_binding_paths.py || {
+  echo "" >&2
+  echo "XAML {Binding} 路径可疑 —— VM 上找不到对应 public 成员，运行期 silently no-op 不出包。" >&2
+  exit 1
+}
+
 echo "═══ 发布 ${RID} ═══"
 dotnet publish src/WeaselPanel.App -c Release -r "$RID" -o "$OUT" --nologo 2>&1 | tail -2
 

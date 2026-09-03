@@ -86,7 +86,7 @@
                          XamlParseException（InlineCollection 不接受 UIElement）。 -->
                     <TextBlock Grid.Row="3" Grid.Column="1" FontSize="{StaticResource FontBody}"
                                Margin="0,4" VerticalAlignment="Center">
-                        <Hyperlink NavigateUri="{Binding RepoUrl}"
+                        <Hyperlink NavigateUri="{x:Static vm:AboutViewModel.RepoUrl}"
                                    RequestNavigate="Hyperlink_RequestNavigate">
                             <Run Text="{Binding RepoDisplay}"/>
                         </Hyperlink>
@@ -195,7 +195,7 @@
                      容器里（StackPanel.Children 是 UIElementCollection，接受 TextBlock）。 -->
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Margin="0,0,16,0">
-                        <Hyperlink NavigateUri="{Binding RepoUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                        <Hyperlink NavigateUri="{x:Static vm:AboutViewModel.RepoUrl}" RequestNavigate="Hyperlink_RequestNavigate">
                             <Run Text="{l10n:L About.Repo}"/>
                         </Hyperlink>
                     </TextBlock>

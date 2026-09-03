@@ -51,7 +51,7 @@ public sealed class AboutViewModel : ViewModelBase, ILanguageAware
     private string _environmentSummary = "";
     private string _languageNote = "";
     private string _developerName = "";
-    private string _developerTitle = "";
+    private string _developerRole = "";
     private string _developerBio = "";
     private string _statusSummary = "";
 
@@ -137,10 +137,10 @@ public sealed class AboutViewModel : ViewModelBase, ILanguageAware
         private set => Set(ref _developerName, value);
     }
 
-    public string DeveloperTitle
+    public string DeveloperRole
     {
-        get => _developerTitle;
-        private set => Set(ref _developerTitle, value);
+        get => _developerRole;
+        private set => Set(ref _developerRole, value);
     }
 
     public string DeveloperBio
@@ -189,7 +189,7 @@ public sealed class AboutViewModel : ViewModelBase, ILanguageAware
         LanguageNote = L10n.Instance.T("Lang.Note");
         EnvironmentSummary = BuildEnvironmentSummary();
         DeveloperName = L10n.Instance.T("About.Developer.Name");
-        DeveloperTitle = L10n.Instance.T("About.Developer.Role");
+        DeveloperRole = L10n.Instance.T("About.Developer.Role");
         DeveloperBio = L10n.Instance.T("About.Developer.Bio");
         StatusSummary = BuildStatusSummary();
         RebuildPromo();
