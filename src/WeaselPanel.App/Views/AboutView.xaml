@@ -78,11 +78,16 @@
 
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="{l10n:L About.Repo}"
                                Style="{StaticResource FieldLabel}" Margin="0,4"/>
+                    <!-- ⚠️ Hyperlink 必须放在 TextBlock 的 inlines 里；Hyperlink.Inlines
+                         又只接受 Inline 子节点，所以内部用 <Run> 而非 <TextBlock>。
+                         v0.2.5 真机踩坑：之前是 <TextBlock> → "Hyperlink 只能放在 TextBlock
+                         的 inlines 里"已对，但 Hyperlink 里再放 TextBlock 会抛
+                         XamlParseException（InlineCollection 不接受 UIElement）。 -->
                     <TextBlock Grid.Row="3" Grid.Column="1" FontSize="{StaticResource FontBody}"
                                Margin="0,4" VerticalAlignment="Center">
                         <Hyperlink NavigateUri="{Binding RepoUrl}"
                                    RequestNavigate="Hyperlink_RequestNavigate">
-                            <TextBlock Text="{Binding RepoDisplay}"/>
+                            <Run Text="{Binding RepoDisplay}"/>
                         </Hyperlink>
                     </TextBlock>
                 </Grid>
@@ -96,7 +101,7 @@
                 <TextBlock Text="{Binding DeveloperName}"
                            FontSize="{StaticResource FontSubtitle}" FontWeight="SemiBold"
                            Foreground="{StaticResource TextPrimaryBrush}" Margin="0,4,0,0"/>
-                <TextBlock Text="{Binding DeveloperTitle}"
+                <TextBlock Text="{Binding DeveloperRole}"
                            FontSize="{StaticResource FontBody}"
                            Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                 <TextBlock Text="{Binding DeveloperBio}"
@@ -127,10 +132,14 @@
                                            FontSize="{StaticResource FontBody}"
                                            Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
                                            LineHeight="{StaticResource LineBody}" Margin="0,4,0,0"/>
+                                <!-- Hyperlink 必须放在 TextBlock 里；Hyperlink.Inlines
+                                     只能用 Inline 子节点（<Run>），不能用 <TextBlock>。
+                                     外层 TextBlock 的 HasValue DataTrigger 控制「有 URL
+                                     才显示」—— 否则没链接的推广项会渲染一个空链接行。 -->
                                 <TextBlock Margin="0,4,0,0">
                                     <Hyperlink NavigateUri="{Binding Url}"
                                                RequestNavigate="Hyperlink_RequestNavigate">
-                                        <TextBlock Text="{l10n:L About.Promo.Visit}"/>
+                                        <Run Text="{l10n:L About.Promo.Visit}"/>
                                     </Hyperlink>
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
@@ -175,20 +184,36 @@
                            Foreground="{StaticResource TextSecondaryBrush}"
                            Margin="0,8,0,0"/>
                 <Border Style="{StaticResource Divider}" Margin="0,10,0,10"/>
-                <WrapPanel Orientation="Horizontal">
-                    <Hyperlink NavigateUri="{Binding RepoUrl}" RequestNavigate="Hyperlink_RequestNavigate">
-                        <TextBlock Text="{l10n:L About.Repo}" Margin="0,0,16,0"/>
-                    </Hyperlink>
-                    <Hyperlink NavigateUri="{Binding IssuesUrl}" RequestNavigate="Hyperlink_RequestNavigate">
-                        <TextBlock Text="{l10n:L About.Link.Issues}" Margin="0,0,16,0"/>
-                    </Hyperlink>
-                    <Hyperlink NavigateUri="{StaticResource RimeUrl}" RequestNavigate="Hyperlink_RequestNavigate">
-                        <TextBlock Text="{l10n:L About.Link.Rime}" Margin="0,0,16,0"/>
-                    </Hyperlink>
-                    <Hyperlink NavigateUri="{StaticResource WeaselUrl}" RequestNavigate="Hyperlink_RequestNavigate">
-                        <TextBlock Text="{l10n:L About.Link.Weasel}"/>
-                    </Hyperlink>
-                </WrapPanel>
+                <!-- ⚠️ 之前是 <WrapPanel Orientation="Horizontal"> 里直接放 4 个 <Hyperlink>。
+                     启动时 InitializeComponent 即崩：
+                     System.Windows.Markup.XamlParseException:
+                       "向类型为 UIElementCollection 的集合中添加值引发了异常；
+                        无法将类型 Hyperlink 的实例添加到类型 UIElementCollection 的集合中。"
+                     Hyperlink 是 Inline 不是 UIElement，只能活在 TextBlock 的 inlines 里。
+                     改成 <StackPanel Orientation=Horizontal>，每个超链接单独放一个 TextBlock
+                     容器里（StackPanel.Children 是 UIElementCollection，接受 TextBlock）。 -->
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Margin="0,0,16,0">
+                        <Hyperlink NavigateUri="{Binding RepoUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                            <Run Text="{l10n:L About.Repo}"/>
+                        </Hyperlink>
+                    </TextBlock>
+                    <TextBlock Margin="0,0,16,0">
+                        <Hyperlink NavigateUri="{Binding IssuesUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                            <Run Text="{l10n:L About.Link.Issues}"/>
+                        </Hyperlink>
+                    </TextBlock>
+                    <TextBlock Margin="0,0,16,0">
+                        <Hyperlink NavigateUri="{StaticResource RimeUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                            <Run Text="{l10n:L About.Link.Rime}"/>
+                        </Hyperlink>
+                    </TextBlock>
+                    <TextBlock>
+                        <Hyperlink NavigateUri="{StaticResource WeaselUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                            <Run Text="{l10n:L About.Link.Weasel}"/>
+                        </Hyperlink>
+                    </TextBlock>
+                </StackPanel>
             </StackPanel>
         </Border>
 
