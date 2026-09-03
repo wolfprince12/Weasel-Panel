@@ -34,6 +34,8 @@ using WeaselPanel.App.Localization;
 using WeaselPanel.App.Services;
 using WeaselPanel.Core.Platform;
 using WeaselPanel.Core.Rime;
+using System.Windows;
+using System.Windows.Media;
 
 namespace WeaselPanel.App.ViewModels;
 
@@ -53,6 +55,23 @@ public sealed class CorrectionRuleRow
     public string Rule { get; }
 }
 
+/// <summary>
+/// librime-lua（即「带 Lua 的 rime.dll」）的检测结果。
+/// 面板只做检测与指引，绝不自动改写系统输入法的 rime.dll —— 版本不匹配
+/// 会让整个小狼毫失效，且无法在 macOS 上真机验证 Windows 部署。见 #59。
+/// </summary>
+public enum LuaEngineState
+{
+    /// <summary>小狼毫未安装，无法检测。</summary>
+    NotInstalled,
+
+    /// <summary>已安装小狼毫，但在其安装目录未找到 Lua 运行时特征文件。</summary>
+    Absent,
+
+    /// <summary>安装目录中存在 Lua 运行时特征文件（如 lua54.dll）。</summary>
+    Present,
+}
+
 public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelActions
 {
     private readonly WeaselEnvironment _environment;
@@ -62,6 +81,13 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
     private string _statusText = "";
     private string _baseline = "";
     private bool _loaded;
+
+    // ── librime-lua（Lua 运行时）─────────────────────────────────────
+    // 纠错脚本（amethyst_corrector.lua）由面板自动部署到用户目录，
+    // 但运行它依赖 librime-lua 提供的 Lua 运行时（即「带 Lua 的 rime.dll」）。
+    // 面板**不**自动改写系统输入法的 rime.dll：版本不匹配会让整个输入法失效，
+    // 且无法在 macOS 上真机验证 Windows 部署。故只做检测 + 指引（见 #59）。
+    private LuaEngineState _luaState;
 
     private bool _enabled;
     private CorrectionInjectionPosition _position = CorrectionInjectionPosition.AfterFirst;
@@ -162,6 +188,60 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
 
     public string EngineStateText { get; private set; } = "";
 
+    // ── librime-lua 状态（检测 + 指引，不写系统目录）──────────────────
+
+    private const string LucEngineDownloadUrl = "https://github.com/hchunhui/librime-lua/releases";
+
+    /// <summary>判定 Lua 运行时是否在场的文件名特征（librime-lua 会随 rime.dll 一起带来这些）。</summary>
+    private static readonly string[] LuaRuntimeMarkers =
+    {
+        "lua54.dll", "lua5.4.dll", "lua.dll", "librime-lua.dll",
+    };
+
+    public LuaEngineState LuaState
+    {
+        get => _luaState;
+        private set
+        {
+            if (value == _luaState) return;
+            _luaState = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(LuaStatusReady));
+            OnPropertyChanged(nameof(LuaStatusBrush));
+        }
+    }
+
+    /// <summary>是否已具备可用的 Lua 运行时（只有 Present 才能正常开启纠错）。</summary>
+    public bool LuaStatusReady => _luaState == LuaEngineState.Present;
+
+    /// <summary>状态文案（随语言切换重建）。</summary>
+    public string LuaStatusText { get; private set; } = "";
+
+    /// <summary>状态配色：就绪=绿(SuccessBrush)，缺引擎=橙(WarningBrush)，未安装=灰(TextSecondaryBrush)。</summary>
+    public Brush LuaStatusBrush
+    {
+        get
+        {
+            var key = _luaState switch
+            {
+                LuaEngineState.Present => "SuccessBrush",
+                LuaEngineState.Absent => "WarningBrush",
+                _ => "TextSecondaryBrush",
+            };
+            return (Brush)(Application.Current?.FindResource(key)
+                            ?? new SolidColorBrush(System.Windows.Media.Colors.Gray));
+        }
+    }
+
+    /// <summary>小狼毫安装目录，用户需把「带 Lua 的 rime.dll」覆盖到这里。</summary>
+    public string LuaInstallDir => _environment.ProgramDirectory ?? "";
+
+    /// <summary>librime-lua 预编译下载页（GitHub Releases）。</summary>
+    public string LuaDownloadUrl => LucEngineDownloadUrl;
+
+    /// <summary>分步安装指引（随语言切换重建，最多 5 步）。</summary>
+    public ObservableCollection<string> LuaGuideLines { get; } = new();
+
     // ── 忙 / 状态条 ───────────────────────────────────────────────────
     public bool IsBusy
     {
@@ -217,6 +297,10 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
         OnPropertyChanged(nameof(DeployedLuaPath));
         OnPropertyChanged(nameof(DeployedDictPath));
         OnPropertyChanged(nameof(UserDictPath));
+        OnPropertyChanged(nameof(LuaInstallDir));
+
+        // 检测 librime-lua（只读探测，绝不写系统目录）。
+        LuaState = DetectLuaEngine();
 
         RefreshTexts();
         _baseline = Signature();
@@ -301,6 +385,7 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
         RuleCountText = L10n.Instance.T("Correction.Rules.Count", Rules.Count);
         ForcedFuzzyText = L10n.Instance.T("Correction.ForcedFuzzy", ForcedFuzzyCount());
         RefreshEngineState();
+        RefreshLuaTexts();
 
         OnPropertyChanged(nameof(PositionOptions));
         OnPropertyChanged(nameof(CountOptions));
@@ -318,6 +403,52 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
             : "Correction.Engine.NotDeployed");
         OnPropertyChanged(nameof(EngineStateText));
         OnPropertyChanged(nameof(EngineDeployed));
+    }
+
+    /// <summary>
+    /// 只读探测 librime-lua 是否在场。
+    /// 小狼毫未安装 → NotInstalled；已安装则在其安装目录（含 Win32 子目录）寻找
+    /// Lua 运行时特征文件（lua54.dll 等）。特征是 librime-lua 替换 rime.dll 时
+    /// 一并带来的，是「带 Lua 的 rime.dll」最可靠的信号；找不到即视为 Absent。
+    /// ⚠️ 不在此做任何写操作。
+    /// </summary>
+    private LuaEngineState DetectLuaEngine()
+    {
+        if (_environment.ProgramDirectory is null) return LuaEngineState.NotInstalled;
+
+        var candidates = new[]
+        {
+            _environment.ProgramDirectory,
+            Path.Combine(_environment.ProgramDirectory, "Win32"),
+        };
+        foreach (var dir in candidates)
+        {
+            if (!Directory.Exists(dir)) continue;
+            if (LuaRuntimeMarkers.Any(m => File.Exists(Path.Combine(dir, m))))
+                return LuaEngineState.Present;
+        }
+        return LuaEngineState.Absent;
+    }
+
+    /// <summary>随语言切换重建 Lua 状态文案与分步指引。</summary>
+    private void RefreshLuaTexts()
+    {
+        LuaStatusText = L10n.Instance.T(_luaState switch
+        {
+            LuaEngineState.Present => "Correction.Lua.Status.Present",
+            LuaEngineState.Absent => "Correction.Lua.Status.Absent",
+            _ => "Correction.Lua.Status.NotInstalled",
+        });
+
+        LuaGuideLines.Clear();
+        for (var i = 1; i <= 5; i++)
+            LuaGuideLines.Add(L10n.Instance.T($"Correction.Lua.Guide.{i}"));
+
+        OnPropertyChanged(nameof(LuaStatusText));
+        OnPropertyChanged(nameof(LuaStatusBrush));
+        OnPropertyChanged(nameof(LuaGuideLines));
+        OnPropertyChanged(nameof(LuaInstallDir));
+        OnPropertyChanged(nameof(LuaState));
     }
 
     /// <summary>

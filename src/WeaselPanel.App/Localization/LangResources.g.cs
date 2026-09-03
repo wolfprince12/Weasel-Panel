@@ -455,6 +455,7 @@ Input.Paging.MinusEqual = - 与 =（减号 / 等号）
 Input.Paging.CommaPeriod = , 与 .（逗号 / 句号）
 Input.Paging.Brackets = [ 与 ]（方括号）
 Input.Paging.UpDown = ↑ 与 ↓（方向键）
+Input.Paging.Tab = Tab 与 Shift+Tab（翻页）
 Input.Switch.MovedToBehavior = 中英切换键已移到「行为」页 —— 那里可以给五个键各指定一个动作。这一项不能两处都放：ascii_composer/switch_key 是整块替换的，第二个编辑器会把另一处的设置悄悄冲掉。
 Input.Punct = 附加开关
 Input.Punct.FullShape = Shift+空格 切换全角 / 半角
@@ -749,6 +750,40 @@ About.RowFormat = {0}：{1}
 About.Deployer = 部署器
 About.DeployHint = 改动需部署后生效 —— 改完请到「外观」页点「部署」。
 
+# ── 关于：开发者 ──
+About.Developer.Title = 开发者
+About.Developer.Name = 大狼（wolfprince）
+About.Developer.Role = 独立导演 · 软件开发者
+About.Developer.Bio = 云珩（北京）文化传媒有限公司。一个考证上瘾的斜杠导演，用 AI 把二十年的跨界底子重新造物。
+
+# ── 关于：更多作品 ──
+About.Promo.Title = 更多作品
+About.Promo.Visit = 访问
+About.Promo.Yaozhi.Title = 爻知云
+About.Promo.Yaozhi.Subtitle = 微信服务号
+About.Promo.Yaozhi.Desc = 关注服务号，启动赛博派古文化占卜。
+About.Promo.Dealv.Title = DealV
+About.Promo.Dealv.Subtitle = AI 合同 SaaS
+About.Promo.Dealv.Desc = 8.8 元得 100 积分，合同生成与 AI 审核一站完成。
+About.Promo.DsonDt.Title = DSonDT
+About.Promo.DsonDt.Subtitle = 本地 DeepSeek 客户端
+About.Promo.DsonDt.Desc = 基于 Tauri 的 macOS 桌面客户端，数据不出本机。
+
+# ── 关于：运行状态 ──
+About.Status.Title = 运行状态
+About.Status.Installed = 小狼毫已安装
+About.Status.NotInstalled = 小狼毫未安装
+About.Status.UserDirReady = 用户目录已就绪
+About.Status.UserDirNotReady = 用户目录未就绪
+
+# ── 关于：项目说明 ──
+About.Project.Title = 关于项目
+About.Project.Desc = 小狼毫控制面板是一个用 C# / WPF / .NET 8 编写的开源图形设置面板，让你不必手改 YAML 即可配置小狼毫输入法。
+About.Project.Disclaimer = 本软件与 Rime 项目组无隶属关系，仅供学习与交流使用。
+About.Link.Issues = 问题反馈
+About.Link.Rime = Rime 官网
+About.Link.Weasel = 小狼毫源码
+
 About.LanguageIntro = 界面语言默认跟随系统，可在此手动覆盖。
 
 # ── 雾凇拼音页 ────────────────────────────────────────────────────────
@@ -927,6 +962,21 @@ Deploy.Status.Dirty = {0} 个面板有未保存改动
 Deploy.Status.Clean = 全部已保存
 Banner.WeaselNotInstalled = 未检测到小狼毫安装，部分设置将无法生效。请先安装小狼毫。
 Banner.UserDirNotReady = 用户目录尚未就绪（首次部署后由 RIME 创建），部署一次后再回来。
+
+Correction.Lua.Title = Lua 运行时（librime-lua）
+Correction.Lua.Note = 紫毫纠错的 Lua 脚本由面板自动部署到你的 Rime 用户目录；但运行它需要 librime-lua 提供的 Lua 运行时（即「带 Lua 的 rime.dll」）。面板不会自动替换系统输入法的 rime.dll，请按下方指引手动安装。
+Correction.Lua.State = 运行状态
+Correction.Lua.Status.Present = 已检测到 Lua 运行时，可正常开启紫毫纠错。
+Correction.Lua.Status.Absent = 未检测到 Lua 运行时：开启纠错后方案编译会失败、候选框消失。请先按下方指引安装 librime-lua。
+Correction.Lua.Status.NotInstalled = 尚未安装小狼毫，无法检测 Lua 运行时。
+Correction.Lua.InstallDir = 小狼毫安装目录（覆盖目标）
+Correction.Lua.Download = 打开 librime-lua 下载页
+Correction.Lua.GuideTitle = 安装指引
+Correction.Lua.Guide.1 = 1. 下载「带 Lua 的 rime.dll」（librime-lua 预编译版，通常含 rime.dll 与 lua54.dll）。
+Correction.Lua.Guide.2 = 2. 在任务栏右键小狼毫图标，退出「算法服务 / WeaselServer」，确保输入法进程已停止。
+Correction.Lua.Guide.3 = 3. 把下载的 rime.dll（及 lua54.dll）覆盖到上方「小狼毫安装目录」。版本必须与你的小狼毫版本匹配，否则整个输入法会失效。
+Correction.Lua.Guide.4 = 4. 重新部署小狼毫（任务栏图标 → 重新部署），回到本页即显示「已检测到 Lua 运行时」。
+Correction.Lua.Guide.5 = 5. 最后在外观页点「部署」，即可开启紫毫纠错。
 
 """;
 
@@ -1375,6 +1425,7 @@ Input.Paging.MinusEqual = - 與 =（減號 / 等號）
 Input.Paging.CommaPeriod = , 與 .（逗號 / 句號）
 Input.Paging.Brackets = [ 與 ]（方括號）
 Input.Paging.UpDown = ↑ 與 ↓（方向鍵）
+Input.Paging.Tab = Tab 與 Shift+Tab（翻頁）
 Input.Switch.MovedToBehavior = 中英切換鍵已移到「行為」頁 —— 那裏可以給五個鍵各指定一個動作。這一項不能兩處都放：ascii_composer/switch_key 是整塊替換的，第二個編輯器會把另一處的設定悄悄沖掉。
 Input.Punct = 附加開關
 Input.Punct.FullShape = Shift+空白鍵 切換全形 / 半形
@@ -1669,6 +1720,40 @@ About.RowFormat = {0}：{1}
 About.Deployer = 部署程式
 About.DeployHint = 改動需部署後生效 —— 改完請到「外觀」頁點「部署」。
 
+# ── 關於：開發者 ──
+About.Developer.Title = 開發者
+About.Developer.Name = 大狼（wolfprince）
+About.Developer.Role = 獨立導演 · 軟體開發者
+About.Developer.Bio = 雲珩（北京）文化傳媒有限公司。一個考證上癮的斜槓導演，用 AI 把二十年的跨界底子重新造物。
+
+# ── 關於：更多作品 ──
+About.Promo.Title = 更多作品
+About.Promo.Visit = 訪問
+About.Promo.Yaozhi.Title = 爻知雲
+About.Promo.Yaozhi.Subtitle = 微信服務號
+About.Promo.Yaozhi.Desc = 關注服務號，啟動賽博派古文化占卜。
+About.Promo.Dealv.Title = DealV
+About.Promo.Dealv.Subtitle = AI 合約 SaaS
+About.Promo.Dealv.Desc = 8.8 元得 100 積分，合約生成與 AI 審核一站完成。
+About.Promo.DsonDt.Title = DSonDT
+About.Promo.DsonDt.Subtitle = 本地 DeepSeek 客戶端
+About.Promo.DsonDt.Desc = 基於 Tauri 的 macOS 桌面客戶端，資料不出本機。
+
+# ── 關於：運行狀態 ──
+About.Status.Title = 運行狀態
+About.Status.Installed = 小狼毫已安裝
+About.Status.NotInstalled = 小狼毫未安裝
+About.Status.UserDirReady = 使用者目錄已就緒
+About.Status.UserDirNotReady = 使用者目錄未就緒
+
+# ── 關於：專案說明 ──
+About.Project.Title = 關於專案
+About.Project.Desc = 小狼毫控制面板是一個用 C# / WPF / .NET 8 撰寫的開源圖形設定面板，讓你不必手改 YAML 即可設定小狼毫輸入法。
+About.Project.Disclaimer = 本軟體與 Rime 專案組無隸屬關係，僅供學習與交流使用。
+About.Link.Issues = 問題回報
+About.Link.Rime = Rime 官網
+About.Link.Weasel = 小狼毫原始碼
+
 About.LanguageIntro = 介面語言默認跟隨系統，可在此手動覆蓋。
 
 # ── 霧凇拼音頁 ────────────────────────────────────────────────────────
@@ -1852,6 +1937,21 @@ Deploy.Status.Dirty = {0} 個面板有未保存變更
 Deploy.Status.Clean = 全部已儲存
 Banner.WeaselNotInstalled = 未偵測到小狼毫安裝，部分設定將無法生效。請先安裝小狼毫。
 Banner.UserDirNotReady = 使用者目錄尚未就緒（首次部署後由 RIME 建立），部署一次後再回來。
+
+Correction.Lua.Title = Lua 執行期（librime-lua）
+Correction.Lua.Note = 紫毫糾錯的 Lua 腳本會由面板自動部署到你的 Rime 使用者目錄；但執行它需要 librime-lua 提供的 Lua 執行期（即「帶 Lua 的 rime.dll」）。面板不會自動替你替換系統輸入法的 rime.dll，請按下方指引手動安裝。
+Correction.Lua.State = 執行狀態
+Correction.Lua.Status.Present = 已偵測到 Lua 執行期，可正常開啟紫毫糾錯。
+Correction.Lua.Status.Absent = 未偵測到 Lua 執行期：開啟糾錯後方案編譯會失敗、候選框消失。請先按下方指引安裝 librime-lua。
+Correction.Lua.Status.NotInstalled = 尚未安裝小狼毫，無法偵測 Lua 執行期。
+Correction.Lua.InstallDir = 小狼毫安裝目錄（覆蓋目標）
+Correction.Lua.Download = 開啟 librime-lua 下載頁
+Correction.Lua.GuideTitle = 安裝指引
+Correction.Lua.Guide.1 = 1. 下載「帶 Lua 的 rime.dll」（librime-lua 預編譯版，通常含 rime.dll 與 lua54.dll）。
+Correction.Lua.Guide.2 = 2. 在工作列右鍵小狼毫圖示，退出「演算法服務 / WeaselServer」，確保輸入法程序已停止。
+Correction.Lua.Guide.3 = 3. 把下載的 rime.dll（及 lua54.dll）覆蓋到上方「小狼毫安裝目錄」。版本必須與你的小狼毫版本相符，否則整個輸入法會失效。
+Correction.Lua.Guide.4 = 4. 重新部署小狼毫（工作列圖示 → 重新部署），回到本頁即顯示「已偵測到 Lua 執行期」。
+Correction.Lua.Guide.5 = 5. 最後在外觀頁點「部署」，即可開啟紫毫糾錯。
 
 """;
 
@@ -2318,6 +2418,7 @@ Input.Paging.MinusEqual = - and = (minus / equal)
 Input.Paging.CommaPeriod = , and . (comma / period)
 Input.Paging.Brackets = [ and ] (brackets)
 Input.Paging.UpDown = ↑ and ↓ (arrow keys)
+Input.Paging.Tab = Tab and Shift+Tab (page up/down)
 Input.Switch.MovedToBehavior = The Chinese/English switch key now lives on the Behavior page, where each of the five keys gets its own action. It cannot be set in two places at once: ascii_composer/switch_key is replaced as a whole, so a second editor would silently wipe the other's settings.
 Input.Punct = Extra toggles
 Input.Punct.FullShape = Shift+Space toggles full/half width
@@ -2612,6 +2713,40 @@ About.RowFormat = {0}: {1}
 About.Deployer = Deployer
 About.DeployHint = Deploy to apply changes — run it from the Appearance page after editing.
 
+# ── About: developer ──
+About.Developer.Title = Developer
+About.Developer.Name = Da Lang (wolfprince)
+About.Developer.Role = Independent director · Software developer
+About.Developer.Bio = Yunheng (Beijing) Culture Media Co., Ltd. A cert-collecting slash director who uses AI to rebuild two decades of cross-domain skills into new things.
+
+# ── About: more works ──
+About.Promo.Title = More works
+About.Promo.Visit = Visit
+About.Promo.Yaozhi.Title = Yaozhi Cloud
+About.Promo.Yaozhi.Subtitle = WeChat service account
+About.Promo.Yaozhi.Desc = Follow the account to launch cyber-pai ancient-culture divination.
+About.Promo.Dealv.Title = DealV
+About.Promo.Dealv.Subtitle = AI contract SaaS
+About.Promo.Dealv.Desc = 8.8 RMB for 100 credits — contract generation and AI review in one place.
+About.Promo.DsonDt.Title = DSonDT
+About.Promo.DsonDt.Subtitle = Local DeepSeek client
+About.Promo.DsonDt.Desc = A Tauri-based macOS desktop client; your data never leaves the machine.
+
+# ── About: status ──
+About.Status.Title = Status
+About.Status.Installed = Weasel installed
+About.Status.NotInstalled = Weasel not installed
+About.Status.UserDirReady = User directory ready
+About.Status.UserDirNotReady = User directory not ready
+
+# ── About: project ──
+About.Project.Title = About the project
+About.Project.Desc = Weasel Panel is an open-source graphical settings panel written in C# / WPF / .NET 8, letting you configure Weasel without hand-editing YAML.
+About.Project.Disclaimer = This software is not affiliated with the Rime project; it is for learning and exchange only.
+About.Link.Issues = Report issues
+About.Link.Rime = Rime website
+About.Link.Weasel = Weasel source
+
 About.LanguageIntro = The interface follows your system language by default; override it here.
 
 # ── Rime Ice (雾凇拼音) page ──────────────────────────────────────────
@@ -2790,6 +2925,21 @@ Deploy.Status.Dirty = {0} panel(s) have unsaved changes
 Deploy.Status.Clean = All saved
 Banner.WeaselNotInstalled = Weasel is not detected. Some settings will not take effect until it is installed.
 Banner.UserDirNotReady = User directory not ready yet. Deploy once after RIME has created the user directory.
+
+Correction.Lua.Title = Lua runtime (librime-lua)
+Correction.Lua.Note = The Lua script for Amethyst Correction is deployed to your Rime user directory automatically. But running it needs the Lua runtime provided by librime-lua (i.e. a "rime.dll with Lua"). This panel will not replace your system input method's rime.dll for you — follow the steps below to install it manually.
+Correction.Lua.State = Status
+Correction.Lua.Status.Present = Lua runtime detected. Amethyst Correction can be enabled normally.
+Correction.Lua.Status.Absent = Lua runtime not detected: enabling correction will make the schema fail to compile and the candidate window disappear. Install librime-lua first by following the steps below.
+Correction.Lua.Status.NotInstalled = Weasel is not installed, so the Lua runtime cannot be detected.
+Correction.Lua.InstallDir = Weasel install directory (overwrite target)
+Correction.Lua.Download = Open the librime-lua download page
+Correction.Lua.GuideTitle = Installation guide
+Correction.Lua.Guide.1 = 1. Download the "rime.dll with Lua" (librime-lua prebuilt, usually rime.dll plus lua54.dll).
+Correction.Lua.Guide.2 = 2. Right-click the Weasel icon in the taskbar and exit "Algorithm Service / WeaselServer" so the input method process stops.
+Correction.Lua.Guide.3 = 3. Overwrite the downloaded rime.dll (and lua54.dll) into the "Weasel install directory" above. The version MUST match your Weasel version, or the whole input method breaks.
+Correction.Lua.Guide.4 = 4. Redeploy Weasel (taskbar icon → Redeploy); return here and it will show "Lua runtime detected".
+Correction.Lua.Guide.5 = 5. Finally, press "Deploy" on the Appearance page to enable Amethyst Correction.
 
 """;
 

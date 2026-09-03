@@ -178,6 +178,60 @@
             </StackPanel>
         </Border>
 
+        <!-- ── librime-lua（Lua 运行时）────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}"
+                IsEnabled="{Binding IsInstalled}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L Correction.Lua.Title}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L Correction.Lua.Note}" Style="{StaticResource SectionIntro}"/>
+
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{l10n:L Correction.Lua.State}"
+                               Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding LuaStatusText}"
+                               FontSize="{StaticResource FontBody}" VerticalAlignment="Center"
+                               Foreground="{Binding LuaStatusBrush}" FontWeight="SemiBold"/>
+                </Grid>
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{l10n:L Correction.Lua.InstallDir}"
+                               Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding LuaInstallDir}"
+                               Style="{StaticResource MonoText}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               TextWrapping="Wrap"/>
+                </Grid>
+
+                <TextBlock Margin="0,14,0,0">
+                    <Hyperlink NavigateUri="{Binding LuaDownloadUrl}"
+                               RequestNavigate="Hyperlink_RequestNavigate">
+                        <TextBlock Text="{l10n:L Correction.Lua.Download}"/>
+                    </Hyperlink>
+                </TextBlock>
+
+                <TextBlock Text="{l10n:L Correction.Lua.GuideTitle}"
+                           Style="{StaticResource SectionTitle}" Margin="0,18,0,0"/>
+                <ItemsControl ItemsSource="{Binding LuaGuideLines}" Margin="0,8,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" FontSize="{StaticResource FontBody}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"
+                                       Margin="0,0,0,8"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
         <!-- ── 应用 ─────────────────────────────────────────────────── -->
         <Border Style="{StaticResource Card}">
             <StackPanel>
