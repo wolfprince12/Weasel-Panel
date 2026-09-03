@@ -251,6 +251,11 @@ Appearance.Status.NoCatalog = Could not load the colour scheme catalogue — che
 Appearance.Status.Ready = Ready
 Appearance.CatalogMissing = (weasel.yaml not found — colour scheme catalogue is empty)
 
+Appearance.LabelSize = Label size
+Appearance.LineSpacing = Line spacing
+Appearance.LayoutTitle = Layout
+Appearance.BehaviorTitle = Behaviour
+
 Appearance.Title = Appearance
 Appearance.Intro = Fonts, colours and layout of the candidate window. Every value is derived with the same rules as Weasel itself - what you see here is what actually gets rendered.
 

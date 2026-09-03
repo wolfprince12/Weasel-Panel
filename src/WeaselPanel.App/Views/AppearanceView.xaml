@@ -3,38 +3,35 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:l10n="clr-namespace:WeaselPanel.App.Localization"
              xmlns:vm="clr-namespace:WeaselPanel.App.ViewModels">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
 
-        <!-- ── 页面标题（占满宽度，不与预览栏并排）───────────────────── -->
-        <TextBlock Grid.Row="0" Text="{l10n:L Appearance.Title}" Style="{StaticResource PageTitle}"/>
-        <TextBlock Grid.Row="1" Text="{l10n:L Appearance.Intro}" Style="{StaticResource PageIntro}"/>
+    <!-- ── 外观面板：仿鼠须管 RootView.swift 的 LazyVStack(spacing: 20) ─────
+         所有 SettingsGroup（全宽卡片）单列纵排。预览块改为顶部独立卡片，
+         与下面 配色 / 字体 / 布局 / 行为 四张全宽卡片并列。
+         ⚠️ WPF StackPanel 没有 Spacing 属性（WPF 没有 ItemsRepeater），每张
+         卡片用 Margin=0,0,0,14 控制卡片间隔。 -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  Padding="0,0,0,24">
+        <StackPanel MaxWidth="780" HorizontalAlignment="Stretch" Margin="20,20,20,0">
 
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="360"/>
-                <ColumnDefinition Width="20"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+            <!-- 页面标题：仿 squirrel 顶部 Header -->
+            <StackPanel>
+                <TextBlock Text="{l10n:L Appearance.Title}" Style="{StaticResource PageTitle}"/>
+                <TextBlock Text="{l10n:L Appearance.Intro}" Style="{StaticResource PageIntro}"/>
+            </StackPanel>
 
-            <!-- ── 预览 ─────────────────────────────────────────────── -->
-            <Border Grid.Column="0" Style="{StaticResource Card}" VerticalAlignment="Top">
+            <!-- ── 1. 预览 ──────────────────────────────────────────────── -->
+            <Border Style="{StaticResource Card}">
                 <StackPanel>
                     <TextBlock Text="{l10n:L Appearance.PreviewTitle}" Style="{StaticResource SectionTitle}"/>
-                    <TextBlock Text="{l10n:L Appearance.PreviewNote1}"
-                               Style="{StaticResource FieldNote}"/>
-                    <TextBlock Text="{l10n:L Appearance.PreviewNote2}"
-                               Style="{StaticResource FieldNote}"
-                               Margin="{StaticResource GapHeader}"/>
+                    <TextBlock Text="{l10n:L Appearance.PreviewNote1}" Style="{StaticResource FieldNote}" Margin="{StaticResource GapHeader}"/>
+                    <TextBlock Text="{l10n:L Appearance.PreviewNote2}" Style="{StaticResource FieldNote}"/>
 
-                    <!-- 模拟候选窗 -->
+                    <!-- 模拟候选窗。HorizontalAlignment=Left，仿 squirrel CandidatePreview
+                         居左悬浮感；下方 8px 留给路径说明。 -->
                     <Border Background="{Binding BackBrush}" BorderBrush="{Binding BorderBrush}"
                             BorderThickness="2" CornerRadius="{StaticResource RadiusSm}" Padding="12,10"
-                            HorizontalAlignment="Left" MinWidth="236">
+                            HorizontalAlignment="Left" MinWidth="236" Margin="0,12,0,8">
                         <StackPanel>
                             <!-- 输入码 -->
                             <TextBlock Text="wang" FontSize="{Binding FontPoint}"
@@ -103,255 +100,294 @@
 
                     <TextBlock Text="{Binding CatalogSource}" FontSize="{StaticResource FontMicro}"
                                Foreground="{StaticResource TextSecondaryBrush}"
-                               TextWrapping="Wrap" Margin="0,16,0,0" LineHeight="15"/>
+                               TextWrapping="Wrap" LineHeight="15"/>
                 </StackPanel>
             </Border>
 
-            <!-- ── 设置 ─────────────────────────────────────────────── -->
-            <StackPanel Grid.Column="2">
+            <!-- ── 2. 配色方案（仿 squirrel appearance.scheme.title）────────── -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="{l10n:L Appearance.Scheme}" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="{l10n:L Appearance.SchemeGridNote}" Style="{StaticResource FieldNote}"
+                               Margin="{StaticResource GapHeader}"/>
 
-                <!-- 配色方案：3 列色卡网格（仿鼠须管 SchemeSwatch）。
-                     选中态=accent 粗描边(2.5) / 未选=主色极淡细描边(1)，圆角 7。 -->
-                <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
-                    <StackPanel>
-                        <TextBlock Text="{l10n:L Appearance.Scheme}" Style="{StaticResource SectionTitle}"/>
-                        <TextBlock Text="{l10n:L Appearance.SchemeGridNote}" Style="{StaticResource FieldNote}"
-                                   Margin="{StaticResource GapHeader}"/>
-
-                        <ListBox ItemsSource="{Binding SchemeCards}"
-                                 SelectedItem="{Binding SelectedCard, Mode=TwoWay}"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                 Background="Transparent" BorderThickness="0">
-                            <ListBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="3" HorizontalAlignment="Stretch"/>
-                                </ItemsPanelTemplate>
-                            </ListBox.ItemsPanel>
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem">
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="Padding" Value="0"/>
-                                    <Setter Property="Margin" Value="0,0,10,10"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="ListBoxItem">
-                                                <ContentPresenter/>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </ListBox.ItemContainerStyle>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="vm:SchemeCardItem">
-                                    <Border CornerRadius="7" Padding="0"
-                                            Background="{StaticResource CardBgBrush}"
-                                            BorderBrush="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem},
-                                                                 Path=IsSelected, Converter={StaticResource SelectedBorderBrush}}"
-                                            BorderThickness="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem},
-                                                                       Path=IsSelected, Converter={StaticResource SelectedBorderThickness}}"
-                                            SnapsToDevicePixels="True">
-                                        <StackPanel>
-                                            <!-- 顶部预览：三行候选样例，底色=方案 bg -->
-                                            <Border Background="{Binding BackBrush}" BorderBrush="{Binding BorderBrush}"
-                                                    BorderThickness="1" CornerRadius="5" Padding="10,8" Margin="8">
-                                                <StackPanel>
-                                                    <TextBlock Text="wang" FontSize="13" Foreground="{Binding TextBrush}" Margin="2,0,0,5"/>
-                                                    <Border Background="{Binding HilitedBackBrush}" CornerRadius="3" Padding="6,3">
-                                                        <TextBlock Text="1. 王 wáng" FontSize="13" Foreground="{Binding HilitedTextBrush}"/>
-                                                    </Border>
-                                                    <TextBlock Text="2. 往" FontSize="13" Foreground="{Binding CandidateTextBrush}" Margin="0,4,0,0"/>
-                                                    <TextBlock Text="3. 网" FontSize="13" Foreground="{Binding LabelBrush}"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <!-- 底部标题条：方案名 + 生效徽标 -->
-                                            <Grid Margin="8,0,8,8">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="{StaticResource FontBody}"
-                                                           Foreground="{StaticResource TextPrimaryBrush}"
-                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                                <Border Grid.Column="1" Style="{StaticResource OriginChip}"
-                                                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}"
-                                                        Margin="6,0,0,0">
-                                                    <TextBlock Text="{l10n:L ColorSchemes.Badge.Active}" Style="{StaticResource StatusChipText}"/>
+                    <ListBox ItemsSource="{Binding SchemeCards}"
+                             SelectedItem="{Binding SelectedCard, Mode=TwoWay}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             Background="Transparent" BorderThickness="0">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="3" HorizontalAlignment="Stretch"/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="0,0,10,10"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <ContentPresenter/>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="vm:SchemeCardItem">
+                                <Border CornerRadius="7" Padding="0"
+                                        Background="{StaticResource CardBgBrush}"
+                                        BorderBrush="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem},
+                                                             Path=IsSelected, Converter={StaticResource SelectedBorderBrush}}"
+                                        BorderThickness="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem},
+                                                                   Path=IsSelected, Converter={StaticResource SelectedBorderThickness}}"
+                                        SnapsToDevicePixels="True">
+                                    <StackPanel>
+                                        <Border Background="{Binding BackBrush}" BorderBrush="{Binding BorderBrush}"
+                                                BorderThickness="1" CornerRadius="5" Padding="10,8" Margin="8">
+                                            <StackPanel>
+                                                <TextBlock Text="wang" FontSize="13" Foreground="{Binding TextBrush}" Margin="2,0,0,5"/>
+                                                <Border Background="{Binding HilitedBackBrush}" CornerRadius="3" Padding="6,3">
+                                                    <TextBlock Text="1. 王 wáng" FontSize="13" Foreground="{Binding HilitedTextBrush}"/>
                                                 </Border>
-                                            </Grid>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </StackPanel>
-                </Border>
+                                                <TextBlock Text="2. 往" FontSize="13" Foreground="{Binding CandidateTextBrush}" Margin="0,4,0,0"/>
+                                                <TextBlock Text="3. 网" FontSize="13" Foreground="{Binding LabelBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Grid Margin="8,0,8,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="{StaticResource FontBody}"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                            <Border Grid.Column="1" Style="{StaticResource OriginChip}"
+                                                    Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}"
+                                                    Margin="6,0,0,0">
+                                                <TextBlock Text="{l10n:L ColorSchemes.Badge.Active}" Style="{StaticResource StatusChipText}"/>
+                                            </Border>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Border>
 
-                <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
-                    <StackPanel>
-                        <TextBlock Text="{l10n:L Appearance.Font}" Style="{StaticResource SectionTitle}"/>
+            <!-- ── 3. 字体（仿 squirrel appearance.font.title）────────────────── -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="{l10n:L Appearance.Font}" Style="{StaticResource SectionTitle}"/>
 
-                        <!-- 字段间距一律用 GapField / 说明用 GapFieldTight。 -->
-                        <Grid Margin="{StaticResource GapField}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{l10n:L Appearance.FontFace}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Grid.Column="1" Text="{Binding FontFace, UpdateSourceTrigger=PropertyChanged}"/>
-                        </Grid>
+                    <!-- 候选字体：可编辑下拉（系统全部字体族）。IsEditable=True
+                         + IsTextSearchEnabled 让用户既能挑现成字体，也能直接粘
+                         其他名字。 -->
+                    <Grid Margin="{StaticResource GapField}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.FontFace}" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding FontFamilies}"
+                                  Text="{Binding FontFace, UpdateSourceTrigger=PropertyChanged}"
+                                  IsEditable="True"
+                                  IsTextSearchEnabled="True"
+                                  IsTextSearchCaseSensitive="False"/>
+                    </Grid>
 
-                        <!-- 滑块 + 数值。数值列固定 44，滑块与它之间留 12 而不是
-                             贴着 —— 数字是「读数」，和滑块是两件事。 -->
-                        <Grid Margin="{StaticResource GapField}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="12"/>
-                                <ColumnDefinition Width="44"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{l10n:L Appearance.FontSize}" Style="{StaticResource FieldLabel}"/>
-                            <Slider Grid.Column="1" Minimum="8" Maximum="48" TickFrequency="1"
-                                    IsSnapToTickEnabled="True" Value="{Binding FontPoint}"
-                                    VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="3" Text="{Binding FontPoint}"
-                                       FontSize="{StaticResource FontBody}"
-                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Grid>
+                    <!-- 候选字号 -->
+                    <Grid Margin="{StaticResource GapField}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="44"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.FontSize}" Style="{StaticResource FieldLabel}"/>
+                        <Slider Grid.Column="1" Minimum="8" Maximum="48" TickFrequency="1"
+                                IsSnapToTickEnabled="True" Value="{Binding FontPoint}"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="{Binding FontPoint}"
+                                   FontSize="{StaticResource FontBody}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
 
-                        <Grid Margin="{StaticResource GapFieldTight}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="12"/>
-                                <ColumnDefinition Width="44"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{l10n:L Appearance.CommentSize}" Style="{StaticResource FieldLabel}"/>
-                            <Slider Grid.Column="1" Minimum="0" Maximum="48" TickFrequency="1"
-                                    IsSnapToTickEnabled="True" Value="{Binding CommentFontPoint}"
-                                    VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="3" Text="{Binding CommentFontPoint}"
-                                       FontSize="{StaticResource FontBody}"
-                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Grid>
+                    <!-- 标签字号（0=未单独设置，回退主字号 → 预览用 PreviewLabelFontPoint） -->
+                    <Grid Margin="{StaticResource GapField}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="44"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.LabelSize}" Style="{StaticResource FieldLabel}"/>
+                        <Slider Grid.Column="1" Minimum="0" Maximum="48" TickFrequency="1"
+                                IsSnapToTickEnabled="True" Value="{Binding LabelFontPoint}"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="{Binding PreviewLabelFontPoint}"
+                                   FontSize="{StaticResource FontBody}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
 
-                        <TextBlock Text="{l10n:L Appearance.CommentSizeNote}"
-                                   Style="{StaticResource FieldNote}"/>
-                    </StackPanel>
-                </Border>
+                    <!-- 注释字号 -->
+                    <Grid Margin="{StaticResource GapField}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="44"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.CommentSize}" Style="{StaticResource FieldLabel}"/>
+                        <Slider Grid.Column="1" Minimum="0" Maximum="48" TickFrequency="1"
+                                IsSnapToTickEnabled="True" Value="{Binding CommentFontPoint}"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="{Binding PreviewCommentFontPoint}"
+                                   FontSize="{StaticResource FontBody}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
 
-                <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
-                    <StackPanel>
-                        <TextBlock Text="{l10n:L Appearance.CandidateLayout}" Style="{StaticResource SectionTitle}"/>
+            <!-- ── 4. 布局（仿 squirrel appearance.layout.title）──────────────── -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="{l10n:L Appearance.LayoutTitle}" Style="{StaticResource SectionTitle}"/>
 
-                        <Grid Margin="{StaticResource GapField}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Layout}" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox Grid.Column="1" SelectedValuePath="Tag"
-                                      SelectedValue="{Binding LayoutType}">
-                                <ComboBoxItem Content="{l10n:L Appearance.Layout.Vertical}" Tag="Vertical"/>
-                                <ComboBoxItem Content="{l10n:L Appearance.Layout.Horizontal}" Tag="Horizontal"/>
-                                <ComboBoxItem Content="{l10n:L Appearance.Layout.VerticalText}" Tag="VerticalText"/>
-                                <ComboBoxItem Content="{l10n:L Appearance.Layout.VerticalFullscreen}" Tag="VerticalFullscreen"/>
-                                <ComboBoxItem Content="{l10n:L Appearance.Layout.HorizontalFullscreen}" Tag="HorizontalFullscreen"/>
-                            </ComboBox>
-                        </Grid>
+                    <!-- 横/竖排（5 选 1，匹配上游 style/layout/type 的全部取值） -->
+                    <Grid Margin="{StaticResource GapField}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Layout}" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding LayoutType}">
+                            <ComboBoxItem Content="{l10n:L Appearance.Layout.Vertical}" Tag="Vertical"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Layout.Horizontal}" Tag="Horizontal"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Layout.VerticalText}" Tag="VerticalText"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Layout.VerticalFullscreen}" Tag="VerticalFullscreen"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Layout.HorizontalFullscreen}" Tag="HorizontalFullscreen"/>
+                        </ComboBox>
+                    </Grid>
 
-                        <Grid Margin="{StaticResource GapField}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{l10n:L Appearance.LabelFormat}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Grid.Column="1" Text="{Binding LabelTextFormat, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="{l10n:L Appearance.LabelFormatTip}"/>
-                        </Grid>
+                    <!-- 序号格式（printf 风格） -->
+                    <Grid Margin="{StaticResource GapField}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.LabelFormat}" Style="{StaticResource FieldLabel}"/>
+                        <TextBox Grid.Column="1" Text="{Binding LabelTextFormat, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="{l10n:L Appearance.LabelFormatTip}"/>
+                    </Grid>
 
-                        <Grid Margin="{StaticResource GapField}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{l10n:L Appearance.MarkText}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Grid.Column="1" Text="{Binding MarkText, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="{l10n:L Appearance.MarkTextTip}"/>
-                        </Grid>
+                    <!-- 高亮标记符（窄输入框，前面留 "1." 类的位）-->
+                    <Grid Margin="{StaticResource GapField}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.MarkText}" Style="{StaticResource FieldLabel}"/>
+                        <TextBox Grid.Column="1" Text="{Binding MarkText, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="{l10n:L Appearance.MarkTextTip}" Width="60" HorizontalAlignment="Left"/>
+                    </Grid>
 
-                        <Grid Margin="{StaticResource GapField}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Preedit}" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox Grid.Column="1" SelectedValuePath="Tag"
-                                      SelectedValue="{Binding PreeditType}">
-                                <ComboBoxItem Content="{l10n:L Appearance.Preedit.Composition}" Tag="Composition"/>
-                                <ComboBoxItem Content="{l10n:L Appearance.Preedit.Preview}" Tag="Preview"/>
-                                <ComboBoxItem Content="{l10n:L Appearance.Preedit.PreviewAll}" Tag="PreviewAll"/>
-                            </ComboBox>
-                        </Grid>
+                    <!-- 行间距 -->
+                    <Grid Margin="{StaticResource GapField}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="44"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.LineSpacing}" Style="{StaticResource FieldLabel}"/>
+                        <Slider Grid.Column="1" Minimum="0" Maximum="24" TickFrequency="1"
+                                IsSnapToTickEnabled="True" Value="{Binding Linespacing}"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="{Binding Linespacing}"
+                                   FontSize="{StaticResource FontBody}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
 
-                        <Grid Margin="{StaticResource GapField}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Antialias}" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox Grid.Column="1" SelectedValuePath="Tag"
-                                      SelectedValue="{Binding AntiAliasMode}">
-                                <ComboBoxItem Content="default" Tag="Default"/>
-                                <ComboBoxItem Content="cleartype" Tag="ClearType"/>
-                                <ComboBoxItem Content="grayscale" Tag="Grayscale"/>
-                                <ComboBoxItem Content="aliased" Tag="Aliased"/>
-                                <ComboBoxItem Content="force_dword" Tag="ForceDword"/>
-                            </ComboBox>
-                        </Grid>
+            <!-- ── 5. 行为（仿 squirrel appearance.behavior.title）────────────── -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="{l10n:L Appearance.BehaviorTitle}" Style="{StaticResource SectionTitle}"/>
 
-                        <Grid Margin="{StaticResource GapFieldTight}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Hover}" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox Grid.Column="1" SelectedValuePath="Tag"
-                                      SelectedValue="{Binding HoverType}">
-                                <ComboBoxItem Content="{l10n:L Appearance.Hover.None}" Tag="None"/>
-                                <ComboBoxItem Content="{l10n:L Appearance.Hover.SemiHilite}" Tag="SemiHilite"/>
-                                <ComboBoxItem Content="{l10n:L Appearance.Hover.Hilite}" Tag="Hilite"/>
-                            </ComboBox>
-                        </Grid>
+                    <!-- 编码区显示方式 -->
+                    <Grid Margin="{StaticResource GapField}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Preedit}" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding PreeditType}">
+                            <ComboBoxItem Content="{l10n:L Appearance.Preedit.Composition}" Tag="Composition"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Preedit.Preview}" Tag="Preview"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Preedit.PreviewAll}" Tag="PreviewAll"/>
+                        </ComboBox>
+                    </Grid>
 
-                        <!-- 行内编码与上面几项不是同一类（它是布尔开关而非下拉），
-                             用分割线切开阅读流，而不是靠间距硬凑。 -->
-                        <Border Style="{StaticResource Divider}"/>
+                    <!-- 字体抗锯齿 -->
+                    <Grid Margin="{StaticResource GapField}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Antialias}" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding AntiAliasMode}">
+                            <ComboBoxItem Content="default" Tag="Default"/>
+                            <ComboBoxItem Content="cleartype" Tag="ClearType"/>
+                            <ComboBoxItem Content="grayscale" Tag="Grayscale"/>
+                            <ComboBoxItem Content="aliased" Tag="Aliased"/>
+                            <ComboBoxItem Content="force_dword" Tag="ForceDword"/>
+                        </ComboBox>
+                    </Grid>
 
-                        <CheckBox Content="{l10n:L Appearance.InlinePreedit}" IsChecked="{Binding InlinePreedit}"/>
-                    </StackPanel>
-                </Border>
+                    <!-- 鼠标悬停高亮方式 -->
+                    <Grid Margin="{StaticResource GapField}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Hover}" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding HoverType}">
+                            <ComboBoxItem Content="{l10n:L Appearance.Hover.None}" Tag="None"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Hover.SemiHilite}" Tag="SemiHilite"/>
+                            <ComboBoxItem Content="{l10n:L Appearance.Hover.Hilite}" Tag="Hilite"/>
+                        </ComboBox>
+                    </Grid>
 
-                <Border Style="{StaticResource Card}">
-                    <StackPanel>
-                        <TextBlock Text="{l10n:L Appearance.ApplyTitle}" Style="{StaticResource SectionTitle}"/>
-                        <TextBlock Text="{l10n:L Appearance.ApplyNote}"
-                                   Style="{StaticResource SectionIntro}"/>
+                    <Border Style="{StaticResource Divider}" Margin="0,4,0,0"/>
 
-                        <StackPanel Orientation="Horizontal" Margin="{StaticResource GapActionRow}">
-                            <Button Content="{l10n:L Appearance.ReloadBtn}" Style="{StaticResource SecondaryButton}"
-                                    Command="{Binding ReloadCommand}"/>
-                        </StackPanel>
+                    <CheckBox Content="{l10n:L Appearance.InlinePreedit}"
+                              IsChecked="{Binding InlinePreedit}"
+                              Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
 
-                        <Border Style="{StaticResource StatusStrip}">
-                            <TextBlock Text="{Binding StatusText}" FontSize="{StaticResource FontBody}"
-                                       TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"/>
-                        </Border>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </Grid>
-    </Grid>
+            <!-- ── 6. 状态条（保留 deploy 提示，仿 squirrel StatusStrip）──────── -->
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Text="{l10n:L Appearance.ApplyTitle}" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="{l10n:L Appearance.ApplyNote}" Style="{StaticResource SectionIntro}"/>
+                    <Border Style="{StaticResource StatusStrip}">
+                        <TextBlock Text="{Binding StatusText}" FontSize="{StaticResource FontBody}"
+                                   TextWrapping="Wrap" LineHeight="{StaticResource LineBody}"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

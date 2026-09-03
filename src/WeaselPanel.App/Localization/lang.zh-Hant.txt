@@ -234,6 +234,11 @@ Appearance.Status.NoCatalog = 無法載入內建配色目錄 —— 請到「診
 Appearance.Status.Ready = 就緒
 Appearance.CatalogMissing = （未找到 weasel.yaml，配色目錄為空）
 
+Appearance.LabelSize = 標籤字號
+Appearance.LineSpacing = 行間距
+Appearance.LayoutTitle = 佈局
+Appearance.BehaviorTitle = 行為
+
 Appearance.Title = 外觀
 Appearance.Intro = 候選窗口的字體、配色與排版。所有取值都用與小狼毫本體同一套規則推導，這裏看到的就是實際渲染結果。
 

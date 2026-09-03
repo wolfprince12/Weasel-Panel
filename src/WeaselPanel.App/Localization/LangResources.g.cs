@@ -247,6 +247,11 @@ Appearance.Status.NoCatalog = 未能加载内置配色目录 —— 请到「诊
 Appearance.Status.Ready = 就绪
 Appearance.CatalogMissing = （未找到 weasel.yaml，配色目录为空）
 
+Appearance.LabelSize = 标签字号
+Appearance.LineSpacing = 行间距
+Appearance.LayoutTitle = 布局
+Appearance.BehaviorTitle = 行为
+
 Appearance.Title = 外观
 Appearance.Intro = 候选窗口的字体、配色与排版。所有取值都用与小狼毫本体同一套规则推导，这里看到的就是实际渲染结果。
 
@@ -1161,6 +1166,11 @@ Appearance.Status.LoadedSchemes = 已載入 {0} 套內建配色
 Appearance.Status.NoCatalog = 無法載入內建配色目錄 —— 請到「診斷」頁檢查共用資料目錄
 Appearance.Status.Ready = 就緒
 Appearance.CatalogMissing = （未找到 weasel.yaml，配色目錄為空）
+
+Appearance.LabelSize = 標籤字號
+Appearance.LineSpacing = 行間距
+Appearance.LayoutTitle = 佈局
+Appearance.BehaviorTitle = 行為
 
 Appearance.Title = 外觀
 Appearance.Intro = 候選窗口的字體、配色與排版。所有取值都用與小狼毫本體同一套規則推導，這裏看到的就是實際渲染結果。
@@ -2098,6 +2108,11 @@ Appearance.Status.LoadedSchemes = Loaded {0} built-in colour schemes
 Appearance.Status.NoCatalog = Could not load the colour scheme catalogue — check the shared data directory on the Diagnostics page
 Appearance.Status.Ready = Ready
 Appearance.CatalogMissing = (weasel.yaml not found — colour scheme catalogue is empty)
+
+Appearance.LabelSize = Label size
+Appearance.LineSpacing = Line spacing
+Appearance.LayoutTitle = Layout
+Appearance.BehaviorTitle = Behaviour
 
 Appearance.Title = Appearance
 Appearance.Intro = Fonts, colours and layout of the candidate window. Every value is derived with the same rules as Weasel itself - what you see here is what actually gets rendered.

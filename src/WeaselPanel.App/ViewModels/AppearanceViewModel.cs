@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Media;
@@ -27,6 +28,7 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
     private WeaselPreeditType _preeditType;
     private WeaselAntiAliasMode _antiAliasMode;
     private WeaselHoverType _hoverType;
+    private int _linespacing;
     private bool _isBusy;
     private string _statusText = "";
     private bool _catalogLoaded;
@@ -51,6 +53,18 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
 
     // ── 外观页 3 列色卡网格（仿鼠须管 SchemeSwatch）──────────────
     public ObservableCollection<SchemeCardItem> SchemeCards { get; } = new();
+
+    /// <summary>
+    /// 系统字体族列表（一次性快照）。绑到候选字体的可编辑 ComboBox，
+    /// 让用户既能选现成字体，也能直接粘自己写的家族名。
+    /// 静态数组 + 实例字段：所有实例共享同一份，避免每次打开外观页重枚举。
+    /// 用 <see cref="IReadOnlyList{T}"/> 而非 <see cref="ObservableCollection{T}"/>：
+    /// 列表构造后永不变化，没必要浪费通知开销，绑定也只读一次。
+    /// </summary>
+    public IReadOnlyList<string> FontFamilies { get; } = StaticFontFamilies;
+
+    private static readonly string[] StaticFontFamilies =
+        Fonts.SystemFontFamilies.Select(f => f.Source).Distinct().OrderBy(s => s, StringComparer.OrdinalIgnoreCase).ToArray();
 
     private SchemeCardItem? _selectedCard;
 
@@ -171,6 +185,13 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
     {
         get => _hoverType;
         set => Set(ref _hoverType, value);
+    }
+
+    /// <summary>候选行间距（style/layout/linespacing）。</summary>
+    public int Linespacing
+    {
+        get => _linespacing;
+        set => Set(ref _linespacing, Math.Clamp(Math.Abs(value), 0, 24));
     }
 
     /// <summary>
@@ -330,6 +351,7 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
         _preeditType = style.PreeditType;
         _antiAliasMode = style.AntiAliasMode;
         _hoverType = style.HoverType;
+        _linespacing = style.Linespacing;
 
         OnPropertyChanged(nameof(FontFace));
         OnPropertyChanged(nameof(FontPoint));
@@ -343,6 +365,7 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
         OnPropertyChanged(nameof(PreeditType));
         OnPropertyChanged(nameof(AntiAliasMode));
         OnPropertyChanged(nameof(HoverType));
+        OnPropertyChanged(nameof(Linespacing));
 
         // color_scheme 属于颜色层，不在 WeaselStyle 里，单独从合并视图取
         var scheme = merged.Lookup("style/color_scheme") as string ?? "aqua";
@@ -506,6 +529,7 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
             // 布局类型写 style/layout/type —— 它在 5 步覆盖链中优先级最高，
             // 是唯一能无歧义表达全部 5 种布局的键。
             custom.Set("style/layout/type", LayoutTypeToConfig(LayoutType));
+            custom.Set("style/layout/linespacing", Linespacing);
 
             custom.Save();
             StatusText = StatusFromKey("Appearance.Status.Written", path);
