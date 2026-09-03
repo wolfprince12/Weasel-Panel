@@ -442,6 +442,7 @@ Input.Paging.MinusEqual = - 與 =（減號 / 等號）
 Input.Paging.CommaPeriod = , 與 .（逗號 / 句號）
 Input.Paging.Brackets = [ 與 ]（方括號）
 Input.Paging.UpDown = ↑ 與 ↓（方向鍵）
+Input.Paging.Tab = Tab 與 Shift+Tab（翻頁）
 Input.Switch.MovedToBehavior = 中英切換鍵已移到「行為」頁 —— 那裏可以給五個鍵各指定一個動作。這一項不能兩處都放：ascii_composer/switch_key 是整塊替換的，第二個編輯器會把另一處的設定悄悄沖掉。
 Input.Punct = 附加開關
 Input.Punct.FullShape = Shift+空白鍵 切換全形 / 半形
@@ -735,6 +736,40 @@ About.UserDir = 使用者目錄
 About.RowFormat = {0}：{1}
 About.Deployer = 部署程式
 About.DeployHint = 改動需部署後生效 —— 改完請到「外觀」頁點「部署」。
+
+# ── 關於：開發者 ──
+About.Developer.Title = 開發者
+About.Developer.Name = 大狼（wolfprince）
+About.Developer.Role = 獨立導演 · 軟體開發者
+About.Developer.Bio = 雲珩（北京）文化傳媒有限公司。一個考證上癮的斜槓導演，用 AI 把二十年的跨界底子重新造物。
+
+# ── 關於：更多作品 ──
+About.Promo.Title = 更多作品
+About.Promo.Visit = 訪問
+About.Promo.Yaozhi.Title = 爻知雲
+About.Promo.Yaozhi.Subtitle = 微信服務號
+About.Promo.Yaozhi.Desc = 關注服務號，啟動賽博派古文化占卜。
+About.Promo.Dealv.Title = DealV
+About.Promo.Dealv.Subtitle = AI 合約 SaaS
+About.Promo.Dealv.Desc = 8.8 元得 100 積分，合約生成與 AI 審核一站完成。
+About.Promo.DsonDt.Title = DSonDT
+About.Promo.DsonDt.Subtitle = 本地 DeepSeek 客戶端
+About.Promo.DsonDt.Desc = 基於 Tauri 的 macOS 桌面客戶端，資料不出本機。
+
+# ── 關於：運行狀態 ──
+About.Status.Title = 運行狀態
+About.Status.Installed = 小狼毫已安裝
+About.Status.NotInstalled = 小狼毫未安裝
+About.Status.UserDirReady = 使用者目錄已就緒
+About.Status.UserDirNotReady = 使用者目錄未就緒
+
+# ── 關於：專案說明 ──
+About.Project.Title = 關於專案
+About.Project.Desc = 小狼毫控制面板是一個用 C# / WPF / .NET 8 撰寫的開源圖形設定面板，讓你不必手改 YAML 即可設定小狼毫輸入法。
+About.Project.Disclaimer = 本軟體與 Rime 專案組無隸屬關係，僅供學習與交流使用。
+About.Link.Issues = 問題回報
+About.Link.Rime = Rime 官網
+About.Link.Weasel = 小狼毫原始碼
 
 About.LanguageIntro = 介面語言默認跟隨系統，可在此手動覆蓋。
 

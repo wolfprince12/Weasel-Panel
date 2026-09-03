@@ -48,6 +48,8 @@
                           Margin="0,4"/>
                 <CheckBox Content="{l10n:L Input.Paging.UpDown}" IsChecked="{Binding PagingUpDown}"
                           Margin="0,4"/>
+                <CheckBox Content="{l10n:L Input.Paging.Tab}" IsChecked="{Binding PagingTab}"
+                          Margin="0,4"/>
 
                 <!-- 中英切换键已移到「行为」页。
                      为什么不能两处都放：ascii_composer/switch_key 是**整块替换**的，

@@ -8,6 +8,8 @@
 //  绝不写进 Rime 用户目录 —— 那个目录同时是同步目录和备份目录，
 //  往里塞面板自己的偏好会污染同步、被备份打包、还会被部署器扫描到。
 //
+//  本页内容对齐 macOS 鼠须管面板的 About 页：开发者、更多作品（推广）、
+//  运行状态、关于项目、相关链接。语言切换时通过 RefreshTexts 重建所有文案。
 
 using System.Collections.ObjectModel;
 using System.Text;
@@ -27,6 +29,16 @@ public sealed class LanguageOption
     public override string ToString() => DisplayName;
 }
 
+/// <summary>关于页「更多作品」里的一条推广。</summary>
+public sealed class PromoItem
+{
+    public required string Title { get; init; }
+    public required string Subtitle { get; init; }
+    public required string Description { get; init; }
+    /// <summary>为空表示没有可跳转的链接（如微信服务号，只能描述）。</summary>
+    public string Url { get; init; } = "";
+}
+
 public sealed class AboutViewModel : ViewModelBase, ILanguageAware
 {
     private readonly WeaselEnvironment _environment;
@@ -36,6 +48,10 @@ public sealed class AboutViewModel : ViewModelBase, ILanguageAware
     private string _licenseValue = "";
     private string _environmentSummary = "";
     private string _languageNote = "";
+    private string _developerName = "";
+    private string _developerTitle = "";
+    private string _developerBio = "";
+    private string _statusSummary = "";
 
     public AboutViewModel(WeaselEnvironment environment)
     {
@@ -47,6 +63,8 @@ public sealed class AboutViewModel : ViewModelBase, ILanguageAware
                 Code = c,
                 DisplayName = L10n.DisplayNameOf(c),
             }));
+
+        PromoItems = new ObservableCollection<PromoItem>();
 
         // 设置里存的是用户的选择（"auto" / "zh-Hans" / null）。
         // 语言包里存的 null 与 "auto" 是同一回事，统一归一成 "auto" 以免 ComboBox 选不中。
@@ -111,9 +129,41 @@ public sealed class AboutViewModel : ViewModelBase, ILanguageAware
         private set => Set(ref _environmentSummary, value);
     }
 
+    public string DeveloperName
+    {
+        get => _developerName;
+        private set => Set(ref _developerName, value);
+    }
+
+    public string DeveloperTitle
+    {
+        get => _developerTitle;
+        private set => Set(ref _developerTitle, value);
+    }
+
+    public string DeveloperBio
+    {
+        get => _developerBio;
+        private set => Set(ref _developerBio, value);
+    }
+
+    public string StatusSummary
+    {
+        get => _statusSummary;
+        private set => Set(ref _statusSummary, value);
+    }
+
+    /// <summary>「更多作品」推广卡片的内容（切语言时重建）。</summary>
+    public ObservableCollection<PromoItem> PromoItems { get; }
+
     /// <summary>仓库地址。不本地化 —— 它就是个 URL。</summary>
     public const string RepoUrl = "https://github.com/wolfprince12/Weasel-Panel";
     public string RepoDisplay => "github.com/wolfprince12/Weasel-Panel";
+    public string IssuesUrl => RepoUrl + "/issues";
+    public const string RimeUrl = "https://rime.im";
+    public const string WeaselUrl = "https://github.com/rime/weasel";
+    public const string DealvUrl = "https://www.dealv.cn";
+    public const string DsonDtUrl = "https://github.com/wolfprince12/DSonDT";
 
     /// <summary>
     /// 语言切换后重建本页文本。
@@ -128,6 +178,47 @@ public sealed class AboutViewModel : ViewModelBase, ILanguageAware
         LicenseValue = L10n.Instance.T("About.LicenseValue");
         LanguageNote = L10n.Instance.T("Lang.Note");
         EnvironmentSummary = BuildEnvironmentSummary();
+        DeveloperName = L10n.Instance.T("About.Developer.Name");
+        DeveloperTitle = L10n.Instance.T("About.Developer.Role");
+        DeveloperBio = L10n.Instance.T("About.Developer.Bio");
+        StatusSummary = BuildStatusSummary();
+        RebuildPromo();
+    }
+
+    private void RebuildPromo()
+    {
+        PromoItems.Clear();
+        PromoItems.Add(new PromoItem
+        {
+            Title = L10n.Instance.T("About.Promo.Yaozhi.Title"),
+            Subtitle = L10n.Instance.T("About.Promo.Yaozhi.Subtitle"),
+            Description = L10n.Instance.T("About.Promo.Yaozhi.Desc"),
+        });
+        PromoItems.Add(new PromoItem
+        {
+            Title = L10n.Instance.T("About.Promo.Dealv.Title"),
+            Subtitle = L10n.Instance.T("About.Promo.Dealv.Subtitle"),
+            Description = L10n.Instance.T("About.Promo.Dealv.Desc"),
+            Url = DealvUrl,
+        });
+        PromoItems.Add(new PromoItem
+        {
+            Title = L10n.Instance.T("About.Promo.DsonDt.Title"),
+            Subtitle = L10n.Instance.T("About.Promo.DsonDt.Subtitle"),
+            Description = L10n.Instance.T("About.Promo.DsonDt.Desc"),
+            Url = DsonDtUrl,
+        });
+    }
+
+    private string BuildStatusSummary()
+    {
+        var installed = _environment.IsInstalled
+            ? L10n.Instance.T("About.Status.Installed")
+            : L10n.Instance.T("About.Status.NotInstalled");
+        var userDir = _environment.IsUserDirectoryReady
+            ? L10n.Instance.T("About.Status.UserDirReady")
+            : L10n.Instance.T("About.Status.UserDirNotReady");
+        return installed + "  ·  " + userDir;
     }
 
     private string BuildEnvironmentSummary()

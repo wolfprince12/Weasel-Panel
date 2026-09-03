@@ -460,6 +460,7 @@ Input.Paging.MinusEqual = - and = (minus / equal)
 Input.Paging.CommaPeriod = , and . (comma / period)
 Input.Paging.Brackets = [ and ] (brackets)
 Input.Paging.UpDown = ↑ and ↓ (arrow keys)
+Input.Paging.Tab = Tab and Shift+Tab (page up/down)
 Input.Switch.MovedToBehavior = The Chinese/English switch key now lives on the Behavior page, where each of the five keys gets its own action. It cannot be set in two places at once: ascii_composer/switch_key is replaced as a whole, so a second editor would silently wipe the other's settings.
 Input.Punct = Extra toggles
 Input.Punct.FullShape = Shift+Space toggles full/half width
@@ -753,6 +754,40 @@ About.UserDir = User directory
 About.RowFormat = {0}: {1}
 About.Deployer = Deployer
 About.DeployHint = Deploy to apply changes — run it from the Appearance page after editing.
+
+# ── About: developer ──
+About.Developer.Title = Developer
+About.Developer.Name = Da Lang (wolfprince)
+About.Developer.Role = Independent director · Software developer
+About.Developer.Bio = Yunheng (Beijing) Culture Media Co., Ltd. A cert-collecting slash director who uses AI to rebuild two decades of cross-domain skills into new things.
+
+# ── About: more works ──
+About.Promo.Title = More works
+About.Promo.Visit = Visit
+About.Promo.Yaozhi.Title = Yaozhi Cloud
+About.Promo.Yaozhi.Subtitle = WeChat service account
+About.Promo.Yaozhi.Desc = Follow the account to launch cyber-pai ancient-culture divination.
+About.Promo.Dealv.Title = DealV
+About.Promo.Dealv.Subtitle = AI contract SaaS
+About.Promo.Dealv.Desc = 8.8 RMB for 100 credits — contract generation and AI review in one place.
+About.Promo.DsonDt.Title = DSonDT
+About.Promo.DsonDt.Subtitle = Local DeepSeek client
+About.Promo.DsonDt.Desc = A Tauri-based macOS desktop client; your data never leaves the machine.
+
+# ── About: status ──
+About.Status.Title = Status
+About.Status.Installed = Weasel installed
+About.Status.NotInstalled = Weasel not installed
+About.Status.UserDirReady = User directory ready
+About.Status.UserDirNotReady = User directory not ready
+
+# ── About: project ──
+About.Project.Title = About the project
+About.Project.Desc = Weasel Panel is an open-source graphical settings panel written in C# / WPF / .NET 8, letting you configure Weasel without hand-editing YAML.
+About.Project.Disclaimer = This software is not affiliated with the Rime project; it is for learning and exchange only.
+About.Link.Issues = Report issues
+About.Link.Rime = Rime website
+About.Link.Weasel = Weasel source
 
 About.LanguageIntro = The interface follows your system language by default; override it here.
 

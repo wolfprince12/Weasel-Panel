@@ -52,6 +52,7 @@ public sealed class InputViewModel : ViewModelBase, IPanelActions
     private bool _pagingCommaPeriod;
     private bool _pagingBrackets;
     private bool _pagingUpDown;
+    private bool _pagingTab;
     private bool _toggleFullShape;
     private bool _togglePunctuation;
 
@@ -96,6 +97,12 @@ public sealed class InputViewModel : ViewModelBase, IPanelActions
     {
         get => _pagingUpDown;
         set => Set(ref _pagingUpDown, value);
+    }
+
+    public bool PagingTab
+    {
+        get => _pagingTab;
+        set => Set(ref _pagingTab, value);
     }
 
     public bool ToggleFullShape
@@ -160,6 +167,7 @@ public sealed class InputViewModel : ViewModelBase, IPanelActions
             _pagingCommaPeriod = bindings.Contains("comma|Page_Up") || bindings.Contains("period|Page_Down");
             _pagingBrackets = bindings.Contains("bracketleft|Page_Up") || bindings.Contains("bracketright|Page_Down");
             _pagingUpDown = bindings.Contains("Up|Page_Up") || bindings.Contains("Down|Page_Down");
+            _pagingTab = bindings.Contains("Tab|Page_Down") || bindings.Contains("Shift+Tab|Page_Up");
 
             _toggleFullShape = bindings.Any(b => b.StartsWith("Shift+space|", StringComparison.OrdinalIgnoreCase));
             _togglePunctuation = bindings.Any(b => b.StartsWith("Control+period|", StringComparison.OrdinalIgnoreCase));
@@ -186,6 +194,7 @@ public sealed class InputViewModel : ViewModelBase, IPanelActions
         OnPropertyChanged(nameof(PagingCommaPeriod));
         OnPropertyChanged(nameof(PagingBrackets));
         OnPropertyChanged(nameof(PagingUpDown));
+        OnPropertyChanged(nameof(PagingTab));
         OnPropertyChanged(nameof(ToggleFullShape));
         OnPropertyChanged(nameof(TogglePunctuation));
     }
@@ -223,10 +232,10 @@ public sealed class InputViewModel : ViewModelBase, IPanelActions
     {
         var list = new List<Dictionary<string, object?>>();
 
-        void Page(string accept, string send) =>
+        void Page(string accept, string send, string when = "paging") =>
             list.Add(new Dictionary<string, object?>
             {
-                ["when"] = "paging",
+                ["when"] = when,
                 ["accept"] = accept,
                 ["send"] = send,
             });
@@ -235,6 +244,7 @@ public sealed class InputViewModel : ViewModelBase, IPanelActions
         if (PagingCommaPeriod) { Page("comma", "Page_Up"); Page("period", "Page_Down"); }
         if (PagingBrackets) { Page("bracketleft", "Page_Up"); Page("bracketright", "Page_Down"); }
         if (PagingUpDown) { Page("Up", "Page_Up"); Page("Down", "Page_Down"); }
+        if (PagingTab) { Page("Tab", "Page_Down", "has_menu"); Page("Shift+Tab", "Page_Up", "has_menu"); }
 
         if (ToggleFullShape)
             list.Add(new Dictionary<string, object?>

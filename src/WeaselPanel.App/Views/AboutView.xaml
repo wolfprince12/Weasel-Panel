@@ -89,6 +89,109 @@
             </StackPanel>
         </Border>
 
+        <!-- ── 开发者 ──────────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L About.Developer.Title}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{Binding DeveloperName}"
+                           FontSize="{StaticResource FontSubtitle}" FontWeight="SemiBold"
+                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,4,0,0"/>
+                <TextBlock Text="{Binding DeveloperTitle}"
+                           FontSize="{StaticResource FontBody}"
+                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                <TextBlock Text="{Binding DeveloperBio}"
+                           FontSize="{StaticResource FontBody}"
+                           Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                           LineHeight="{StaticResource LineBody}" Margin="0,8,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ── 更多作品（推广）──────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L About.Promo.Title}" Style="{StaticResource SectionTitle}"/>
+                <ItemsControl ItemsSource="{Binding PromoItems}" Margin="0,8,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,0,0,12">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontSize="{StaticResource FontBody}" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="{Binding Subtitle}"
+                                               FontSize="{StaticResource FontCaption}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Description}"
+                                           FontSize="{StaticResource FontBody}"
+                                           Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                                           LineHeight="{StaticResource LineBody}" Margin="0,4,0,0"/>
+                                <TextBlock Margin="0,4,0,0">
+                                    <Hyperlink NavigateUri="{Binding Url}"
+                                               RequestNavigate="Hyperlink_RequestNavigate">
+                                        <TextBlock Text="{l10n:L About.Promo.Visit}"/>
+                                    </Hyperlink>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Url, Converter={StaticResource HasValue}}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- ── 运行状态 ────────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L About.Status.Title}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{Binding StatusSummary}"
+                           FontSize="{StaticResource FontBody}" TextWrapping="Wrap"
+                           LineHeight="{StaticResource LineBody}"
+                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ── 关于项目 ────────────────────────────────────────── -->
+        <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
+            <StackPanel>
+                <TextBlock Text="{l10n:L About.Project.Title}" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Text="{l10n:L About.Project.Desc}"
+                           FontSize="{StaticResource FontBody}" TextWrapping="Wrap"
+                           LineHeight="{StaticResource LineBody}"
+                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                <TextBlock Text="{l10n:L About.Project.Disclaimer}"
+                           FontSize="{StaticResource FontCaption}" TextWrapping="Wrap"
+                           LineHeight="{StaticResource LineBody}"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Margin="0,8,0,0"/>
+                <Border Style="{StaticResource Divider}" Margin="0,10,0,10"/>
+                <WrapPanel Orientation="Horizontal">
+                    <Hyperlink NavigateUri="{Binding RepoUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                        <TextBlock Text="{l10n:L About.Repo}" Margin="0,0,16,0"/>
+                    </Hyperlink>
+                    <Hyperlink NavigateUri="{Binding IssuesUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                        <TextBlock Text="{l10n:L About.Link.Issues}" Margin="0,0,16,0"/>
+                    </Hyperlink>
+                    <Hyperlink NavigateUri="{StaticResource RimeUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                        <TextBlock Text="{l10n:L About.Link.Rime}" Margin="0,0,16,0"/>
+                    </Hyperlink>
+                    <Hyperlink NavigateUri="{StaticResource WeaselUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+                        <TextBlock Text="{l10n:L About.Link.Weasel}"/>
+                    </Hyperlink>
+                </WrapPanel>
+            </StackPanel>
+        </Border>
+
         <!-- 语言选择。存 %APPDATA%\WeaselPanel\settings.json，不碰 Rime 用户目录。 -->
         <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
             <StackPanel>
