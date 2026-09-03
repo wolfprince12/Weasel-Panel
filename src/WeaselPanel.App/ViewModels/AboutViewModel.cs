@@ -11,6 +11,7 @@
 //  本页内容对齐 macOS 鼠须管面板的 About 页：开发者、更多作品（推广）、
 //  运行状态、关于项目、相关链接。语言切换时通过 RefreshTexts 重建所有文案。
 
+using System;
 using System.Collections.ObjectModel;
 using System.Text;
 using WeaselPanel.App.Infrastructure;
@@ -36,7 +37,8 @@ public sealed class PromoItem
     public required string Subtitle { get; init; }
     public required string Description { get; init; }
     /// <summary>为空表示没有可跳转的链接（如微信服务号，只能描述）。</summary>
-    public string Url { get; init; } = "";
+    /// <summary>推广条目。Url 留 null 表示该项无外链（面板不渲染「访问」行）。</summary>
+    public Uri? Url { get; init; }
 }
 
 public sealed class AboutViewModel : ViewModelBase, ILanguageAware
@@ -157,13 +159,21 @@ public sealed class AboutViewModel : ViewModelBase, ILanguageAware
     public ObservableCollection<PromoItem> PromoItems { get; }
 
     /// <summary>仓库地址。不本地化 —— 它就是个 URL。</summary>
-    public const string RepoUrl = "https://github.com/wolfprince12/Weasel-Panel";
+    /// <remarks>
+    /// 用 static readonly Uri（不能 const —— Uri 不是编译期常量），
+    /// 直接给 Hyperlink.NavigateUri 喂 Uri 类型对象，XAML attribute 解析时
+    /// 完全不走 string→Uri TypeConverter，避免「"https://rime.im" 不是属性
+    /// 'NavigateUri' 的有效值」之类的运行时崩盘。URL 一律带尾斜杠，避免
+    /// UriTypeConverter 对无路径主机名的边界 case 拒识别。
+    /// </remarks>
+    public static readonly Uri RepoUrl = new("https://github.com/wolfprince12/Weasel-Panel/");
     public string RepoDisplay => "github.com/wolfprince12/Weasel-Panel";
-    public string IssuesUrl => RepoUrl + "/issues";
-    public const string RimeUrl = "https://rime.im";
-    public const string WeaselUrl = "https://github.com/rime/weasel";
-    public const string DealvUrl = "https://www.dealv.cn";
-    public const string DsonDtUrl = "https://github.com/wolfprince12/DSonDT";
+    public Uri IssuesUrl => new(RepoUrl, "/issues");
+
+    public static readonly Uri RimeUrl = new("https://rime.im/");
+    public static readonly Uri WeaselUrl = new("https://github.com/rime/weasel/");
+    public static readonly Uri DealvUrl = new("https://www.dealv.cn/");
+    public static readonly Uri DsonDtUrl = new("https://github.com/wolfprince12/DSonDT/");
 
     /// <summary>
     /// 语言切换后重建本页文本。

@@ -190,7 +190,7 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
 
     // ── librime-lua 状态（检测 + 指引，不写系统目录）──────────────────
 
-    private const string LucEngineDownloadUrl = "https://github.com/hchunhui/librime-lua/releases";
+    private static readonly Uri LucEngineDownloadUrl = new("https://github.com/hchunhui/librime-lua/releases/");
 
     /// <summary>判定 Lua 运行时是否在场的文件名特征（librime-lua 会随 rime.dll 一起带来这些）。</summary>
     private static readonly string[] LuaRuntimeMarkers =
@@ -237,7 +237,7 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
     public string LuaInstallDir => _environment.ProgramDirectory ?? "";
 
     /// <summary>librime-lua 预编译下载页（GitHub Releases）。</summary>
-    public string LuaDownloadUrl => LucEngineDownloadUrl;
+    public Uri LuaDownloadUrl => LucEngineDownloadUrl;
 
     /// <summary>分步安装指引（随语言切换重建，最多 5 步）。</summary>
     public ObservableCollection<string> LuaGuideLines { get; } = new();
