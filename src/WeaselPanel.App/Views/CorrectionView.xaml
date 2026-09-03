@@ -220,6 +220,14 @@
                     </Hyperlink>
                 </TextBlock>
 
+                <!-- 引导式安装：仅当「已装小狼毫但未检测到 Lua 运行时」时显示。
+                     点击后弹确认框 → 选文件 → 后台提权覆盖 rime.dll → 重部署 → 重检测。 -->
+                <Button Margin="0,14,0,0"
+                        Content="{l10n:L Correction.Lua.Install}"
+                        Style="{StaticResource PrimaryButton}"
+                        Visibility="{Binding ShowLuaInstall, Converter={StaticResource BoolToVisibility}}"
+                        Command="{Binding InstallLuaCommand}"/>
+
                 <TextBlock Text="{l10n:L Correction.Lua.GuideTitle}"
                            Style="{StaticResource SectionTitle}" Margin="0,18,0,0"/>
                 <ItemsControl ItemsSource="{Binding LuaGuideLines}" Margin="0,8,0,0">

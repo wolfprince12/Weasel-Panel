@@ -30,9 +30,13 @@
          0.2.6（2026-09-03）：外观面板系统字体列表修复 —— FontFamilies 原在 UI 线程
          同步枚举 Fonts.SystemFontFamilies（几百~上千字体），导致面板打开卡顿、
          字体服务未就绪时列表为空。改为后台线程异步枚举 + 单字体容错 + 空列表兜底
-         常用字体，下拉加虚拟化。详见 git log。 -->
-    <Version>0.2.6</Version>
-    <InformationalVersion>0.2.6</InformationalVersion>
+         常用字体，下拉加虚拟化。详见 git log。
+         0.2.7（2026-09-03）：紫毫纠错页新增「安装 Lua 引擎」引导式模块 ——
+         仅当检测不到 Lua 运行时时高亮按钮，点击后确认框 → 选 rime.dll/.zip →
+         后台提权（runas）备份并覆盖 Program Files 下的 rime.dll、停 WeaselServer、
+         重部署、重检测。下载那一步仍由用户手动点链接，避开版本错配与登录墙。 -->
+    <Version>0.2.7</Version>
+    <InformationalVersion>0.2.7</InformationalVersion>
     <Company>大狼导演工作室</Company>
     <Product>小狼毫控制面板</Product>
     <Copyright>GPL-3.0</Copyright>

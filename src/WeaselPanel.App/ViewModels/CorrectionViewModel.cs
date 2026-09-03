@@ -36,6 +36,7 @@ using WeaselPanel.Core.Platform;
 using WeaselPanel.Core.Rime;
 using System.Windows;
 using System.Windows.Media;
+using Microsoft.Win32;
 
 namespace WeaselPanel.App.ViewModels;
 
@@ -100,6 +101,9 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
 
         ApplyCommand = new RelayCommand(ApplyAsync, () => !IsBusy && IsDirty && IsInstalled);
         ReloadCommand = new DelegateCommand(Load);
+        InstallLuaCommand = new RelayCommand(
+            InstallLuaAsync,
+            () => !IsBusy && _luaState == LuaEngineState.Absent && _environment.ProgramDirectory is not null);
 
         PositionOptions = new ObservableCollection<ValueOption<CorrectionInjectionPosition>>
         {
@@ -127,6 +131,9 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
 
     public RelayCommand ApplyCommand { get; }
     public DelegateCommand ReloadCommand { get; }
+
+    /// <summary>引导式安装 librime-lua：仅在未检测到 Lua 运行时、且小狼毫已安装时可用。</summary>
+    public RelayCommand InstallLuaCommand { get; }
 
     // ── 状态 ──────────────────────────────────────────────────────────
 
@@ -216,11 +223,16 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
             OnPropertyChanged();
             OnPropertyChanged(nameof(LuaStatusReady));
             OnPropertyChanged(nameof(LuaStatusBrush));
+            OnPropertyChanged(nameof(ShowLuaInstall));
+            InstallLuaCommand?.RaiseCanExecuteChanged();
         }
     }
 
     /// <summary>是否已具备可用的 Lua 运行时（只有 Present 才能正常开启纠错）。</summary>
     public bool LuaStatusReady => _luaState == LuaEngineState.Present;
+
+    /// <summary>仅在「已装小狼毫但未检测到 Lua 运行时」时显示「安装 Lua 引擎」按钮。</summary>
+    public bool ShowLuaInstall => _luaState == LuaEngineState.Absent;
 
     /// <summary>状态文案（随语言切换重建）。</summary>
     public string LuaStatusText { get; private set; } = "";
@@ -437,6 +449,108 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
                 return LuaEngineState.Present;
         }
         return LuaEngineState.Absent;
+    }
+
+    /// <summary>
+    /// 引导式安装 librime-lua：确认框 → 选文件 → 后台提权覆盖 → 重部署 → 重检测。
+    /// 危险动作（覆盖 Program Files 下的 rime.dll）全自动，但会先备份并停服务，
+    /// 且版本由用户下载的那一份决定——面板只负责「安全地把文件放到位」。
+    /// </summary>
+    private async Task InstallLuaAsync()
+    {
+        // 1. 二次确认：覆盖 rime.dll 版本错配会让整个输入法失效、候选框消失。
+        var confirm = MessageBox.Show(
+            L10n.Instance.T("Correction.Lua.ConfirmBody"),
+            L10n.Instance.T("Correction.Lua.ConfirmTitle"),
+            MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (confirm != MessageBoxResult.Yes) return;
+
+        // 2. 选文件：用户已手动从官网下好 rime.dll / .zip（.7z 请先解压）。
+        var dialog = new OpenFileDialog
+        {
+            Title = L10n.Instance.T("Correction.Lua.PickFile"),
+            Filter = "rime.dll|*.dll|Zip 压缩包|*.zip|全部文件|*.*",
+            CheckFileExists = true,
+            Multiselect = false,
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            StatusText = StatusFromKey("Correction.Lua.Err.NoFile");
+            return;
+        }
+
+        var picked = dialog.FileName;
+        var ext = Path.GetExtension(picked).ToLowerInvariant();
+
+        IsBusy = true;
+        StatusText = StatusFromKey("Correction.Lua.Installing");
+        try
+        {
+            // 3. 解析出源 rime.dll（以及同包的 lua54.dll）。
+            string srcDll;
+            string? srcLua = null;
+            if (ext == ".dll")
+            {
+                srcDll = picked;
+                var candLua = Path.Combine(Path.GetDirectoryName(picked)!, "lua54.dll");
+                if (File.Exists(candLua)) srcLua = candLua;
+            }
+            else if (ext == ".zip")
+            {
+                var (dll, lua) = await LuaInstaller.ExtractZipForRimeDllAsync(picked).ConfigureAwait(false);
+                if (dll is null)
+                {
+                    StatusText = StatusFromKey("Correction.Lua.Err.BadFile");
+                    return;
+                }
+                srcDll = dll;
+                srcLua = lua;
+            }
+            else if (ext == ".7z")
+            {
+                StatusText = StatusFromKey("Correction.Lua.Err.SevenZip");
+                return;
+            }
+            else
+            {
+                StatusText = StatusFromKey("Correction.Lua.Err.BadFile");
+                return;
+            }
+
+            // 4. 提权覆盖（备份 + 停服务内置在临时 bat 里，用户只见一次 UAC）。
+            var ok = await LuaInstaller.OverwriteWithElevationAsync(
+                _environment.ProgramDirectory!, srcDll, srcLua).ConfigureAwait(false);
+            if (!ok)
+            {
+                StatusText = StatusFromKey("Correction.Lua.Err.Overwrite");
+                return;
+            }
+
+            // 5. 重部署（让 librime 重新加载），退出码负才视为失败（已运行=1 不算）。
+            var deployCode = await WeaselDeployer.RunAsync(_environment, "/deploy").ConfigureAwait(false);
+
+            // 6. 重检测：覆盖后若特征文件就位，即为成功。
+            LuaState = DetectLuaEngine();
+            if (LuaState == LuaEngineState.Present)
+            {
+                var msg = StatusFromKey("Correction.Lua.Installed");
+                if (deployCode < 0) msg += " " + StatusFromKey("Correction.Lua.Err.Redeploy");
+                StatusText = msg;
+                RefreshLuaTexts();
+            }
+            else
+            {
+                StatusText = StatusFromKey("Correction.Lua.Err.Detect");
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText = StatusFromKey("Correction.Lua.InstallFailed") + " " + ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     /// <summary>随语言切换重建 Lua 状态文案与分步指引。</summary>
