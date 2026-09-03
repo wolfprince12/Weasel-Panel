@@ -240,6 +240,7 @@ public sealed class RimeIceViewModel : ViewModelBase, ILanguageAware, IPanelActi
     private bool _isBusy;
     private string _statusText = "";
     private string _baseline = "";
+    private bool _loaded;
     private string _rawText = "";
     private string? _rawError;
 
@@ -349,7 +350,8 @@ public sealed class RimeIceViewModel : ViewModelBase, ILanguageAware, IPanelActi
     public string FilePath => _config.IceCustomPath;
 
     // ── 脏值 ──────────────────────────────────────────────────────────
-    public new bool IsDirty => Signature() != _baseline;
+    // ⚠️ 未 Load 前不报脏（见 SchemaViewModel 同款守卫说明），否则启动即误报。
+    public new bool IsDirty => _loaded && Signature() != _baseline;
 
     private string Signature()
     {
@@ -434,6 +436,7 @@ public sealed class RimeIceViewModel : ViewModelBase, ILanguageAware, IPanelActi
 
         RefreshTexts();
         _baseline = Signature();
+        _loaded = true;
         OnPropertyChanged(nameof(IsDirty));
         ApplyCommand.RaiseCanExecuteChanged();
 

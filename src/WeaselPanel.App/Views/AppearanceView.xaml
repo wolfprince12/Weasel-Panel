@@ -5,10 +5,11 @@
              xmlns:vm="clr-namespace:WeaselPanel.App.ViewModels">
 
     <!-- ── 外观面板：仿鼠须管 RootView.swift 的 LazyVStack(spacing: 20) ─────
-         所有 SettingsGroup（全宽卡片）单列纵排。预览块改为顶部独立卡片，
-         与下面 配色 / 字体 / 布局 / 行为 四张全宽卡片并列。
+         所有 SettingsGroup（全宽卡片）单列纵排。
          ⚠️ WPF StackPanel 没有 Spacing 属性（WPF 没有 ItemsRepeater），每张
-         卡片用 Margin=0,0,0,14 控制卡片间隔。 -->
+         卡片用 Margin=0,0,0,14 控制卡片间隔。
+         ⚠️ 候选窗预览模块已移除（既拖慢交互、又与色卡网格重复展示同一信息），
+         配色所见即所得由下方 3 列色卡网格承担。 -->
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled"
                   Padding="0,0,0,24">
@@ -20,91 +21,7 @@
                 <TextBlock Text="{l10n:L Appearance.Intro}" Style="{StaticResource PageIntro}"/>
             </StackPanel>
 
-            <!-- ── 1. 预览 ──────────────────────────────────────────────── -->
-            <Border Style="{StaticResource Card}">
-                <StackPanel>
-                    <TextBlock Text="{l10n:L Appearance.PreviewTitle}" Style="{StaticResource SectionTitle}"/>
-                    <TextBlock Text="{l10n:L Appearance.PreviewNote1}" Style="{StaticResource FieldNote}" Margin="{StaticResource GapHeader}"/>
-                    <TextBlock Text="{l10n:L Appearance.PreviewNote2}" Style="{StaticResource FieldNote}"/>
-
-                    <!-- 模拟候选窗。HorizontalAlignment=Left，仿 squirrel CandidatePreview
-                         居左悬浮感；下方 8px 留给路径说明。 -->
-                    <Border Background="{Binding BackBrush}" BorderBrush="{Binding BorderBrush}"
-                            BorderThickness="2" CornerRadius="{StaticResource RadiusSm}" Padding="12,10"
-                            HorizontalAlignment="Left" MinWidth="236" Margin="0,12,0,8">
-                        <StackPanel>
-                            <!-- 输入码 -->
-                            <TextBlock Text="wang" FontSize="{Binding FontPoint}"
-                                       FontFamily="{Binding FontFace}"
-                                       Foreground="{Binding TextBrush}" Margin="2,0,0,7"/>
-
-                            <!-- 高亮候选：标记符 + 序号 + 词 + 注释 -->
-                            <Border Background="{Binding HilitedBackBrush}"
-                                    CornerRadius="3" Padding="7,4">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding PreviewMarkText}"
-                                               FontSize="{Binding FontPoint}" FontFamily="{Binding FontFace}"
-                                               Foreground="{Binding HilitedTextBrush}" Margin="0,0,4,0"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding PreviewLabel1}"
-                                               FontSize="{Binding PreviewLabelFontPoint}" FontFamily="{Binding FontFace}"
-                                               Foreground="{Binding HilitedLabelBrush}" Margin="0,0,6,0"/>
-                                    <TextBlock Grid.Column="2" Text="王"
-                                               FontSize="{Binding FontPoint}" FontFamily="{Binding FontFace}"
-                                               Foreground="{Binding HilitedTextBrush}"/>
-                                    <TextBlock Grid.Column="3" Text="wáng" FontSize="11"
-                                               Foreground="{Binding HilitedTextBrush}" Opacity="0.75" Margin="12,0,0,0"/>
-                                </Grid>
-                            </Border>
-
-                            <!-- 普通候选 -->
-                            <Grid Margin="7,4">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Width="16"/>
-                                <TextBlock Grid.Column="1" Text="{Binding PreviewLabel2}"
-                                           FontSize="{Binding PreviewLabelFontPoint}" FontFamily="{Binding FontFace}"
-                                           Foreground="{Binding LabelBrush}" Margin="0,0,6,0"/>
-                                <TextBlock Grid.Column="2" Text="往"
-                                           FontSize="{Binding FontPoint}" FontFamily="{Binding FontFace}"
-                                           Foreground="{Binding CandidateTextBrush}"/>
-                            </Grid>
-                            <Grid Margin="7,4">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Width="16"/>
-                                <TextBlock Grid.Column="1" Text="{Binding PreviewLabel3}"
-                                           FontSize="{Binding PreviewLabelFontPoint}" FontFamily="{Binding FontFace}"
-                                           Foreground="{Binding LabelBrush}" Margin="0,0,6,0"/>
-                                <TextBlock Grid.Column="2" Text="网"
-                                           FontSize="{Binding FontPoint}" FontFamily="{Binding FontFace}"
-                                           Foreground="{Binding CandidateTextBrush}"/>
-                            </Grid>
-
-                            <!-- 注释行 -->
-                            <TextBlock Text="〔，。〕 0 分" FontSize="{Binding PreviewCommentFontPoint}"
-                                       Margin="7,7,0,0" Foreground="{Binding CommentBrush}"/>
-                        </StackPanel>
-                    </Border>
-
-                    <TextBlock Text="{Binding CatalogSource}" FontSize="{StaticResource FontMicro}"
-                               Foreground="{StaticResource TextSecondaryBrush}"
-                               TextWrapping="Wrap" LineHeight="15"/>
-                </StackPanel>
-            </Border>
-
-            <!-- ── 2. 配色方案（仿 squirrel appearance.scheme.title）────────── -->
+            <!-- ── 1. 配色方案（仿 squirrel appearance.scheme.title）────────── -->
             <Border Style="{StaticResource Card}">
                 <StackPanel>
                     <TextBlock Text="{l10n:L Appearance.Scheme}" Style="{StaticResource SectionTitle}"/>
@@ -178,7 +95,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- ── 3. 字体（仿 squirrel appearance.font.title）────────────────── -->
+            <!-- ── 2. 字体（仿 squirrel appearance.font.title）────────────────── -->
             <Border Style="{StaticResource Card}">
                 <StackPanel>
                     <TextBlock Text="{l10n:L Appearance.Font}" Style="{StaticResource SectionTitle}"/>
@@ -256,7 +173,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- ── 4. 布局（仿 squirrel appearance.layout.title）──────────────── -->
+            <!-- ── 3. 布局（仿 squirrel appearance.layout.title）──────────────── -->
             <Border Style="{StaticResource Card}">
                 <StackPanel>
                     <TextBlock Text="{l10n:L Appearance.LayoutTitle}" Style="{StaticResource SectionTitle}"/>
@@ -319,7 +236,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- ── 5. 行为（仿 squirrel appearance.behavior.title）────────────── -->
+            <!-- ── 4. 行为（仿 squirrel appearance.behavior.title）────────────── -->
             <Border Style="{StaticResource Card}">
                 <StackPanel>
                     <TextBlock Text="{l10n:L Appearance.BehaviorTitle}" Style="{StaticResource SectionTitle}"/>
@@ -376,7 +293,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- ── 6. 状态条（保留 deploy 提示，仿 squirrel StatusStrip）──────── -->
+            <!-- ── 5. 状态条（保留 deploy 提示，仿 squirrel StatusStrip）──────── -->
             <Border Style="{StaticResource Card}" Margin="0,14,0,0">
                 <StackPanel>
                     <TextBlock Text="{l10n:L Appearance.ApplyTitle}" Style="{StaticResource SectionTitle}"/>

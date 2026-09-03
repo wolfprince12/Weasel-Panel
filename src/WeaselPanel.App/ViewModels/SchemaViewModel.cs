@@ -195,6 +195,8 @@ public sealed class SchemaViewModel : ViewModelBase, ILanguageAware, IPanelActio
             _catalog = SchemaCatalog.Build(_environment.UserDirectory, _environment.SharedDataDirectory);
             RebuildLists();
             HasLoaded = true;
+            _baseline = Signature();
+            OnPropertyChanged(nameof(IsDirty));
             StatusText = _catalog.All.Count == 0
                 ? StatusFromKey("Schema.Status.None")
                 : StatusFromKey("Schema.Status.Scanned", _catalog.All.Count, ActiveSchemas.Count);
@@ -367,7 +369,7 @@ public sealed class SchemaViewModel : ViewModelBase, ILanguageAware, IPanelActio
     }
     // ── 应用 ────────────────────────────────────────────────────────────────
 
-    public new bool IsDirty => Signature() != _baseline;
+    public new bool IsDirty => HasLoaded && Signature() != _baseline;
 
     private string Signature() => string.Join(",", ActiveSchemas.Select(r => r.SchemaId));
 

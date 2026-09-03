@@ -11,8 +11,10 @@ using WeaselPanel.Core.Rime;
 namespace WeaselPanel.App.ViewModels;
 
 /// <summary>
-/// 外观页。预览用的颜色一律走 Core 的 <see cref="ColorSchemeResolver"/>，
-/// 即套用上游完整回退链与 alpha 混合 —— 保证「面板所见」=「候选窗所得」。
+/// 外观页。配色所见即所得由下方 3 列色卡网格承担（套用上游完整回退链与
+/// alpha 混合，保证「面板所见」=「候选窗所得」）。候选窗预览模块已移除：
+/// 它既与色卡网格重复展示同一信息，又会因拖动字体/字号滑块时整块重渲染
+/// 造成交互卡顿。
 /// </summary>
 public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelActions
 {
@@ -32,8 +34,6 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
     private bool _isBusy;
     private string _statusText = "";
     private bool _catalogLoaded;
-    private string _catalogSourcePath = "";
-    private bool _catalogFound;
 
     public AppearanceViewModel(WeaselEnvironment environment)
     {
@@ -76,7 +76,6 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
         {
             if (!Set(ref _selectedCard, value) || value is null) return;
             OnPropertyChanged(nameof(SelectedScheme));
-            RefreshPreview();
         }
     }
 
@@ -84,7 +83,7 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
     public DelegateCommand ReloadCommand { get; }
     public RelayCommand DeployCommand { get; }
 
-    /// <summary>当前生效/选中的方案名。由 <see cref="SelectedCard"/> 推导，供 Apply/预览使用。</summary>
+    /// <summary>当前生效/选中的方案名。由 <see cref="SelectedCard"/> 推导，供 Apply 使用。</summary>
     public string? SelectedScheme => _selectedCard?.Name;
 
     public string FontFace
@@ -105,8 +104,8 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
     }
 
     /// <summary>
-    /// 预览用的注释字号。上游 label/comment 字号为 0 时表示「未单独设置」，
-    /// 实际渲染跟随主字号，故预览也必须回退，否则会显示成 0（不可见）。
+    /// 字号滑块旁展示的「有效字号」。上游 label/comment 字号为 0 时表示「未单独设置」，
+    /// 实际渲染跟随主字号，故这里也回退，否则会显示成 0（不可见）。
     /// </summary>
     public int PreviewCommentFontPoint => _commentFontPoint > 0 ? _commentFontPoint : _fontPoint;
     public int PreviewLabelFontPoint => _labelFontPoint > 0 ? _labelFontPoint : _fontPoint;
@@ -141,27 +140,14 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
     public string LabelTextFormat
     {
         get => _labelTextFormat;
-        set
-        {
-            if (!Set(ref _labelTextFormat, value)) return;
-            OnPropertyChanged(nameof(PreviewLabel1));
-            OnPropertyChanged(nameof(PreviewLabel2));
-            OnPropertyChanged(nameof(PreviewLabel3));
-        }
+        set => Set(ref _labelTextFormat, value);
     }
 
-    /// <summary>高亮候选前的标记符。空串在小狼毫中等价于 "*"。</summary>
     public string MarkText
     {
         get => _markText;
-        set
-        {
-            if (Set(ref _markText, value)) OnPropertyChanged(nameof(PreviewMarkText));
-        }
+        set => Set(ref _markText, value);
     }
-
-    /// <summary>预览用的标记符：空串按上游语义兜底为 "*"。</summary>
-    public string PreviewMarkText => _markText.Length == 0 ? "*" : _markText;
 
     public WeaselLayoutType LayoutType
     {
@@ -194,20 +180,6 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
         set => Set(ref _linespacing, Math.Clamp(Math.Abs(value), 0, 24));
     }
 
-    /// <summary>
-    /// 预览里的序号文本。把 printf 风格的 "%s" 替换为实际序号。
-    /// 上游用 swprintf_s 套用该格式（RimeWithWeasel.cpp:857）。
-    /// </summary>
-    public string PreviewLabel(string ordinal) =>
-        _labelTextFormat.Contains("%s", StringComparison.Ordinal)
-            ? _labelTextFormat.Replace("%s", ordinal)
-            : _labelTextFormat;
-
-    // 预览用的三个序号（WPF 不能绑定带参数的方法，故展开为属性）
-    public string PreviewLabel1 => PreviewLabel("1");
-    public string PreviewLabel2 => PreviewLabel("2");
-    public string PreviewLabel3 => PreviewLabel("3");
-
     public bool IsBusy
     {
         get => _isBusy;
@@ -220,48 +192,10 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
         private set => Set(ref _statusText, value);
     }
 
-    // ── 预览画笔 ──────────────────────────────────────────────
-    private SolidColorBrush _backBrush = Brushes.White;
-    public SolidColorBrush BackBrush { get => _backBrush; private set => Set(ref _backBrush, value); }
-
-    private SolidColorBrush _textBrush = Brushes.Black;
-    public SolidColorBrush TextBrush { get => _textBrush; private set => Set(ref _textBrush, value); }
-
-    private SolidColorBrush _candidateTextBrush = Brushes.Black;
-    public SolidColorBrush CandidateTextBrush { get => _candidateTextBrush; private set => Set(ref _candidateTextBrush, value); }
-
-    private SolidColorBrush _hilitedTextBrush = Brushes.White;
-    public SolidColorBrush HilitedTextBrush { get => _hilitedTextBrush; private set => Set(ref _hilitedTextBrush, value); }
-
-    private SolidColorBrush _hilitedBackBrush = Brushes.DodgerBlue;
-    public SolidColorBrush HilitedBackBrush { get => _hilitedBackBrush; private set => Set(ref _hilitedBackBrush, value); }
-
-    private SolidColorBrush _labelBrush = Brushes.Gray;
-    public SolidColorBrush LabelBrush { get => _labelBrush; private set => Set(ref _labelBrush, value); }
-
-    private SolidColorBrush _hilitedLabelBrush = Brushes.White;
-    public SolidColorBrush HilitedLabelBrush { get => _hilitedLabelBrush; private set => Set(ref _hilitedLabelBrush, value); }
-
-    private SolidColorBrush _commentBrush = Brushes.DimGray;
-    public SolidColorBrush CommentBrush { get => _commentBrush; private set => Set(ref _commentBrush, value); }
-
-    private SolidColorBrush _borderBrush = Brushes.LightGray;
-    public SolidColorBrush BorderBrush { get => _borderBrush; private set => Set(ref _borderBrush, value); }
-
-    /// <summary>
-    /// 内置配色目录的来源文件路径。
-    /// 做成计算属性而不是一次性拼好的字符串：找不到文件时要显示的那句提示是本地化的，
-    /// 切语言后必须能重取（否则中文界面上会一直留着上一句英文）。
-    /// </summary>
-    public string CatalogSource =>
-        _catalogFound ? _catalogSourcePath : L10n.Instance.T("Appearance.CatalogMissing");
-
     public void RefreshTexts()
     {
-        // 状态栏是「赋值那一刻拼好的 string」，靠 ViewModelBase 记下的 key 重建；
-        // 配色目录那句同理，重发一次通知让绑定重取。
+        // 状态栏是「赋值那一刻拼好的 string」，靠 ViewModelBase 记下的 key 重建。
         StatusText = Restatus();
-        OnPropertyChanged(nameof(CatalogSource));
     }
 
     // ── 加载 ──────────────────────────────────────────────────
@@ -319,9 +253,6 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
 
         foreach (var n in catalog.Names) SchemeNames.Add(n);
         _catalog = catalog;
-        _catalogSourcePath = source ?? "";
-        _catalogFound = source is not null;
-        OnPropertyChanged(nameof(CatalogSource));
         _catalogLoaded = catalog.Names.Count > 0;
 
         // 2) 当前生效值 = 共享 weasel.yaml（出厂）+ 用户 patch 合并后的**派生结果**。
@@ -359,7 +290,6 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
         OnPropertyChanged(nameof(CommentFontPoint));
         OnPropertyChanged(nameof(LabelTextFormat));
         OnPropertyChanged(nameof(MarkText));
-        OnPropertyChanged(nameof(PreviewMarkText));
         OnPropertyChanged(nameof(InlinePreedit));
         OnPropertyChanged(nameof(LayoutType));
         OnPropertyChanged(nameof(PreeditType));
@@ -373,7 +303,7 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
         // 先建色卡网格（依赖 _catalog），再据生效方案选中对应卡
         BuildSchemeCards(scheme);
 
-        // 先选中再刷新预览；若目录里没这个名字，仍保留（可能是自定义方案）
+        // 选中生效方案对应卡；目录里没这个名字，仍保留（可能是自定义方案）
         if (!_catalogLoaded || _catalog.Contains(scheme))
         {
             _selectedCard = SchemeCards.FirstOrDefault(c => c.Name == scheme) ?? SchemeCards.FirstOrDefault();
@@ -385,7 +315,6 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
 
         OnPropertyChanged(nameof(SelectedCard));
         OnPropertyChanged(nameof(SelectedScheme));
-        RefreshPreview();
 
         StatusText = _catalogLoaded
             ? StatusFromKey("Appearance.Status.LoadedSchemes", SchemeNames.Count)
@@ -394,7 +323,7 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
         MarkLoaded();
     }
 
-    /// <summary>据当前目录构建 3 列色卡网格的数据（预览色走完整回退链）。</summary>
+    /// <summary>据当前目录构建 3 列色卡网格的数据（所见即所得，走完整回退链）。</summary>
     private void BuildSchemeCards(string effectiveScheme)
     {
         SchemeCards.Clear();
@@ -420,26 +349,6 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
 
     /// <summary>用户的 weasel.custom.yaml，供「应用」时复用（保持已加载状态）。</summary>
     private CustomYamlFile? _custom;
-
-    private void RefreshPreview()
-    {
-        var resolved = SelectedScheme is null ? null : _catalog.Resolve(SelectedScheme);
-        if (resolved is null)
-        {
-            // 目录里没有（自定义方案）→ 退回空白预览，不要崩溃
-            return;
-        }
-
-        BackBrush = ToBrush(resolved.BackColor);
-        TextBrush = ToBrush(resolved.TextColor);
-        CandidateTextBrush = ToBrush(resolved.CandidateTextColor);
-        HilitedTextBrush = ToBrush(resolved.HilitedCandidateTextColor);
-        HilitedBackBrush = ToBrush(resolved.HilitedCandidateBackColor);
-        LabelBrush = ToBrush(resolved.LabelTextColor);
-        HilitedLabelBrush = ToBrush(resolved.HilitedLabelTextColor);
-        CommentBrush = ToBrush(resolved.CommentTextColor);
-        BorderBrush = ToBrush(resolved.BorderColor);
-    }
 
     /// <summary>ABGR 字面量 → WPF 画笔。RimeColor 内部已处理字节序与 alpha。</summary>
     private static SolidColorBrush ToBrush(uint abgr)

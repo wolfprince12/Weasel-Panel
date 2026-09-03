@@ -61,6 +61,7 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
     private bool _isBusy;
     private string _statusText = "";
     private string _baseline = "";
+    private bool _loaded;
 
     private bool _enabled;
     private CorrectionInjectionPosition _position = CorrectionInjectionPosition.AfterFirst;
@@ -179,7 +180,8 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
     public string FilePath => _config.IceCustomPath;
 
     // ── 脏值 ──────────────────────────────────────────────────────────
-    public new bool IsDirty => Signature() != _baseline;
+    // ⚠️ 未 Load 前不报脏（见 SchemaViewModel 同款守卫说明），否则启动即误报。
+    public new bool IsDirty => _loaded && Signature() != _baseline;
 
     private string Signature() => string.Join("#",
         _enabled ? 1 : 0,
@@ -218,6 +220,7 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
 
         RefreshTexts();
         _baseline = Signature();
+        _loaded = true;
         OnPropertyChanged(nameof(IsDirty));
         ApplyCommand.RaiseCanExecuteChanged();
 

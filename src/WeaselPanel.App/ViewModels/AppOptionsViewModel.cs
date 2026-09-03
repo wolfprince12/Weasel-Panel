@@ -293,6 +293,7 @@ public sealed class AppOptionsViewModel : ViewModelBase, ILanguageAware, IPanelA
     {
         get
         {
+            if (!_hasLoaded) return false;
             if (Rows.Count != _baseline.Count) return true;
             for (var i = 0; i < Rows.Count; i++)
                 if (Snapshot(Rows[i]) != _baseline[i]) return true;

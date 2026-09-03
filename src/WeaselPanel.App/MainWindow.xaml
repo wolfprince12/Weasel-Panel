@@ -75,7 +75,6 @@
                                  local:NavItemHelper.Tint="{StaticResource NavTintRed}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.Appearance}"
-                                 Tag="{l10n:L NavGroup.Appearance}"
                                  local:NavItemHelper.Icon="&#xE790;"
                                  local:NavItemHelper.Tint="{StaticResource NavTintOrange}"/>
                     <ListBoxItem Content="{l10n:L Nav.ColorSchemes}"
@@ -83,7 +82,6 @@
                                  local:NavItemHelper.Tint="{StaticResource NavTintOrange}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.Schema}"
-                                 Tag="{l10n:L NavGroup.Input}"
                                  local:NavItemHelper.Icon="&#xE8A5;"
                                  local:NavItemHelper.Tint="{StaticResource NavTintGreen}"/>
                     <ListBoxItem Content="{l10n:L Nav.RimeIce}"
@@ -91,7 +89,6 @@
                                  local:NavItemHelper.Tint="{StaticResource NavTintTeal}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.Dictionary}"
-                                 Tag="{l10n:L NavGroup.Data}"
                                  local:NavItemHelper.Icon="&#xE7B7;"
                                  local:NavItemHelper.Tint="{StaticResource NavTintPink}"/>
                     <ListBoxItem Content="{l10n:L Nav.Packages}"
@@ -99,12 +96,10 @@
                                  local:NavItemHelper.Tint="{StaticResource NavTintPink}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.Correction}"
-                                 Tag="{l10n:L NavGroup.Correction}"
                                  local:NavItemHelper.Icon="&#xE7E0;"
                                  local:NavItemHelper.Tint="{StaticResource NavTintMint}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.Input}"
-                                 Tag="{l10n:L NavGroup.Keys}"
                                  local:NavItemHelper.Icon="&#xE765;"
                                  local:NavItemHelper.Tint="{StaticResource NavTintIndigo}"/>
                     <ListBoxItem Content="{l10n:L Nav.Behavior}"
@@ -112,7 +107,6 @@
                                  local:NavItemHelper.Tint="{StaticResource NavTintIndigo}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.Backup}"
-                                 Tag="{l10n:L NavGroup.Maintenance}"
                                  local:NavItemHelper.Icon="&#xE74E;"
                                  local:NavItemHelper.Tint="{StaticResource NavTintBrown}"/>
                     <ListBoxItem Content="{l10n:L Nav.AppOptions}"
@@ -123,12 +117,10 @@
                                  local:NavItemHelper.Tint="{StaticResource NavTintPurple}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.Inspector}"
-                                 Tag="{l10n:L NavGroup.Tools}"
                                  local:NavItemHelper.Icon="&#xE721;"
                                  local:NavItemHelper.Tint="{StaticResource NavTintGray}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.About}"
-                                 Tag="{l10n:L NavGroup.Meta}"
                                  local:NavItemHelper.Icon="&#xE946;"
                                  local:NavItemHelper.Tint="{StaticResource NavTintGray}"/>
                 </ListBox>

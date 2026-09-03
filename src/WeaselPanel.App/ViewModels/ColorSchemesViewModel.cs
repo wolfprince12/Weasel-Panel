@@ -209,6 +209,7 @@ public sealed class ColorSchemesViewModel : ViewModelBase, ILanguageAware, IPane
     private readonly WeaselEnvironment _environment;
     private UserColorSchemeStore _store;
     private string _baseline = "";
+    private bool _loaded;
     private SchemeRow? _selected;
     private string _statusText = "";
     private bool _isBusy;
@@ -442,7 +443,8 @@ public sealed class ColorSchemesViewModel : ViewModelBase, ILanguageAware, IPane
         private set => Set(ref _statusText, value);
     }
 
-    public new bool IsDirty => Signature() != _baseline;
+    // ⚠️ 未 Load 前不报脏（见 SchemaViewModel 同款守卫说明），否则启动即误报。
+    public new bool IsDirty => _loaded && Signature() != _baseline;
 
     public bool ShowNoSchemes => Schemes.Count == 0;
 
@@ -513,6 +515,7 @@ public sealed class ColorSchemesViewModel : ViewModelBase, ILanguageAware, IPane
         RebindEditor();
 
         _baseline = Signature();
+        _loaded = true;
         OnPropertyChanged(nameof(IsDirty));
         RaiseCanExecuteChanged();
 
