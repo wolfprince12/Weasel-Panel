@@ -34,9 +34,12 @@
          0.2.7（2026-09-03）：紫毫纠错页新增「安装 Lua 引擎」引导式模块 ——
          仅当检测不到 Lua 运行时时高亮按钮，点击后确认框 → 选 rime.dll/.zip →
          后台提权（runas）备份并覆盖 Program Files 下的 rime.dll、停 WeaselServer、
-         重部署、重检测。下载那一步仍由用户手动点链接，避开版本错配与登录墙。 -->
-    <Version>0.2.7</Version>
-    <InformationalVersion>0.2.7</InformationalVersion>
+         重部署、重检测。下载那一步仍由用户手动点链接，         避开版本错配与登录墙。
+         0.2.8（2026-09-03）：紫毫纠错卡片下载源优化 —— 首选直达 rime/librime 官方
+         Releases（公开、含 dist/lib/rime.dll，正是安装引导要的那一份）；原 hchunhui
+         链接降为备选（其预编译包已转到需登录的 Actions artifacts）。三语包同步。 -->
+    <Version>0.2.8</Version>
+    <InformationalVersion>0.2.8</InformationalVersion>
     <Company>大狼导演工作室</Company>
     <Product>小狼毫控制面板</Product>
     <Copyright>GPL-3.0</Copyright>

@@ -216,6 +216,13 @@
                         <!-- ⚠️ Hyperlink.Inlines 只接受 Inline 子节点。
                              之前用 <TextBlock Text="..."> 会抛 XamlParseException
                              ("向 InlineCollection 添加 TextBlock")。改用 <Run>。 -->
+                        <Run Text="{l10n:L Correction.Lua.DownloadRime}"/>
+                    </Hyperlink>
+                </TextBlock>
+
+                <TextBlock Margin="0,6,0,0">
+                    <Hyperlink NavigateUri="{x:Static vm:CorrectionViewModel.LuaDownloadUrl}"
+                               RequestNavigate="Hyperlink_RequestNavigate">
                         <Run Text="{l10n:L Correction.Lua.Download}"/>
                     </Hyperlink>
                 </TextBlock>

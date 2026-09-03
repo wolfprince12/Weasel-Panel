@@ -207,6 +207,11 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
     /// 详见 docs/RELEASE_v0.2.5.md 第⑤类盲区。</summary>
     public static readonly Uri LuaDownloadUrl = new("https://github.com/hchunhui/librime-lua/releases/");
 
+    /// <summary>librime 官方 Release 页（公开，含 lua / octagram / charcode 三插件的 dist/lib/rime.dll）。
+    /// 社区现优先从这里取「带 Lua 的 rime.dll」——hchunhui/librime-lua 的预编译包已转到需登录的
+    /// GitHub Actions artifacts。安装引导流程要的就是这里的 dist/lib/rime.dll，故作为推荐源。</summary>
+    public static readonly Uri LuaDownloadUrlRime = new("https://github.com/rime/librime/releases/");
+
     /// <summary>判定 Lua 运行时是否在场的文件名特征（librime-lua 会随 rime.dll 一起带来这些）。</summary>
     private static readonly string[] LuaRuntimeMarkers =
     {
