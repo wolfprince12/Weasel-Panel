@@ -37,6 +37,10 @@ NavGroup.Appearance = Appearance
 NavGroup.Input = Input
 NavGroup.Data = Dictionaries & Upkeep
 NavGroup.Meta = About
+NavGroup.Correction = Correction
+NavGroup.Keys = Keys & Behavior
+NavGroup.Maintenance = Upkeep
+NavGroup.Tools = Tools
 
 Nav.Diagnostics = Diagnostics
 Nav.Appearance = Appearance
@@ -917,3 +921,9 @@ Deploy.Apply = Apply and redeploy
 Deploy.ViewYaml = View YAML
 Deploy.Discard = Discard changes
 Deploy.Note = All changes are written to patch files (*.custom.yaml). Only modified panels are applied, then deployed once.
+
+Deploy.Status.Applying = Applying…
+Deploy.Status.Dirty = {0} panel(s) have unsaved changes
+Deploy.Status.Clean = All saved
+Banner.WeaselNotInstalled = Weasel is not detected. Some settings will not take effect until it is installed.
+Banner.UserDirNotReady = User directory not ready yet. Deploy once after RIME has created the user directory.

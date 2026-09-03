@@ -60,66 +60,100 @@
                 <ListBox Grid.Row="1" x:Name="Nav" Background="Transparent" BorderThickness="0"
                          ItemContainerStyle="{StaticResource NavItem}"
                          SelectionChanged="Nav_SelectionChanged">
-                    <!-- 不要在这里写 IsSelected="True"。InitializeComponent 解析到这个
-                         ListBoxItem 时会立刻同步触发 SelectionChanged，但 _diagnosticsView
-                         等字段在 ctor 体里还要一会儿才 new 好，回调里 _appearanceView 还是
-                         null，直接 NRE。改由 ctor 末尾在所有 view 就绪后直接赋首屏。 -->
-                    <!-- ⚠️ Tag = 组标题，由 NavItem 模板在该项上方渲染一行小字。
-                         组标题**不是**独立条目 —— 导航按 SelectedIndex 派发，
-                         多插一项就会「点维护跳出词典」，所以分组只能挂 Tag。
-                         只有「组内第一项」带 Tag，其余不带。
-                         首项「环境诊断」紧贴品牌区，不需要再压一行标题。
-                         local:NavItemHelper.Icon = Segoe MDL2 Assets 字形（Windows 内置）。 -->
+                    <!-- 顺序严格对齐鼠须管（squirrel）侧栏：
+                         外观 → 输入方案 → 雾凇拼音 → 词库 → 紫毫纠错 → 按键与行为
+                         → 备份与维护 → 应用选项 → 维护 → 关于。
+                         小狼毫（Windows）独占的面板就近插入：诊断(首)、自定义配色(紧跟外观)、
+                         词库包(紧跟词库)、配置查看器(工具组)。
+                         ⚠️ 顺序必须与 MainWindow.xaml.cs 的 NavViews 数组逐一对应；
+                            改动这里必须同步改 NavViews，否则「点维护跳出词典」。
+
+                         Tag = 组标题（仅组内首项带，由 NavItem 模板在该项头顶渲染一行小字）；
+                         local:NavItemHelper.Tint = 按面板语义的图标着色（仿 squirrel listItemTint）。 -->
                     <ListBoxItem Content="{l10n:L Nav.Diagnostics}"
-                                 local:NavItemHelper.Icon="&#xE9D0;"/>
+                                 local:NavItemHelper.Icon="&#xE9D0;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintRed}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.Appearance}"
                                  Tag="{l10n:L NavGroup.Appearance}"
-                                 local:NavItemHelper.Icon="&#xE790;"/>
-                    <!-- 自定义配色紧挨「外观」：两页都管配色，
-                         外观是「选哪一套」，这里是「造一套」。 -->
+                                 local:NavItemHelper.Icon="&#xE790;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintOrange}"/>
                     <ListBoxItem Content="{l10n:L Nav.ColorSchemes}"
-                                 local:NavItemHelper.Icon="&#xE7AB;"/>
+                                 local:NavItemHelper.Icon="&#xE7AB;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintOrange}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.Schema}"
                                  Tag="{l10n:L NavGroup.Input}"
-                                 local:NavItemHelper.Icon="&#xE8A5;"/>
-                    <!-- 雾凇拼音紧挨「输入方案」：rime_ice 本身是一个拼音方案，
-                         方案页管「装哪些、谁在前」，这里管「这一套内部的词库/模糊音/繁简」。 -->
+                                 local:NavItemHelper.Icon="&#xE8A5;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintGreen}"/>
                     <ListBoxItem Content="{l10n:L Nav.RimeIce}"
-                                 local:NavItemHelper.Icon="&#xE753;"/>
-                    <!-- 紫毫纠错紧挨「雾凇拼音」：纠错引擎挂在 rime_ice 方案上，
-                         两者同属「输入」分组。纠错只此一页可改，避免与雾凇页互相回滚。 -->
-                    <ListBoxItem Content="{l10n:L Nav.Correction}"
-                                 local:NavItemHelper.Icon="&#xE7E0;"/>
-                    <ListBoxItem Content="{l10n:L Nav.Input}"
-                                 local:NavItemHelper.Icon="&#xE765;"/>
-                    <ListBoxItem Content="{l10n:L Nav.Behavior}"
-                                 local:NavItemHelper.Icon="&#xE713;"/>
-                    <ListBoxItem Content="{l10n:L Nav.AppOptions}"
-                                 local:NavItemHelper.Icon="&#xE7F4;"/>
+                                 local:NavItemHelper.Icon="&#xE753;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintTeal}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.Dictionary}"
                                  Tag="{l10n:L NavGroup.Data}"
-                                 local:NavItemHelper.Icon="&#xE7B7;"/>
+                                 local:NavItemHelper.Icon="&#xE7B7;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintPink}"/>
                     <ListBoxItem Content="{l10n:L Nav.Packages}"
-                                 local:NavItemHelper.Icon="&#xE7B8;"/>
-                    <ListBoxItem Content="{l10n:L Nav.Maintenance}"
-                                 local:NavItemHelper.Icon="&#xE7D9;"/>
-                    <ListBoxItem Content="{l10n:L Nav.Inspector}"
-                                 local:NavItemHelper.Icon="&#xE721;"/>
+                                 local:NavItemHelper.Icon="&#xE7B8;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintPink}"/>
+
+                    <ListBoxItem Content="{l10n:L Nav.Correction}"
+                                 Tag="{l10n:L NavGroup.Correction}"
+                                 local:NavItemHelper.Icon="&#xE7E0;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintMint}"/>
+
+                    <ListBoxItem Content="{l10n:L Nav.Input}"
+                                 Tag="{l10n:L NavGroup.Keys}"
+                                 local:NavItemHelper.Icon="&#xE765;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintIndigo}"/>
+                    <ListBoxItem Content="{l10n:L Nav.Behavior}"
+                                 local:NavItemHelper.Icon="&#xE713;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintIndigo}"/>
+
                     <ListBoxItem Content="{l10n:L Nav.Backup}"
-                                 local:NavItemHelper.Icon="&#xE74E;"/>
+                                 Tag="{l10n:L NavGroup.Maintenance}"
+                                 local:NavItemHelper.Icon="&#xE74E;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintBrown}"/>
+                    <ListBoxItem Content="{l10n:L Nav.AppOptions}"
+                                 local:NavItemHelper.Icon="&#xE7F4;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintBlue}"/>
+                    <ListBoxItem Content="{l10n:L Nav.Maintenance}"
+                                 local:NavItemHelper.Icon="&#xE7D9;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintPurple}"/>
+
+                    <ListBoxItem Content="{l10n:L Nav.Inspector}"
+                                 Tag="{l10n:L NavGroup.Tools}"
+                                 local:NavItemHelper.Icon="&#xE721;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintGray}"/>
 
                     <ListBoxItem Content="{l10n:L Nav.About}"
                                  Tag="{l10n:L NavGroup.Meta}"
-                                 local:NavItemHelper.Icon="&#xE946;"/>
+                                 local:NavItemHelper.Icon="&#xE946;"
+                                 local:NavItemHelper.Tint="{StaticResource NavTintGray}"/>
                 </ListBox>
 
                 <!-- 底部统一部署栏（仿鼠须管侧栏「应用并重新部署」）：
-                     上方「查看 YAML / 放弃更改」次要操作，中间全宽主按钮，
-                     下方一行脚注说明改动落点。只应用有未保存改动的面板，统一重部署一次。 -->
+                     上方状态行（应用进度圈 + 待保存/已保存文案），
+                     中间「查看 YAML / 放弃更改」次要操作，下方全宽主按钮，
+                     再下方一行脚注说明改动落点。只应用有未保存改动的面板，统一重部署一次。 -->
                 <StackPanel Grid.Row="2" x:Name="DeployBarHost" Margin="0,12,0,0">
+                    <!-- 状态行：应用进行中显示进度条；有未保存改动文案用橙色（仿 squirrel footer.dirty），
+                         否则用次文字色。绑 _deploy 的属性，DataContext 在 ctor 里已指向 _deploy。 -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ProgressBar Grid.Column="0" Width="90" Height="4" IsIndeterminate="True"
+                                     Visibility="{Binding IsApplying, Converter={StaticResource BoolToVisibility}}"
+                                     Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding StatusMessage}"
+                                   Foreground="{Binding StatusBrush}"
+                                   FontSize="{StaticResource FontCaption}" TextWrapping="Wrap"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                         <Button Style="{StaticResource SecondaryButton}"
                                 Command="{Binding ViewYamlCommand}"
@@ -141,30 +175,54 @@
         </Border>
 
         <!-- ── 内容区 ─────────────────────────────────
-             MaxWidth + 左对齐是本轮排版复审最关键的一处修正。原来是纯 `*`，
-             窗口最大化后内容区能有 2000+ 像素宽：说明文字一行 200 多字符、
-             「标签 : 控件」中间拉出一大片空白、复选框注释横贯整屏 ——
-             十三个页面**全部**受影响，这就是「各个页面排版很有问题」的总根源。
-             限宽到 920（见 App.xaml 的 ContentMaxWidth），窄窗口下不生效，
-             宽窗口下内容靠左维持与侧栏的阅读连续性（跟 Windows 11 设置一致，
-             不居中 —— 居中会让内容在超宽屏上飘到屏幕正中、与左侧导航断开）。 -->
+             顶部横幅区（仿 squirrel 顶部 Banner：未装小狼毫 / 用户目录未就绪），
+             下方才是各面板内容。限宽到 920（见 App.xaml 的 ContentMaxWidth），
+             窄窗口下不生效，宽窗口下内容靠左维持与侧栏的阅读连续性。 -->
         <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       Padding="0" Margin="0">
-            <!-- 为什么用「star 列 + MaxWidth」而不是给 ContentControl 直接写
-                 HorizontalAlignment=Left + MaxWidth：Left 对齐的元素宽度是**按内容收缩**的，
-                 于是每页宽度都不一样（哪页恰好有一行长文字，那页的卡片就更宽），
-                 页间切换时卡片右边缘会跳。而 Stretch + MaxWidth 在 WPF 里是**居中**，
-                 超宽屏上内容会飘到屏幕正中、和左侧导航断开。
-                 star 列受 MaxWidth 限制后停在 920 且靠左，右侧富余空间由 Auto 列吃掉，
-                 是唯一能同时满足「定宽 + 靠左」的写法。 -->
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MaxWidth="{StaticResource ContentMaxWidth}"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <ContentControl x:Name="ContentHost" Grid.Column="0" Margin="24,22,24,28"/>
-            </Grid>
+            <StackPanel>
+                <!-- 横幅区：DataContext 由 ctor 指向 _deploy（与 DeployBarHost 同源）。
+                     Banners 为空（已安装且用户目录就绪）时整块折叠，不占空间。 -->
+                <ItemsControl x:Name="BannerHost"
+                              Visibility="{Binding HasBanners, Converter={StaticResource BoolToVisibility}}"
+                              Margin="24,16,24,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="local:BannerItem">
+                            <Border Margin="0,0,0,10" CornerRadius="{StaticResource RadiusMd}"
+                                    Background="{Binding TintBrush}"
+                                    BorderBrush="{Binding TextBrush}" BorderThickness="1">
+                                <Grid Margin="14,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Width="26" Height="26" CornerRadius="6"
+                                            Background="{Binding TextBrush}" Opacity="0.16"
+                                            Margin="0,0,12,0" VerticalAlignment="Top">
+                                        <TextBlock Text="{Binding IconGlyph}"
+                                                   FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   Foreground="{Binding TextBrush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="{Binding Text}"
+                                               FontSize="{StaticResource FontBody}"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MaxWidth="{StaticResource ContentMaxWidth}"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ContentControl x:Name="ContentHost" Grid.Column="0" Margin="24,22,24,28"/>
+                </Grid>
+            </StackPanel>
         </ScrollViewer>
     </Grid>
 </Window>

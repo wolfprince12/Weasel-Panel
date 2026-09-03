@@ -106,6 +106,27 @@
             <SolidColorBrush x:Key="InfoSoftBrush" Color="{StaticResource InfoSoft}"/>
             <SolidColorBrush x:Key="NeutralSoftBrush" Color="{StaticResource NeutralSoft}"/>
 
+            <!-- 横幅（仿 squirrel 顶部 Banner：未装小狼毫 / 用户目录未就绪）。
+                 浅底 + 实色字，由 DeployCoordinator.BannerItem 的 TintBrushKey / TextBrushKey 引用。 -->
+            <SolidColorBrush x:Key="BannerWarningBrush" Color="{StaticResource WarningSoft}"/>
+            <SolidColorBrush x:Key="BannerWarningTextBrush" Color="{StaticResource Warning}"/>
+            <SolidColorBrush x:Key="BannerInfoBrush" Color="{StaticResource InfoSoft}"/>
+            <SolidColorBrush x:Key="BannerInfoTextBrush" Color="{StaticResource Info}"/>
+
+            <!-- 侧栏导航每项的着色（仿 squirrel listItemTint，按面板语义上色）。
+                 侧栏图标默认是中性色，加上这层 tint 后视觉上更贴近鼠须管的「每项一色」。 -->
+            <SolidColorBrush x:Key="NavTintRed" Color="#FFD1372C"/>
+            <SolidColorBrush x:Key="NavTintOrange" Color="#FFC77B30"/>
+            <SolidColorBrush x:Key="NavTintGreen" Color="#FF2E9E5B"/>
+            <SolidColorBrush x:Key="NavTintTeal" Color="#FF1F9C8B"/>
+            <SolidColorBrush x:Key="NavTintPink" Color="#FFD14B8C"/>
+            <SolidColorBrush x:Key="NavTintMint" Color="#FF3FB58E"/>
+            <SolidColorBrush x:Key="NavTintIndigo" Color="#FF5B5BD6"/>
+            <SolidColorBrush x:Key="NavTintBlue" Color="#FF2D7DD2"/>
+            <SolidColorBrush x:Key="NavTintBrown" Color="#FF8A5A2B"/>
+            <SolidColorBrush x:Key="NavTintPurple" Color="#FF8B5BD6"/>
+            <SolidColorBrush x:Key="NavTintGray" Color="#FF7A838C"/>
+
             <!-- bool → Visibility。XAML 里判断 null / bool 很容易把条件写反，
                  这类显示与否的判断优先在 ViewModel 里算成 bool 属性，再由此转换器绑定。 -->
             <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
@@ -688,11 +709,15 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <!-- 图标：Segoe MDL2 Assets 字形，由 ListBoxItem 的
-                                                 NavItemHelper.Icon 附加属性提供。Foreground 不显式设置，
-                                                 继承 ListBoxItem 的当前前景（选中态自动变主色）。 -->
+                                                 NavItemHelper.Icon 附加属性提供。前景绑 NavItemHelper.Tint
+                                                 （仿 squirrel listItemTint 按面板语义上色）；未设置时回退中性色。
+                                                 选中态只让文字（ContentPresenter）变主色，图标保持本面板 tint。 -->
                                             <TextBlock x:Name="ico" Grid.Column="0"
                                                        Text="{Binding Path=(local:NavItemHelper.Icon),
                                                               RelativeSource={RelativeSource TemplatedParent}}"
+                                                       Foreground="{Binding Path=(local:NavItemHelper.Tint),
+                                                              RelativeSource={RelativeSource TemplatedParent},
+                                                              TargetNullValue={StaticResource TextLabelBrush}}"
                                                        FontFamily="Segoe MDL2 Assets" FontSize="16"
                                                        Margin="0,0,10,0" VerticalAlignment="Center"
                                                        IsHitTestVisible="False"/>

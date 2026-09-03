@@ -22,6 +22,10 @@ NavGroup.Appearance = 外觀與配色
 NavGroup.Input = 輸入
 NavGroup.Data = 詞庫與維護
 NavGroup.Meta = 關於
+NavGroup.Correction = 紫毫糾錯
+NavGroup.Keys = 按鍵與行為
+NavGroup.Maintenance = 維護
+NavGroup.Tools = 工具
 
 Nav.Diagnostics = 環境診斷
 Nav.Appearance = 外觀
@@ -904,3 +908,9 @@ Packages.Error.GrammarFirst = 請先卸載語法模型，再卸載霧凇拼音�
 Packages.Error.NotManaged = 找不到本面板的安裝記錄，無法執行該操作。
 Packages.Error.Download = 下載失敗，已嘗試全部鏡像站：{0}
 Packages.Error.Unknown = 未知錯誤（{0}）
+
+Deploy.Status.Applying = 應用並重新部署中……
+Deploy.Status.Dirty = {0} 個面板有未保存變更
+Deploy.Status.Clean = 全部已儲存
+Banner.WeaselNotInstalled = 未偵測到小狼毫安裝，部分設定將無法生效。請先安裝小狼毫。
+Banner.UserDirNotReady = 使用者目錄尚未就緒（首次部署後由 RIME 建立），部署一次後再回來。

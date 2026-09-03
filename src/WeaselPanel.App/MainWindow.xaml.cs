@@ -85,6 +85,7 @@ public partial class MainWindow : Window
         _deploy.Register((IPanelActions)_appOptionsView.DataContext);
         _deploy.Register((IPanelActions)_dictionaryView.DataContext);
         DeployBarHost.DataContext = _deploy;
+        BannerHost.DataContext = _deploy;
 
         // ⚠️ 不要在 XAML 里写 ListBoxItem.IsSelected="True"，会在 InitializeComponent
         // 阶段触发 SelectionChanged，此时各 view 字段还没就绪 → NRE。
@@ -215,20 +216,20 @@ public partial class MainWindow : Window
 
     private UserControl[] NavViews =>
     [
-        _diagnosticsView,   // 0 环境诊断
+        _diagnosticsView,   // 0 环境诊断（Windows 独占，置顶）
         _appearanceView,    // 1 外观
-        _colorSchemesView,  // 2 自定义配色
+        _colorSchemesView,  // 2 自定义配色（紧跟外观）
         _schemaView,        // 3 输入方案
         _rimeIceView,       // 4 雾凇拼音
-        _correctionView,    // 5 紫毫纠错
-        _inputView,         // 6 按键与输入
-        _behaviorView,      // 7 行为
-        _appOptionsView,    // 8 应用选项
-        _dictionaryView,     // 9 词典
-        _packageManagerView, // 10 词库包
-        _maintenanceView,    // 11 维护
-        _inspectorView,      // 12 配置查看器
-        _backupView,         // 13 备份与恢复
+        _dictionaryView,     // 5 词库
+        _packageManagerView, // 6 词库包（紧跟词库）
+        _correctionView,    // 7 紫毫纠错
+        _inputView,         // 8 按键与输入
+        _behaviorView,      // 9 行为
+        _backupView,         // 10 备份与恢复
+        _appOptionsView,    // 11 应用选项
+        _maintenanceView,    // 12 维护
+        _inspectorView,      // 13 配置查看器（工具组）
         _aboutView,          // 14 关于
     ];
 }

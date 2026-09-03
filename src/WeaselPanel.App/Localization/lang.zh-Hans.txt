@@ -21,6 +21,10 @@ NavGroup.Appearance = 外观与配色
 NavGroup.Input = 输入
 NavGroup.Data = 词库与维护
 NavGroup.Meta = 关于
+NavGroup.Correction = 紫毫纠错
+NavGroup.Keys = 按键与行为
+NavGroup.Maintenance = 维护
+NavGroup.Tools = 工具
 
 Nav.Diagnostics = 环境诊断
 Nav.Appearance = 外观
@@ -900,3 +904,9 @@ Deploy.Apply = 应用并重新部署
 Deploy.ViewYaml = 查看 YAML
 Deploy.Discard = 放弃更改
 Deploy.Note = 所有改动写入补丁文件（*.custom.yaml）；仅应用有改动的面板，统一重新部署一次。
+
+Deploy.Status.Applying = 应用并重新部署中……
+Deploy.Status.Dirty = {0} 个面板有未保存改动
+Deploy.Status.Clean = 全部已保存
+Banner.WeaselNotInstalled = 未检测到小狼毫安装，部分设置将无法生效。请先安装小狼毫。
+Banner.UserDirNotReady = 用户目录尚未就绪（首次部署后由 RIME 创建），部署一次后再回来。

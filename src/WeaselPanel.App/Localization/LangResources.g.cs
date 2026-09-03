@@ -33,6 +33,10 @@ NavGroup.Appearance = 外观与配色
 NavGroup.Input = 输入
 NavGroup.Data = 词库与维护
 NavGroup.Meta = 关于
+NavGroup.Correction = 紫毫纠错
+NavGroup.Keys = 按键与行为
+NavGroup.Maintenance = 维护
+NavGroup.Tools = 工具
 
 Nav.Diagnostics = 环境诊断
 Nav.Appearance = 外观
@@ -913,6 +917,12 @@ Deploy.ViewYaml = 查看 YAML
 Deploy.Discard = 放弃更改
 Deploy.Note = 所有改动写入补丁文件（*.custom.yaml）；仅应用有改动的面板，统一重新部署一次。
 
+Deploy.Status.Applying = 应用并重新部署中……
+Deploy.Status.Dirty = {0} 个面板有未保存改动
+Deploy.Status.Clean = 全部已保存
+Banner.WeaselNotInstalled = 未检测到小狼毫安装，部分设置将无法生效。请先安装小狼毫。
+Banner.UserDirNotReady = 用户目录尚未就绪（首次部署后由 RIME 创建），部署一次后再回来。
+
 """;
 
         public const string ZhHant = """
@@ -940,6 +950,10 @@ NavGroup.Appearance = 外觀與配色
 NavGroup.Input = 輸入
 NavGroup.Data = 詞庫與維護
 NavGroup.Meta = 關於
+NavGroup.Correction = 紫毫糾錯
+NavGroup.Keys = 按鍵與行為
+NavGroup.Maintenance = 維護
+NavGroup.Tools = 工具
 
 Nav.Diagnostics = 環境診斷
 Nav.Appearance = 外觀
@@ -1823,6 +1837,12 @@ Packages.Error.NotManaged = 找不到本面板的安裝記錄，無法執行該�
 Packages.Error.Download = 下載失敗，已嘗試全部鏡像站：{0}
 Packages.Error.Unknown = 未知錯誤（{0}）
 
+Deploy.Status.Applying = 應用並重新部署中……
+Deploy.Status.Dirty = {0} 個面板有未保存變更
+Deploy.Status.Clean = 全部已儲存
+Banner.WeaselNotInstalled = 未偵測到小狼毫安裝，部分設定將無法生效。請先安裝小狼毫。
+Banner.UserDirNotReady = 使用者目錄尚未就緒（首次部署後由 RIME 建立），部署一次後再回來。
+
 """;
 
         public const string En = """
@@ -1865,6 +1885,10 @@ NavGroup.Appearance = Appearance
 NavGroup.Input = Input
 NavGroup.Data = Dictionaries & Upkeep
 NavGroup.Meta = About
+NavGroup.Correction = Correction
+NavGroup.Keys = Keys & Behavior
+NavGroup.Maintenance = Upkeep
+NavGroup.Tools = Tools
 
 Nav.Diagnostics = Diagnostics
 Nav.Appearance = Appearance
@@ -2745,6 +2769,12 @@ Deploy.Apply = Apply and redeploy
 Deploy.ViewYaml = View YAML
 Deploy.Discard = Discard changes
 Deploy.Note = All changes are written to patch files (*.custom.yaml). Only modified panels are applied, then deployed once.
+
+Deploy.Status.Applying = Applying…
+Deploy.Status.Dirty = {0} panel(s) have unsaved changes
+Deploy.Status.Clean = All saved
+Banner.WeaselNotInstalled = Weasel is not detected. Some settings will not take effect until it is installed.
+Banner.UserDirNotReady = User directory not ready yet. Deploy once after RIME has created the user directory.
 
 """;
 
