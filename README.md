@@ -9,7 +9,7 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 
 ## 当前状态
 
-🚧 **开发初期** —— 尚无可用版本，请勿期待下载。
+🔧 **v0.2.5 已出包，待 Windows 真机验证** —— 在 macOS 交叉编译产出单文件 exe（见下文「构建与测试」），但 WPF 的部分 XAML 错误编译期不报、需真机启动一次才暴露。v0.2.5 已修 v0.2.4 的两处启动崩溃（`<Hyperlink>` 容器类型错、`{StaticResource}` 误用 ViewModel 常量），并在 `build.sh` 加了 XAML 资源引用体检拦同类复发。
 
 | 阶段 | 内容 | 状态 |
 | --- | --- | --- |
@@ -73,6 +73,31 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 
 已以上游原始 `weasel.yaml` 验证：三组别键回退（`border_width` / `round_corner` /
 `hilite_padding`）全部命中，派生值与预期逐项一致。
+
+## v0.2.5 已实现功能
+
+| 类别 | 改动 | 状态 |
+| --- | --- | --- |
+| 侧栏 | 去掉误加的 NavGroup 功能分类层次，恢复纯 `List` 导航 | ✅ |
+| 外观面板 | 移除候选窗预览模块（解决打开卡顿） | ✅ |
+| 脏标记 | 修 `SchemaViewModel.IsDirty` 缺 `HasLoaded` 守卫（修打开即报「有未保存改动」常驻） | ✅ |
+| 按键与输入页 | 加「Tab / Shift+Tab 翻页」开关，语义对齐鼠须管（Tab→Page_Down / Shift+Tab→Page_Up，`when:has_menu`） | ✅ |
+| 关于面板 | 对齐鼠须管：开发者 / 更多作品（推广）/ 运行状态 / 关于项目 四块卡片 | ✅ |
+| 紫毫纠错 | 加「Lua 运行时（librime-lua）」检测卡：状态 + 安装目录 + 下载页链接 + 5 步安装指引 | ✅ |
+
+**已知限制**：紫毫纠错页能检测 librime-lua 是否就绪，但**启用 Lua 引擎仍需用户手动**覆盖小狼毫安装目录的 `rime.dll`（带 Lua 的版本）。面板**不会**自动改写系统目录的 `rime.dll`——版本不匹配会让整个输入法失效，且 macOS 上无法验证 Windows 部署。详细见 [「不链接 librime」设计原则](#设计原则)。
+
+### 构建质量门禁
+
+`./build.sh` 包含 5 道关卡，缺一不放过：
+
+1. **Core 单元测试**（xunit，389+ 用例）
+2. **本地化键位体检**（三包齐校验：`tools/check_lang_keys.py`）
+3. **语言包内联常量生成**（`tools/embed_lang.py` ——  单文件 L10n 兜底）
+4. **XAML 静态资源引用体检**（`tools/check_xaml_resources.py`，拦 `{StaticResource X}` 引用未声明 Key 这类编译期不报、运行期才崩的错）
+5. **出包验收**（`tools/verify_lang_packs.py` 拿每包哨兵原文真搜 exe）
+
+> v0.2.4 / v0.2.5 真机连栽两次同类 XAML 错（Hyperlink 容器、`{StaticResource}` 误用 VM const）才加了这道关——macOS 交叉编译**完全看不见**纯运行时 XAML 错，这道 lint 拦第二类（资源引用），第一类（容器类型）还得靠真机。
 
 ---
 
