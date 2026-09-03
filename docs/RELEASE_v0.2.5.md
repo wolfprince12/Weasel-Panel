@@ -63,6 +63,36 @@ were fixed that the macOS cross-compile build couldn't detect at all:
    `TextTrimming="CharacterEllipsis"` so long subtitles can actually
    truncate inside the column instead of forcing the column to grow.
 
+## 7. Schema panel buttons greyed out / unclickable (command-refresh bug)
+
+After the layout fix above, the "启用" / "→ 移除" / "上移" / "下移" /
+"设为默认" buttons in the **Input Schemes** panel rendered correctly but
+stayed **greyed out and unclickable** even after selecting a list item.
+The toolbar "重新扫描" button (a `Click` handler, not a command) kept
+working — which proved the fault was every command's `CanExecute`
+returning `false`, not a binding or layout problem.
+
+Root cause: this project's `DelegateCommand` / `RelayCommand`
+(`Infrastructure/RelayCommand.cs`) do **not** bridge their
+`CanExecuteChanged` event to `CommandManager.RequerySuggested` (grep the
+repo — there is no `CommandManager.RequerySuggested += value` wiring).
+`DeployCoordinator.cs` even documents this: *"本项目 RelayCommand 的
+CanExecuteChanged 不链 CommandManager.RequerySuggested，必须显式
+RaiseCanExecuteChanged 才刷新按钮启用态。"* So
+`CommandManager.InvalidateRequerySuggested()` is a **no-op** for these
+commands. `SchemaViewModel` was the only ViewModel that relied on it
+(its `SelectedActive` / `SelectedAvailable` setters and both
+`CollectionChanged` handlers called only `InvalidateRequerySuggested`),
+whereas every other ViewModel in the repo calls
+`RaiseCanExecuteChanged()` explicitly.
+
+Fix: added `RefreshSelectionCommands()` / `RefreshAllCommands()` helpers
+in `SchemaViewModel` and call them from the selection setters and the
+collection-change handlers, each doing
+`((DelegateCommand)XxxCommand).RaiseCanExecuteChanged()` (the `ICommand`
+interface has no such method, so the field must be cast to the concrete
+type). Selecting an item now immediately enables the relevant buttons.
+
 ## Build system
 
 The macOS `dotnet build` cannot validate any of the five XAML runtime
@@ -123,10 +153,10 @@ Once you cut the release, attach the single-file self-contained
 executable:
 
 ```
-dist/win-x64/WeaselPanel_v0.2.5_509ebf7e.exe
+dist/win-x64/WeaselPanel_v0.2.5_66ecac02.exe
 ```
 
-(`509ebf7e` is the hash of the most recent rebuild that includes every
+(`66ecac02` is the hash of the most recent rebuild that includes every
 hotfix and lint. Rebuild with `./build.sh` to refresh the hash on
 demand.)
 

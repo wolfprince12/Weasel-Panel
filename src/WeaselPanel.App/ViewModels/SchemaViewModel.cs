@@ -105,7 +105,7 @@ public sealed class SchemaViewModel : ViewModelBase, ILanguageAware, IPanelActio
         set
         {
             if (Set(ref _selectedActive, value))
-                CommandManager.InvalidateRequerySuggested();
+                RefreshSelectionCommands();
         }
     }
 
@@ -116,7 +116,7 @@ public sealed class SchemaViewModel : ViewModelBase, ILanguageAware, IPanelActio
         set
         {
             if (Set(ref _selectedAvailable, value))
-                CommandManager.InvalidateRequerySuggested();
+                ((DelegateCommand)AddCommand).RaiseCanExecuteChanged();
         }
     }
 
@@ -148,6 +148,28 @@ public sealed class SchemaViewModel : ViewModelBase, ILanguageAware, IPanelActio
     public ICommand SetDefaultCommand { get; }
     public ICommand ApplyCommand { get; }
 
+    /// <summary>选中项变化后显式刷新依赖选中态的命令启用态。
+    /// 重要：本项目的 <see cref="DelegateCommand"/> / <see cref="RelayCommand"/>
+    /// 不桥接 <see cref="System.Windows.Input.CommandManager.RequerySuggested"/>，
+    /// 只靠 <c>CommandManager.InvalidateRequerySuggested()</c> 不会触发按钮刷新
+    /// （见 <c>DeployCoordinator</c> 注释）。必须显式 <c>RaiseCanExecuteChanged()</c>，
+    /// 与项目里其他 11 个 ViewModel 一致 —— 否则选中方案后「启用 / 移除 / 上移 /
+    /// 下移 / 设为默认」仍是初始灰色、点不动（v0.2.6 真机证伪的第⑦类盲区）。</summary>
+    private void RefreshSelectionCommands()
+    {
+        ((DelegateCommand)RemoveCommand).RaiseCanExecuteChanged();
+        ((DelegateCommand)MoveUpCommand).RaiseCanExecuteChanged();
+        ((DelegateCommand)MoveDownCommand).RaiseCanExecuteChanged();
+        ((DelegateCommand)SetDefaultCommand).RaiseCanExecuteChanged();
+    }
+
+    private void RefreshAllCommands()
+    {
+        ((DelegateCommand)AddCommand).RaiseCanExecuteChanged();
+        RefreshSelectionCommands();
+        ((RelayCommand)ApplyCommand).RaiseCanExecuteChanged();
+    }
+
     public SchemaViewModel(WeaselEnvironment environment)
     {
         _environment = environment;
@@ -169,12 +191,12 @@ public sealed class SchemaViewModel : ViewModelBase, ILanguageAware, IPanelActio
         ActiveSchemas.CollectionChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(ShowNoActive));
-            CommandManager.InvalidateRequerySuggested();
+            RefreshAllCommands();
         };
         AvailableSchemas.CollectionChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(ShowNoAvailable));
-            CommandManager.InvalidateRequerySuggested();
+            RefreshAllCommands();
         };
     }
 

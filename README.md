@@ -103,7 +103,7 @@ Windows 下 [小狼毫（Rime Weasel）](https://github.com/rime/weasel) 输入�
 外加一道 CI：
 9. **GitHub Actions Windows 真机启动冒烟**（`.github/workflows/wpf-smoke.yml`，`windows-latest` runner 启动 8s，抓 `InitializeComponent()` 阶段 XamlParseException 启动崩溃）
 
-> v0.2.4 / v0.2.5 / v0.2.5(第五类) / v0.2.5(第六类) 真机连续栽了 **6 类**「编译期不报真机才炸」的 XAML 错才把这 5 道 lint + 三件套布局约束配齐：Hyperlink 容器类型、`{StaticResource}` 误用 VM const、VM string 给 XAML Uri、Binding 路径错、**默认 TwoWay target 撞 VM 只读属性**、**Grid 三列布局 + ItemTemplate 长文本撑爆中间按钮列**。最后这一类**不崩但功能完全不可用**（截图实证：「输入方案」面板的「启用 / → 移除」按钮被夹缝压成竖条、点击无响应）。macOS 交叉编译**完全看不见**纯运行时 XAML 错，这 5 道 lint + 三件套 + CI 是唯一兜底。
+> v0.2.4 / v0.2.5 真机连续栽了 **7 类**「编译期不报真机才炸」的盲区：Hyperlink 容器类型、`{StaticResource}` 误用 VM const、VM string 给 XAML Uri、Binding 路径错、**默认 TwoWay target 撞 VM 只读属性**、**Grid 三列布局 + ItemTemplate 长文本撑爆中间按钮列**、**ICommand 启用态只靠 `CommandManager.InvalidateRequerySuggested()` 不刷新**（本项目 `DelegateCommand` 不桥接 `RequerySuggested`，必须显式 `RaiseCanExecuteChanged()`）。前 6 类是 XAML 运行时错，第 7 类是 ViewModel 端命令刷新约定；macOS 交叉编译**完全看不见**纯运行时错，这 6 道 lint + 三件套布局约束 + 命令刷新铁律 + CI 是唯一兜底。
 
 ---
 
