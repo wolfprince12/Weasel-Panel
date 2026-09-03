@@ -1,8 +1,4 @@
-# Weasel Panel v0.2.6 — Release Notes (DRAFT)
-
-> ⚠️ **DRAFT — not yet published.** This file is pre-staged in `docs/` so the
-> notes are ready to copy into a GitHub release the moment you decide to ship.
-> Nothing has been uploaded as a release asset; nothing has been tagged.
+# Weasel Panel v0.2.6 — Release Notes
 
 ## What's new
 
