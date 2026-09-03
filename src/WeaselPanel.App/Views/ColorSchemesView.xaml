@@ -526,12 +526,6 @@
                             <Button Grid.Column="2" Content="{l10n:L Common.Refresh}"
                                     Command="{Binding ReloadCommand}"
                                     Style="{StaticResource SecondaryButton}"/>
-                            <Button Grid.Column="3" Content="{l10n:L ColorSchemes.Deploy}"
-                                    Command="{Binding DeployCommand}"
-                                    Style="{StaticResource SecondaryButton}" Margin="{StaticResource Pad2}"/>
-                            <Button Grid.Column="4" Content="{l10n:L ColorSchemes.Save}"
-                                    Command="{Binding SaveCommand}"
-                                    Style="{StaticResource PrimaryButton}" Margin="{StaticResource Pad2}"/>
                         </Grid>
                     </StackPanel>
                 </StackPanel>

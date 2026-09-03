@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Windows;
 using System.Windows.Threading;
+using WeaselPanel.App.Infrastructure;
 using WeaselPanel.App.Localization;
 using WeaselPanel.Core.Config;
 
@@ -104,6 +105,11 @@ public partial class App : Application
 
     private void RunStartup(StartupEventArgs e)
     {
+        // 明暗主题：必须在创建任何窗口之前定好，否则首屏会先闪一下浅色再变深色。
+        // 全部页面/样式用 {StaticResource 语义画刷}，ThemeManager 改写这些共享画刷实例的
+        // Color，已解析的引用即时生效，且不重建窗口（保留未保存编辑）。
+        ThemeManager.Init();
+
         base.OnStartup(e);
 
         Log($"exe_path = {Environment.ProcessPath}");

@@ -289,7 +289,7 @@ public sealed class AppOptionsViewModel : ViewModelBase, ILanguageAware
     /// 按内容比，不靠「改过就是脏」的标记 —— 拨过去再拨回来不该亮保存按钮。
     /// 条目数只有个位数，逐条比的成本可以忽略。
     /// </summary>
-    public bool IsDirty
+    public new bool IsDirty
     {
         get
         {

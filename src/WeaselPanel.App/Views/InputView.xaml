@@ -86,8 +86,6 @@
                 </Border>
 
                 <StackPanel Orientation="Horizontal" Margin="{StaticResource GapActionRow}">
-                    <Button Content="{l10n:L Input.ApplyBtn}" Style="{StaticResource PrimaryButton}"
-                            Command="{Binding ApplyCommand}" Margin="0,0,10,0"/>
                     <Button Content="{l10n:L Common.Reload}" Style="{StaticResource SecondaryButton}"
                             Command="{Binding ReloadCommand}"/>
                 </StackPanel>

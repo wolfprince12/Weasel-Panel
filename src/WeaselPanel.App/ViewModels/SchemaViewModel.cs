@@ -90,6 +90,7 @@ public sealed class SchemaViewModel : ViewModelBase, ILanguageAware
 {
     private readonly WeaselEnvironment _environment;
     private SchemaCatalog _catalog = SchemaCatalog.Empty;
+    private string _baseline = "";
 
     /// <summary>用户目录里「当前启用」的方案列表（按用户视角排序，可编辑）。</summary>
     public ObservableCollection<SchemaRow> ActiveSchemas { get; } = new();
@@ -366,7 +367,13 @@ public sealed class SchemaViewModel : ViewModelBase, ILanguageAware
     }
     // ── 应用 ────────────────────────────────────────────────────────────────
 
-    private async System.Threading.Tasks.Task ApplyAsync()
+    public new bool IsDirty => Signature() != _baseline;
+
+    private string Signature() => string.Join(",", ActiveSchemas.Select(r => r.SchemaId));
+
+    public Task ReloadAsync() { Load(); return Task.CompletedTask; }
+
+    public async System.Threading.Tasks.Task ApplyAsync()
     {
         IsBusy = true;
         StatusText = StatusFromKey("Schema.Status.Writing");
@@ -389,6 +396,9 @@ public sealed class SchemaViewModel : ViewModelBase, ILanguageAware
             custom.ApplyLineEdits(set);
 
             StatusText = StatusFromKey("Schema.Status.Written", path, ids.Count);
+
+            _baseline = Signature();
+            OnPropertyChanged(nameof(IsDirty));
         }
         catch (Exception ex)
         {

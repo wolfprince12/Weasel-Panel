@@ -862,6 +862,16 @@ Packages.Hint.External = 偵測到同名檔案，但沒有本面板的安裝記�
 Packages.Hint.NeedsRimeIce = 語法模型需要掛在霧凇拼音上。請先安裝霧凇拼音。
 Packages.Hint.GrammarFirst = 語法模型正依賴霧凇拼音，請先卸載語法模型再卸載它。更新不受影響。
 Packages.Row.Working = 處理中……
+
+# ── 外觀：字體（Phase 2 補齊，zh-Hant 此前漏譯）──
+Appearance.Font = 字體
+Appearance.SchemeGridNote = 點選卡片即可切換配色方案；帶「生效中」標記的是目前生效方案。
+
+# ── 部署欄（全局統一「應用並重新部署」，Phase 2 補齊，zh-Hant 此前漏譯）──
+Deploy.Apply = 應用並重新部署
+Deploy.ViewYaml = 檢視 YAML
+Deploy.Discard = 放棄變更
+Deploy.Note = 所有變動寫入修補檔（*.custom.yaml）；僅套用有變動的面板，統一重新部署一次。
 Packages.Button.Install = 安裝
 Packages.Button.Update = 更新
 Packages.Button.Uninstall = 卸載

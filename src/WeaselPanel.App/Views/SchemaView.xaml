@@ -148,8 +148,6 @@
                     <TextBlock Grid.Column="0" Text="{Binding StatusText}"
                                Style="{StaticResource FieldNote}"
                                VerticalAlignment="Center" Margin="0,0,20,0"/>
-                    <Button Grid.Column="1" Content="{l10n:L Schema.ApplyBtn}" Command="{Binding ApplyCommand}"
-                            Style="{StaticResource PrimaryButton}"/>
                 </Grid>
             </Grid>
         </Border>

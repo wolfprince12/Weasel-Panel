@@ -190,7 +190,7 @@ public sealed class DictionaryViewModel : ViewModelBase, ILanguageAware
 
     public bool IsNotBusy => !IsBusy;
 
-    public bool IsDirty => _file?.IsDirty ?? false;
+    public new bool IsDirty => _file?.IsDirty ?? false;
 
     public int EntryCount => _file?.EntryCount ?? 0;
 
@@ -298,6 +298,8 @@ public sealed class DictionaryViewModel : ViewModelBase, ILanguageAware
         StatusText = StatusFromKey("Dictionary.Status.Removed");
         RefreshDerived();
     }
+
+    public async Task ApplyAsync() => await SaveAsync();
 
     private async Task SaveAsync()
     {

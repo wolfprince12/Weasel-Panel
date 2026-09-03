@@ -442,7 +442,7 @@ public sealed class ColorSchemesViewModel : ViewModelBase, ILanguageAware
         private set => Set(ref _statusText, value);
     }
 
-    public bool IsDirty => Signature() != _baseline;
+    public new bool IsDirty => Signature() != _baseline;
 
     public bool ShowNoSchemes => Schemes.Count == 0;
 

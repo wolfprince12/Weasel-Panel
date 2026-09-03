@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using WeaselPanel.App.Infrastructure;
 using WeaselPanel.App.Localization;
+using WeaselPanel.App.Services;
 using WeaselPanel.App.ViewModels;
 using WeaselPanel.App.Views;
 using WeaselPanel.Core.Platform;
@@ -28,6 +29,7 @@ public partial class MainWindow : Window
     private readonly InspectorView _inspectorView;
     private readonly BackupView _backupView;
     private readonly AboutView _aboutView;
+    private readonly DeployCoordinator _deploy;
 
     public MainWindow()
     {
@@ -70,6 +72,20 @@ public partial class MainWindow : Window
         _backupView = new BackupView(new BackupViewModel(environment));
         _aboutView = new AboutView(environment);
 
+        // ── 全局部署协调器（仿鼠须管侧栏底部「应用并重新部署」统一栏）──
+        // 注册全部 9 个配置面板；只应用有未保存改动的面板，统一重新部署一次。
+        _deploy = new DeployCoordinator(environment);
+        _deploy.Register((IPanelActions)_appearanceView.DataContext);
+        _deploy.Register((IPanelActions)_colorSchemesView.DataContext);
+        _deploy.Register((IPanelActions)_schemaView.DataContext);
+        _deploy.Register((IPanelActions)_rimeIceView.DataContext);
+        _deploy.Register((IPanelActions)_correctionView.DataContext);
+        _deploy.Register((IPanelActions)_inputView.DataContext);
+        _deploy.Register((IPanelActions)_behaviorView.DataContext);
+        _deploy.Register((IPanelActions)_appOptionsView.DataContext);
+        _deploy.Register((IPanelActions)_dictionaryView.DataContext);
+        DeployBarHost.DataContext = _deploy;
+
         // ⚠️ 不要在 XAML 里写 ListBoxItem.IsSelected="True"，会在 InitializeComponent
         // 阶段触发 SelectionChanged，此时各 view 字段还没就绪 → NRE。
         // 直接在 ctor 末尾赋 ContentHost.Content 给默认页，不经过事件 —— 用户
@@ -88,6 +104,33 @@ public partial class MainWindow : Window
         App.Log($">>> language = {L10n.Instance.Language}");
 
         ApplyLocalizedText();
+        LoadBrandLogo();
+    }
+
+    /// <summary>
+    /// 从嵌入式资源加载侧栏品牌 logo（复用 About 页的 EmbeddedAssets.TryLoadLogo）。
+    /// 失败时降级为纯文字占位，不让品牌区整块崩。
+    /// </summary>
+    private void LoadBrandLogo()
+    {
+        try
+        {
+            var img = EmbeddedAssets.TryLoadLogo();
+            if (img is not null)
+            {
+                BrandLogo.Source = img;
+            }
+            else
+            {
+                BrandLogo.Visibility = Visibility.Collapsed;
+                BrandFallback.Visibility = Visibility.Visible;
+            }
+        }
+        catch
+        {
+            BrandLogo.Visibility = Visibility.Collapsed;
+            BrandFallback.Visibility = Visibility.Visible;
+        }
     }
 
     /// <summary>标题栏 + 侧栏版本号。语言切换时也会重跑（见 OnLanguageChanged）。</summary>
@@ -103,7 +146,7 @@ public partial class MainWindow : Window
         var build = App.ExecutableBuildTime.ToString("MM-dd HH:mm");
         var hash = App.ExecutableHashPrefix;
         Title = $"小狼毫控制面板 v{version} · {build} · #{hash}";
-        VersionLabel.Text = $"v{version} · {build} · #{hash}";
+        BrandVersion.Text = $"v{version} · {build} · #{hash}";
     }
 
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)

@@ -208,8 +208,6 @@
                                    Margin="0,4,0,0"/>
                     </StackPanel>
 
-                    <Button Grid.Column="1" Content="{l10n:L AppOptions.Save}" Command="{Binding SaveCommand}"
-                            Style="{StaticResource PrimaryButton}" VerticalAlignment="Center"/>
                 </Grid>
             </Grid>
         </Border>

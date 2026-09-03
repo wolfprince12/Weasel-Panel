@@ -271,7 +271,9 @@ public sealed class InputViewModel : ViewModelBase
 
     // ── 应用 ────────────────────────────────────────────────────
 
-    private async Task ApplyAsync()
+    public Task ReloadAsync() { Load(); return Task.CompletedTask; }
+
+    public async Task ApplyAsync()
     {
         IsBusy = true;
         StatusText = L10n.Instance.T("Input.Status.Writing");

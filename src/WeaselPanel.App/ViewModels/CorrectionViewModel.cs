@@ -179,7 +179,7 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware
     public string FilePath => _config.IceCustomPath;
 
     // ── 脏值 ──────────────────────────────────────────────────────────
-    public bool IsDirty => Signature() != _baseline;
+    public new bool IsDirty => Signature() != _baseline;
 
     private string Signature() => string.Join("#",
         _enabled ? 1 : 0,
@@ -227,7 +227,9 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware
     }
 
     // ── 写盘 ──────────────────────────────────────────────────────────
-    private async Task ApplyAsync()
+    public Task ReloadAsync() { Load(); return Task.CompletedTask; }
+
+    public async Task ApplyAsync()
     {
         if (!IsInstalled)
         {

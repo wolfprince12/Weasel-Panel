@@ -349,7 +349,7 @@ public sealed class RimeIceViewModel : ViewModelBase, ILanguageAware
     public string FilePath => _config.IceCustomPath;
 
     // ── 脏值 ──────────────────────────────────────────────────────────
-    public bool IsDirty => Signature() != _baseline;
+    public new bool IsDirty => Signature() != _baseline;
 
     private string Signature()
     {

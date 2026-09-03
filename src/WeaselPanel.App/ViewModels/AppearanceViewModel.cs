@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Media;
 using WeaselPanel.App.Infrastructure;
 using WeaselPanel.App.Localization;
@@ -12,10 +13,9 @@ namespace WeaselPanel.App.ViewModels;
 /// 外观页。预览用的颜色一律走 Core 的 <see cref="ColorSchemeResolver"/>，
 /// 即套用上游完整回退链与 alpha 混合 —— 保证「面板所见」=「候选窗所得」。
 /// </summary>
-public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware
+public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelActions
 {
     private readonly string _userDirectory;
-    private string? _selectedScheme;
     private string _fontFace = "Microsoft YaHei";
     private int _fontPoint = 14;
     private bool _inlinePreedit;
@@ -49,18 +49,29 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware
     public WeaselEnvironment Environment { get; }
     public ObservableCollection<string> SchemeNames { get; } = new();
 
+    // ── 外观页 3 列色卡网格（仿鼠须管 SchemeSwatch）──────────────
+    public ObservableCollection<SchemeCardItem> SchemeCards { get; } = new();
+
+    private SchemeCardItem? _selectedCard;
+
+    /// <summary>当前选中的方案卡，是选色的唯一真源。ComboBox 已移除，由网格负责选择。</summary>
+    public SchemeCardItem? SelectedCard
+    {
+        get => _selectedCard;
+        set
+        {
+            if (!Set(ref _selectedCard, value) || value is null) return;
+            OnPropertyChanged(nameof(SelectedScheme));
+            RefreshPreview();
+        }
+    }
+
     public RelayCommand ApplyCommand { get; }
     public DelegateCommand ReloadCommand { get; }
     public RelayCommand DeployCommand { get; }
 
-    public string? SelectedScheme
-    {
-        get => _selectedScheme;
-        set
-        {
-            if (Set(ref _selectedScheme, value)) RefreshPreview();
-        }
-    }
+    /// <summary>当前生效/选中的方案名。由 <see cref="SelectedCard"/> 推导，供 Apply/预览使用。</summary>
+    public string? SelectedScheme => _selectedCard?.Name;
 
     public string FontFace
     {
@@ -336,23 +347,50 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware
         // color_scheme 属于颜色层，不在 WeaselStyle 里，单独从合并视图取
         var scheme = merged.Lookup("style/color_scheme") as string ?? "aqua";
 
+        // 先建色卡网格（依赖 _catalog），再据生效方案选中对应卡
+        BuildSchemeCards(scheme);
+
         // 先选中再刷新预览；若目录里没这个名字，仍保留（可能是自定义方案）
         if (!_catalogLoaded || _catalog.Contains(scheme))
         {
-            _selectedScheme = scheme;
-            OnPropertyChanged(nameof(SelectedScheme));
+            _selectedCard = SchemeCards.FirstOrDefault(c => c.Name == scheme) ?? SchemeCards.FirstOrDefault();
         }
-        else if (SchemeNames.Count > 0)
+        else if (SchemeCards.Count > 0)
         {
-            _selectedScheme = SchemeNames[0];
-            OnPropertyChanged(nameof(SelectedScheme));
+            _selectedCard = SchemeCards[0];
         }
 
+        OnPropertyChanged(nameof(SelectedCard));
+        OnPropertyChanged(nameof(SelectedScheme));
         RefreshPreview();
 
         StatusText = _catalogLoaded
             ? StatusFromKey("Appearance.Status.LoadedSchemes", SchemeNames.Count)
             : StatusFromKey("Appearance.Status.NoCatalog");
+
+        MarkLoaded();
+    }
+
+    /// <summary>据当前目录构建 3 列色卡网格的数据（预览色走完整回退链）。</summary>
+    private void BuildSchemeCards(string effectiveScheme)
+    {
+        SchemeCards.Clear();
+        foreach (var name in _catalog.Names)
+        {
+            var resolved = _catalog.Resolve(name);
+            if (resolved is null) continue;
+            SchemeCards.Add(new SchemeCardItem(
+                name,
+                isActive: name == effectiveScheme,
+                ToBrush(resolved.BackColor),
+                ToBrush(resolved.BorderColor),
+                ToBrush(resolved.TextColor),
+                ToBrush(resolved.CandidateTextColor),
+                ToBrush(resolved.HilitedCandidateBackColor),
+                ToBrush(resolved.HilitedCandidateTextColor),
+                ToBrush(resolved.LabelTextColor),
+                ToBrush(resolved.CommentTextColor)));
+        }
     }
 
     private ColorSchemeCatalog _catalog = ColorSchemeCatalog.Empty;
@@ -433,7 +471,7 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware
     };
 
     // ── 应用 ──────────────────────────────────────────────────
-    private async Task ApplyAsync()
+    public async Task ApplyAsync()
     {
         IsBusy = true;
         StatusText = StatusFromKey("Appearance.Status.Writing");
@@ -471,6 +509,8 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware
 
             custom.Save();
             StatusText = StatusFromKey("Appearance.Status.Written", path);
+
+            MarkLoaded();
         }
         catch (Exception ex)
         {
@@ -501,5 +541,11 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware
         {
             IsBusy = false;
         }
+    }
+
+    public Task ReloadAsync()
+    {
+        LoadAll();
+        return Task.CompletedTask;
     }
 }

@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:l10n="clr-namespace:WeaselPanel.App.Localization"
+        xmlns:local="clr-namespace:WeaselPanel.App"
         Title="Weasel Panel"
         Width="1000" Height="680" MinWidth="860" MinHeight="560"
         WindowStartupLocation="CenterScreen"
@@ -16,7 +17,7 @@
          之前连续两轮修复都栽在「以为测的是新版、其实是旧 exe」。 -->
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="196"/>
+            <ColumnDefinition Width="224"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -31,15 +32,29 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- 品牌区。副标题不写死「Rime 设置面板」这类营销语，
-                     就写它是什么，克制。 -->
-                <StackPanel Grid.Row="0" Margin="14,0,8,20">
-                    <TextBlock Text="{l10n:L App.NameShort}" FontSize="16" FontWeight="SemiBold"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
-                    <TextBlock Text="{l10n:L App.Subtitle}" FontSize="{StaticResource FontCaption}"
-                               Margin="0,3,0,0"
+                <!-- 品牌区：居中，仿鼠须管侧栏顶部的 Logo + 产品名 + 版本。
+                     96×96 圆角方块（复用 About 页的嵌入式 logo.png），加载失败时
+                     降级为纯文字占位，不让整块崩。 -->
+                <StackPanel Grid.Row="0" Margin="0,6,0,18" HorizontalAlignment="Center">
+                    <Border Width="96" Height="96" CornerRadius="{StaticResource RadiusLg}"
+                            Background="{StaticResource BgSubtleBrush}" SnapsToDevicePixels="True">
+                        <Grid Margin="14">
+                            <Image x:Name="BrandLogo" Stretch="Uniform"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   SnapsToDevicePixels="True"/>
+                            <TextBlock x:Name="BrandFallback" Text="{l10n:L App.NameShort}"
+                                       FontSize="22" FontWeight="SemiBold"
+                                       Foreground="{StaticResource PrimaryBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="Collapsed"/>
+                        </Grid>
+                    </Border>
+                    <TextBlock Text="{l10n:L App.NameShort}" FontSize="17" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                    <TextBlock x:Name="BrandVersion" FontSize="{StaticResource FontMicro}"
                                Foreground="{StaticResource TextSecondaryBrush}"
-                               TextWrapping="Wrap" LineHeight="{StaticResource LineCaption}"/>
+                               HorizontalAlignment="Center" Margin="0,3,0,0"/>
                 </StackPanel>
 
                 <ListBox Grid.Row="1" x:Name="Nav" Background="Transparent" BorderThickness="0"
@@ -53,38 +68,75 @@
                          组标题**不是**独立条目 —— 导航按 SelectedIndex 派发，
                          多插一项就会「点维护跳出词典」，所以分组只能挂 Tag。
                          只有「组内第一项」带 Tag，其余不带。
-                         首项「环境诊断」紧贴品牌区，不需要再压一行标题。 -->
-                    <ListBoxItem Content="{l10n:L Nav.Diagnostics}"/>
+                         首项「环境诊断」紧贴品牌区，不需要再压一行标题。
+                         local:NavItemHelper.Icon = Segoe MDL2 Assets 字形（Windows 内置）。 -->
+                    <ListBoxItem Content="{l10n:L Nav.Diagnostics}"
+                                 local:NavItemHelper.Icon="&#xE9D0;"/>
 
-                    <ListBoxItem Content="{l10n:L Nav.Appearance}" Tag="{l10n:L NavGroup.Appearance}"/>
+                    <ListBoxItem Content="{l10n:L Nav.Appearance}"
+                                 Tag="{l10n:L NavGroup.Appearance}"
+                                 local:NavItemHelper.Icon="&#xE790;"/>
                     <!-- 自定义配色紧挨「外观」：两页都管配色，
                          外观是「选哪一套」，这里是「造一套」。 -->
-                    <ListBoxItem Content="{l10n:L Nav.ColorSchemes}"/>
+                    <ListBoxItem Content="{l10n:L Nav.ColorSchemes}"
+                                 local:NavItemHelper.Icon="&#xE7AB;"/>
 
-                    <ListBoxItem Content="{l10n:L Nav.Schema}" Tag="{l10n:L NavGroup.Input}"/>
+                    <ListBoxItem Content="{l10n:L Nav.Schema}"
+                                 Tag="{l10n:L NavGroup.Input}"
+                                 local:NavItemHelper.Icon="&#xE8A5;"/>
                     <!-- 雾凇拼音紧挨「输入方案」：rime_ice 本身是一个拼音方案，
                          方案页管「装哪些、谁在前」，这里管「这一套内部的词库/模糊音/繁简」。 -->
-                    <ListBoxItem Content="{l10n:L Nav.RimeIce}"/>
+                    <ListBoxItem Content="{l10n:L Nav.RimeIce}"
+                                 local:NavItemHelper.Icon="&#xE753;"/>
                     <!-- 紫毫纠错紧挨「雾凇拼音」：纠错引擎挂在 rime_ice 方案上，
                          两者同属「输入」分组。纠错只此一页可改，避免与雾凇页互相回滚。 -->
-                    <ListBoxItem Content="{l10n:L Nav.Correction}"/>
-                    <ListBoxItem Content="{l10n:L Nav.Input}"/>
-                    <ListBoxItem Content="{l10n:L Nav.Behavior}"/>
-                    <ListBoxItem Content="{l10n:L Nav.AppOptions}"/>
+                    <ListBoxItem Content="{l10n:L Nav.Correction}"
+                                 local:NavItemHelper.Icon="&#xE7E0;"/>
+                    <ListBoxItem Content="{l10n:L Nav.Input}"
+                                 local:NavItemHelper.Icon="&#xE765;"/>
+                    <ListBoxItem Content="{l10n:L Nav.Behavior}"
+                                 local:NavItemHelper.Icon="&#xE713;"/>
+                    <ListBoxItem Content="{l10n:L Nav.AppOptions}"
+                                 local:NavItemHelper.Icon="&#xE7F4;"/>
 
-                    <ListBoxItem Content="{l10n:L Nav.Dictionary}" Tag="{l10n:L NavGroup.Data}"/>
-                    <ListBoxItem Content="{l10n:L Nav.Packages}"/>
-                    <ListBoxItem Content="{l10n:L Nav.Maintenance}"/>
-                    <ListBoxItem Content="{l10n:L Nav.Inspector}"/>
-                    <ListBoxItem Content="{l10n:L Nav.Backup}"/>
+                    <ListBoxItem Content="{l10n:L Nav.Dictionary}"
+                                 Tag="{l10n:L NavGroup.Data}"
+                                 local:NavItemHelper.Icon="&#xE7B7;"/>
+                    <ListBoxItem Content="{l10n:L Nav.Packages}"
+                                 local:NavItemHelper.Icon="&#xE7B8;"/>
+                    <ListBoxItem Content="{l10n:L Nav.Maintenance}"
+                                 local:NavItemHelper.Icon="&#xE7D9;"/>
+                    <ListBoxItem Content="{l10n:L Nav.Inspector}"
+                                 local:NavItemHelper.Icon="&#xE721;"/>
+                    <ListBoxItem Content="{l10n:L Nav.Backup}"
+                                 local:NavItemHelper.Icon="&#xE74E;"/>
 
-                    <ListBoxItem Content="{l10n:L Nav.About}" Tag="{l10n:L NavGroup.Meta}"/>
+                    <ListBoxItem Content="{l10n:L Nav.About}"
+                                 Tag="{l10n:L NavGroup.Meta}"
+                                 local:NavItemHelper.Icon="&#xE946;"/>
                 </ListBox>
 
-                <TextBlock Grid.Row="2" x:Name="VersionLabel" Text=""
-                           FontSize="{StaticResource FontMicro}"
-                           Foreground="{StaticResource TextDisabledBrush}"
-                           HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                <!-- 底部统一部署栏（仿鼠须管侧栏「应用并重新部署」）：
+                     上方「查看 YAML / 放弃更改」次要操作，中间全宽主按钮，
+                     下方一行脚注说明改动落点。只应用有未保存改动的面板，统一重部署一次。 -->
+                <StackPanel Grid.Row="2" x:Name="DeployBarHost" Margin="0,12,0,0">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Style="{StaticResource SecondaryButton}"
+                                Command="{Binding ViewYamlCommand}"
+                                Content="{l10n:L Deploy.ViewYaml}" Margin="0,0,8,0"/>
+                        <Button Style="{StaticResource SecondaryButton}"
+                                Command="{Binding DiscardCommand}"
+                                Content="{l10n:L Deploy.Discard}"/>
+                    </StackPanel>
+                    <Button Style="{StaticResource PrimaryButton}"
+                            Command="{Binding ApplyDeployCommand}"
+                            Content="{l10n:L Deploy.Apply}"
+                            HorizontalAlignment="Stretch"/>
+                    <TextBlock Text="{l10n:L Deploy.Note}"
+                               FontSize="{StaticResource FontMicro}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="0,8,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
             </Grid>
         </Border>
 

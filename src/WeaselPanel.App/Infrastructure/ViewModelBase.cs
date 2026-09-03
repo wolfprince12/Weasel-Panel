@@ -18,9 +18,28 @@ public abstract class ViewModelBase : INotifyPropertyChanged
     {
         if (EqualityComparer<T>.Default.Equals(field, value)) return false;
         field = value;
+        HasUnsavedChanges = true;
         OnPropertyChanged(name);
         return true;
     }
+
+    // ── 未保存标记（全局部署栏用）───────────────────────────────────
+    // 全局「应用并重新部署」只应用有未保存改动的面板，避免把用户没改过的
+    // 配置用内存里的默认值覆盖回磁盘（灾难性）。注意：部分面板（雾凇/紫毫/
+    // 配色/应用选项/词典）已有自己的 baseline 版 IsDirty，本字段只服务
+    // 没有自带脏追踪的面板；二者命名不同，不会冲突。各面板在 Load 末尾
+    // 调 MarkLoaded() 把标记清零。
+    public bool HasUnsavedChanges { get; private set; }
+
+    /// <summary>
+    /// 未保存标记的统一出口（给 <see cref="IPanelActions"/> 用）。
+    /// 自带 baseline 版 IsDirty 的面板（雾凇/紫毫/配色/应用选项/词典/方案）
+    /// 用 <c>new</c> 隐藏本属性，以各自的基线比较口径为准；其余面板直接继承本值。
+    /// </summary>
+    public bool IsDirty => HasUnsavedChanges;
+
+    /// <summary>加载/重新加载完成后调用，清零未保存标记。</summary>
+    protected void MarkLoaded() => HasUnsavedChanges = false;
 
     // ── 本地化状态文本 ────────────────────────────────────────────────
     // 状态栏文案是「赋值那一刻拼好的 string」，不像 XAML 的 {l10n:L} 能随

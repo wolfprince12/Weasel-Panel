@@ -197,7 +197,9 @@ Appearance.PreviewTitle = 候选窗预览
 Appearance.PreviewNote1 = 显示的是派生后的生效值（而非配置原值）：颜色走完整回退链与 alpha 混合，
 Appearance.PreviewNote2 = 字号未配置时按上游规则兜底为 12，序号按 label_format 渲染。
 Appearance.ColorFont = 配色与字体
+Appearance.Font = 字体
 Appearance.Scheme = 配色方案
+Appearance.SchemeGridNote = 点选卡片即可切换配色方案；带「生效中」标记的是当前生效方案。
 Appearance.FontFace = 字体
 Appearance.FontSize = 字号
 Appearance.CommentSize = 注释字号
@@ -905,6 +907,11 @@ Packages.Error.GrammarFirst = 请先卸载语法模型，再卸载雾凇拼音�
 Packages.Error.NotManaged = 没有找到本面板的安装记录，无法执行该操作。
 Packages.Error.Download = 下载失败，已尝试全部镜像：{0}
 Packages.Error.Unknown = 未知错误（{0}）
+
+Deploy.Apply = 应用并重新部署
+Deploy.ViewYaml = 查看 YAML
+Deploy.Discard = 放弃更改
+Deploy.Note = 所有改动写入补丁文件（*.custom.yaml）；仅应用有改动的面板，统一重新部署一次。
 
 """;
 
@@ -1773,6 +1780,16 @@ Packages.Hint.External = 偵測到同名檔案，但沒有本面板的安裝記�
 Packages.Hint.NeedsRimeIce = 語法模型需要掛在霧凇拼音上。請先安裝霧凇拼音。
 Packages.Hint.GrammarFirst = 語法模型正依賴霧凇拼音，請先卸載語法模型再卸載它。更新不受影響。
 Packages.Row.Working = 處理中……
+
+# ── 外觀：字體（Phase 2 補齊，zh-Hant 此前漏譯）──
+Appearance.Font = 字體
+Appearance.SchemeGridNote = 點選卡片即可切換配色方案；帶「生效中」標記的是目前生效方案。
+
+# ── 部署欄（全局統一「應用並重新部署」，Phase 2 補齊，zh-Hant 此前漏譯）──
+Deploy.Apply = 應用並重新部署
+Deploy.ViewYaml = 檢視 YAML
+Deploy.Discard = 放棄變更
+Deploy.Note = 所有變動寫入修補檔（*.custom.yaml）；僅套用有變動的面板，統一重新部署一次。
 Packages.Button.Install = 安裝
 Packages.Button.Update = 更新
 Packages.Button.Uninstall = 卸載
@@ -2012,7 +2029,9 @@ Appearance.PreviewTitle = Candidate window preview
 Appearance.PreviewNote1 = Shows the resolved effective values (not the raw config): colours go through the full fallback chain and alpha blending,
 Appearance.PreviewNote2 = font sizes fall back to 12 when unset, labels render through label_format.
 Appearance.ColorFont = Colours & fonts
+Appearance.Font = Fonts
 Appearance.Scheme = Colour scheme
+Appearance.SchemeGridNote = Click a card to switch the colour scheme; the one marked "Active" is currently in effect.
 Appearance.FontFace = Font
 Appearance.FontSize = Font size
 Appearance.CommentSize = Comment size
@@ -2721,6 +2740,11 @@ Packages.Error.GrammarFirst = Remove the grammar model before removing Rime Ice.
 Packages.Error.NotManaged = No install record from this panel was found, so the operation cannot run.
 Packages.Error.Download = Download failed after trying every mirror: {0}
 Packages.Error.Unknown = Unknown error ({0})
+
+Deploy.Apply = Apply and redeploy
+Deploy.ViewYaml = View YAML
+Deploy.Discard = Discard changes
+Deploy.Note = All changes are written to patch files (*.custom.yaml). Only modified panels are applied, then deployed once.
 
 """;
 

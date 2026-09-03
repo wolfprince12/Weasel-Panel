@@ -1,7 +1,8 @@
 <UserControl x:Class="WeaselPanel.App.Views.AppearanceView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization">
+             xmlns:l10n="clr-namespace:WeaselPanel.App.Localization"
+             xmlns:vm="clr-namespace:WeaselPanel.App.ViewModels">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -108,23 +109,89 @@
 
             <!-- ── 设置 ─────────────────────────────────────────────── -->
             <StackPanel Grid.Column="2">
+
+                <!-- 配色方案：3 列色卡网格（仿鼠须管 SchemeSwatch）。
+                     选中态=accent 粗描边(2.5) / 未选=主色极淡细描边(1)，圆角 7。 -->
                 <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
                     <StackPanel>
-                        <TextBlock Text="{l10n:L Appearance.ColorFont}" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="{l10n:L Appearance.Scheme}" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="{l10n:L Appearance.SchemeGridNote}" Style="{StaticResource FieldNote}"
+                                   Margin="{StaticResource GapHeader}"/>
 
-                        <!-- 字段间距一律用 GapField / 说明用 GapFieldTight。
-                             之前这里连续 8 个 Margin="0,0,0,10" —— 间距全等会让
-                             整张卡变成一条没有分组感的列表，读起来累。 -->
-                        <Grid Margin="{StaticResource GapField}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{l10n:L Appearance.Scheme}" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox Grid.Column="1" ItemsSource="{Binding SchemeNames}"
-                                      SelectedItem="{Binding SelectedScheme}"/>
-                        </Grid>
+                        <ListBox ItemsSource="{Binding SchemeCards}"
+                                 SelectedItem="{Binding SelectedCard, Mode=TwoWay}"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 Background="Transparent" BorderThickness="0">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="3" HorizontalAlignment="Stretch"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0,0,10,10"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <ContentPresenter/>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="vm:SchemeCardItem">
+                                    <Border CornerRadius="7" Padding="0"
+                                            Background="{StaticResource CardBgBrush}"
+                                            BorderBrush="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem},
+                                                                 Path=IsSelected, Converter={StaticResource SelectedBorderBrush}}"
+                                            BorderThickness="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem},
+                                                                       Path=IsSelected, Converter={StaticResource SelectedBorderThickness}}"
+                                            SnapsToDevicePixels="True">
+                                        <StackPanel>
+                                            <!-- 顶部预览：三行候选样例，底色=方案 bg -->
+                                            <Border Background="{Binding BackBrush}" BorderBrush="{Binding BorderBrush}"
+                                                    BorderThickness="1" CornerRadius="5" Padding="10,8" Margin="8">
+                                                <StackPanel>
+                                                    <TextBlock Text="wang" FontSize="13" Foreground="{Binding TextBrush}" Margin="2,0,0,5"/>
+                                                    <Border Background="{Binding HilitedBackBrush}" CornerRadius="3" Padding="6,3">
+                                                        <TextBlock Text="1. 王 wáng" FontSize="13" Foreground="{Binding HilitedTextBrush}"/>
+                                                    </Border>
+                                                    <TextBlock Text="2. 往" FontSize="13" Foreground="{Binding CandidateTextBrush}" Margin="0,4,0,0"/>
+                                                    <TextBlock Text="3. 网" FontSize="13" Foreground="{Binding LabelBrush}"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <!-- 底部标题条：方案名 + 生效徽标 -->
+                                            <Grid Margin="8,0,8,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="{StaticResource FontBody}"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                <Border Grid.Column="1" Style="{StaticResource OriginChip}"
+                                                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}"
+                                                        Margin="6,0,0,0">
+                                                    <TextBlock Text="{l10n:L ColorSchemes.Badge.Active}" Style="{StaticResource StatusChipText}"/>
+                                                </Border>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
 
+                <Border Style="{StaticResource Card}" Margin="{StaticResource GapCard}">
+                    <StackPanel>
+                        <TextBlock Text="{l10n:L Appearance.Font}" Style="{StaticResource SectionTitle}"/>
+
+                        <!-- 字段间距一律用 GapField / 说明用 GapFieldTight。 -->
                         <Grid Margin="{StaticResource GapField}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="{StaticResource FieldLabelWidth}"/>
@@ -274,10 +341,6 @@
                                    Style="{StaticResource SectionIntro}"/>
 
                         <StackPanel Orientation="Horizontal" Margin="{StaticResource GapActionRow}">
-                            <Button Content="{l10n:L Appearance.ApplyBtn}" Style="{StaticResource PrimaryButton}"
-                                    Command="{Binding ApplyCommand}" Margin="0,0,10,0"/>
-                            <Button Content="{l10n:L Appearance.Redeploy}" Style="{StaticResource SecondaryButton}"
-                                    Command="{Binding DeployCommand}" Margin="0,0,10,0"/>
                             <Button Content="{l10n:L Appearance.ReloadBtn}" Style="{StaticResource SecondaryButton}"
                                     Command="{Binding ReloadCommand}"/>
                         </StackPanel>

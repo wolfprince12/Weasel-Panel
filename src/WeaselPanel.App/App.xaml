@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:sys="clr-namespace:System;assembly=System.Runtime"
              xmlns:infra="clr-namespace:WeaselPanel.App.Infrastructure"
+             xmlns:local="clr-namespace:WeaselPanel.App"
              StartupUri="MainWindow.xaml">
     <!-- ════════════════════════════════════════════════════════════════
          设计 token 体系
@@ -77,6 +78,8 @@
             <SolidColorBrush x:Key="BgHoverBrush" Color="{StaticResource Gray100}"/>
             <!-- 表格隔行底色。整行填色会压过内容，所以只比白底暗一档。 -->
             <SolidColorBrush x:Key="RowAltBrush" Color="{StaticResource Gray50}"/>
+            <!-- 按压态表面（次要按钮按下时）。浅色=Gray200；深色由 ThemeManager 改写。 -->
+            <SolidColorBrush x:Key="PressedSurfaceBrush" Color="{StaticResource Gray200}"/>
 
             <!-- 边框两档。default 用于卡片外框与分割线，strong 用于输入控件
                  （输入控件需要更清晰的边界才看得出「这里能填」）。 -->
@@ -85,6 +88,8 @@
 
             <!-- 强调与状态 -->
             <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Primary500}"/>
+            <!-- 色卡未选中态的极淡主色描边（仿鼠须管 SchemeSwatch 的 0.1 细边）。 -->
+            <SolidColorBrush x:Key="PrimaryFaintBrush" Color="{StaticResource Primary500}" Opacity="0.22"/>
             <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary500}"/>
             <SolidColorBrush x:Key="PrimaryHoverBrush" Color="{StaticResource Primary700}"/>
             <SolidColorBrush x:Key="PrimaryPressedBrush" Color="{StaticResource Primary700}"/>
@@ -107,6 +112,8 @@
             <infra:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
             <infra:ErrorBorderThicknessConverter x:Key="ErrThickness"/>
             <infra:HasValueConverter x:Key="HasValue"/>
+            <infra:SelectedBorderBrushConverter x:Key="SelectedBorderBrush"/>
+            <infra:SelectedBorderThicknessConverter x:Key="SelectedBorderThickness"/>
 
             <!-- ═══ 3. 字体 ════════════════════════════════════════════ -->
             <FontFamily x:Key="UIFont">Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI, Microsoft YaHei, PingFang SC</FontFamily>
@@ -193,7 +200,7 @@
 
             <!-- ═══ 5. 圆角：全站只留 3 档 ════════════════════════════ -->
             <CornerRadius x:Key="RadiusSm">4</CornerRadius>          <!-- 按钮、输入框、徽标 -->
-            <CornerRadius x:Key="RadiusMd">8</CornerRadius>          <!-- 卡片、大容器 -->
+            <CornerRadius x:Key="RadiusMd">10</CornerRadius>         <!-- 卡片、大容器 -->
             <CornerRadius x:Key="RadiusLg">12</CornerRadius>         <!-- 关于页 logo 容器 -->
 
             <!-- ═══ 6. 阴影：4 档层级 ════════════════════════════════
@@ -322,7 +329,7 @@
                 <Setter Property="BorderBrush" Value="{StaticResource BorderBrushKey}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="CornerRadius" Value="{StaticResource RadiusMd}"/>
-                <Setter Property="Padding" Value="{StaticResource Pad5}"/>
+                <Setter Property="Padding" Value="{StaticResource Pad4}"/>
                 <Setter Property="Effect" Value="{StaticResource ShadowXs}"/>
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
             </Style>
@@ -466,7 +473,7 @@
                                     <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Primary300Brush}"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource Gray200}"/>
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource PressedSurfaceBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsKeyboardFocused" Value="True">
                                     <Setter TargetName="ring" Property="Opacity" Value="1"/>
@@ -675,7 +682,22 @@
                                     <Border x:Name="bd" Margin="3,0,0,0" Background="Transparent"
                                             CornerRadius="{StaticResource RadiusSm}"
                                             Padding="11,0,8,0">
-                                        <ContentPresenter VerticalAlignment="Center"/>
+                                        <Grid VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <!-- 图标：Segoe MDL2 Assets 字形，由 ListBoxItem 的
+                                                 NavItemHelper.Icon 附加属性提供。Foreground 不显式设置，
+                                                 继承 ListBoxItem 的当前前景（选中态自动变主色）。 -->
+                                            <TextBlock x:Name="ico" Grid.Column="0"
+                                                       Text="{Binding Path=(local:NavItemHelper.Icon),
+                                                              RelativeSource={RelativeSource TemplatedParent}}"
+                                                       FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                       Margin="0,0,10,0" VerticalAlignment="Center"
+                                                       IsHitTestVisible="False"/>
+                                            <ContentPresenter Grid.Column="1" VerticalAlignment="Center"/>
+                                        </Grid>
                                     </Border>
                                 </Grid>
                             </StackPanel>

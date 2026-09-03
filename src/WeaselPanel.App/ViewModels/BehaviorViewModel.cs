@@ -351,7 +351,9 @@ public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware
 
     // ── 应用 ─────────────────────────────────────────────────────────
 
-    private async Task ApplyAsync()
+    public Task ReloadAsync() { Load(); return Task.CompletedTask; }
+
+    public async Task ApplyAsync()
     {
         IsBusy = true;
         StatusText = StatusFromKey("Behavior.Status.Writing");
