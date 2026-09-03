@@ -30,11 +30,22 @@
                 </WrapPanel>
 
                 <!-- ── 双栏 ──────────────────────────────────────────────── -->
+                <!--
+                  列宽策略：
+                    · 左右  *   MinWidth=220  保底，保证左/右列表至少能看到关键字与一行副标题
+                    · 中间  Auto MinWidth=92  按按钮内容（"启用"/"→ 移除" + Padding）
+                                            自然撑开；不能在中文 14pt+下被压成竖条
+                  早期这里写死 52 px —— 中文字号 + padding 临界刚好越过，外加右侧
+                  ItemTemplate 长 Subtitle 触发横向滚动条时 Grid 把 52 px 挤成 0 宽
+                  —— "启用"按钮文字被切没、点击不可用（v0.2.6 真机证伪）。
+                  ItemTemplate 内对所有 TextBlock 再加 MaxWidth 绑 ListBoxItem 实际
+                  宽度，兜底不让长 Subtitle 撑出列外。
+                -->
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="52"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*" MinWidth="220"/>
+                        <ColumnDefinition Width="Auto" MinWidth="92"/>
+                        <ColumnDefinition Width="*" MinWidth="220"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- 左：已启用（首位即默认方案） -->
@@ -58,7 +69,9 @@
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="{Binding DisplayName}"
                                                                FontWeight="SemiBold"
-                                                               FontSize="{StaticResource FontBody}"/>
+                                                               FontSize="{StaticResource FontBody}"
+                                                               MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                                               TextTrimming="CharacterEllipsis"/>
                                                     <!-- 默认方案标记：由 ViewModel 的 SyncDefault 维护 IsDefault -->
                                                     <Border Style="{StaticResource OriginChip}" Margin="8,0,0,0"
                                                             Visibility="{Binding IsDefault, Converter={StaticResource BoolToVisibility}}">
@@ -73,6 +86,7 @@
                                                 <TextBlock Text="{Binding Subtitle}"
                                                            Style="{StaticResource FieldNote}"
                                                            Margin="0,2,0,0"
+                                                           MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
                                                            TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                         </DataTemplate>
@@ -117,7 +131,9 @@
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="{Binding DisplayName}"
                                                                FontWeight="SemiBold"
-                                                               FontSize="{StaticResource FontBody}"/>
+                                                               FontSize="{StaticResource FontBody}"
+                                                               MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                                               TextTrimming="CharacterEllipsis"/>
                                                     <Border Style="{StaticResource OriginChip}" Margin="8,0,0,0">
                                                         <TextBlock Text="{Binding OriginLabel}"
                                                                    Style="{StaticResource StatusChipText}"/>
@@ -126,6 +142,7 @@
                                                 <TextBlock Text="{Binding Subtitle}"
                                                            Style="{StaticResource FieldNote}"
                                                            Margin="0,2,0,0"
+                                                           MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
                                                            TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                         </DataTemplate>

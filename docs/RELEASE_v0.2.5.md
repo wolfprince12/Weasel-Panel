@@ -51,6 +51,17 @@ were fixed that the macOS cross-compile build couldn't detect at all:
 5. `SchemaViewModel.IsDirty` was missing the `HasLoaded` guard, so the
    status bar always showed "unsaved changes" the moment the page opened.
    Now `IsDirty => HasLoaded && Signature() != _baseline`.
+6. The "输入方案" (Schemas) page had its center action buttons
+   ("启用" / "→ 移除") clipped: the middle `ColumnDefinition Width="52"`
+   was narrower than the buttons actually needed, and the side `Width="*"`
+   columns had no `MinWidth` floor. Long `Subtitle` strings from the right
+   list (`https://github.com/...`) were also pushing the layout across
+   the boundary. Fixed via three layered guards: `Auto MinWidth="92"` on
+   the middle column, `MinWidth="220"` on both sides, and
+   `MaxWidth={Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListBoxItem}}`
+   on every TextBlock inside the ItemTemplates, plus
+   `TextTrimming="CharacterEllipsis"` so long subtitles can actually
+   truncate inside the column instead of forcing the column to grow.
 
 ## Build system
 
@@ -112,10 +123,10 @@ Once you cut the release, attach the single-file self-contained
 executable:
 
 ```
-dist/win-x64/WeaselPanel_v0.2.5_4b26a7b3.exe
+dist/win-x64/WeaselPanel_v0.2.5_509ebf7e.exe
 ```
 
-(`4b26a7b3` is the hash of the most recent rebuild that includes every
+(`509ebf7e` is the hash of the most recent rebuild that includes every
 hotfix and lint. Rebuild with `./build.sh` to refresh the hash on
 demand.)
 
