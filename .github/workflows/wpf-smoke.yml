@@ -1,0 +1,59 @@
+name: WPF 启动冒烟测试
+
+# 为什么要有这道 CI：
+# weasel-panel 在 macOS 上用 dotnet build 完全看不见「纯运行时 XAML 错误」——
+# BAML loader 在 InitializeComponent() 阶段才抛 XamlParseException，编译期不报、
+# IDE 漂红但不影响 build。v0.2.4 / v0.2.5 连续栽了三次（Hyperlink 容器类型错、
+# {StaticResource} 误用、VM 给 string 而 XAML 要 Uri），每次都是 Windows 真机才暴露。
+# build.sh 里的 check_xaml_resources.py / check_uri_consts.py 能拦后两类，但
+# 第一类（容器类型错）只能靠真机启动验证。本 workflow 在 windows-latest runner
+# 上真机 publish + 启动 exe，抓 InitializeComponent 阶段的崩溃。
+#
+# 启用方式（用户侧操作一次）：
+#   GitHub 仓库 → Settings → Actions → General → 允许 main 分支的 workflow
+# 之后每次 push 到 main 自动跑；也可在 Actions 页手动 Run workflow。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: 安装 WPF workload
+        run: dotnet workload install windows-desktop
+
+      - name: 还原 + 发布单文件 exe
+        run: dotnet publish src/WeaselPanel.App -c Release -r win-x64 -o dist/win-x64 --nologo
+
+      - name: 冒烟启动（抓 InitializeComponent 阶段的 XamlParseException）
+        shell: pwsh
+        run: |
+          $exe = "dist/win-x64/WeaselPanel.exe"
+          if (-not (Test-Path $exe)) {
+            Write-Error "未产出 $exe —— 发布步骤失败"
+            exit 1
+          }
+          # 启动后等 8 秒：WPF app 成功 InitializeComponent 会进入消息循环、进程存活；
+          # 若启动即崩（XamlParseException / 顶层异常），进程会在秒级内退出且退出码非 0。
+          $p = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 8
+          if ($p.HasExited) {
+            Write-Error "进程在 8 秒内退出（exit code $($p.ExitCode)）—— 大概率启动即崩（XamlParseException）。"
+            exit 1
+          }
+          Write-Host "进程存活 8 秒，无立即崩溃 —— 启动路径 BAML 加载通过。"
+          Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue

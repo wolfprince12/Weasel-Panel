@@ -99,6 +99,20 @@ echo "═══ 校验 XAML 资源引用 ═══"
   exit 1
 }
 
+# ── VM 端 URL 字面量 const/property 体检 ─────────────────────────────
+# 拦 `const string X = "https://..."` 这类字段/属性。XAML 端 NavigateUri 等 Uri
+# 类型属性若引用它们，会走 string→Uri TypeConverter，对无尾斜杠主机名或某些
+# .NET 8 子版本会抛 ArgumentException，同样运行时崩盘。v0.2.5 #3 真机栽过：
+#   RimeUrl/WeaselUrl/RepoUrl/IssuesUrl/LuaDownloadUrl 都是 const string →
+#   NavigateUri={x:Static vm:...} 全炸。
+# 修法是改 static readonly Uri（Uri 不支持 const，故 readonly）。XAML 端零改动。
+echo "═══ 校验 VM 端 URL 字面量声明 ═══"
+"$PY" tools/check_uri_consts.py || {
+  echo "" >&2
+  echo "VM 端 URL 字面量声明违规 —— XAML 端 NavigateUri 等 Uri 类型属性会运行时 TypeConverter 异常，不出包。" >&2
+  exit 1
+}
+
 echo "═══ 发布 ${RID} ═══"
 dotnet publish src/WeaselPanel.App -c Release -r "$RID" -o "$OUT" --nologo 2>&1 | tail -2
 
