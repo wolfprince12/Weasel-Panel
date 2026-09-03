@@ -232,7 +232,7 @@ public sealed class RimeIceFuzzyGroup : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
 }
 
-public sealed class RimeIceViewModel : ViewModelBase, ILanguageAware
+public sealed class RimeIceViewModel : ViewModelBase, ILanguageAware, IPanelActions
 {
     private readonly WeaselEnvironment _environment;
     private RimeIceConfig _config;
@@ -443,7 +443,9 @@ public sealed class RimeIceViewModel : ViewModelBase, ILanguageAware
     }
 
     // ── 写盘 ──────────────────────────────────────────────────────────
-    private async Task ApplyAsync()
+    public Task ReloadAsync() { Load(); return Task.CompletedTask; }
+
+    public async Task ApplyAsync()
     {
         if (!IsInstalled)
         {

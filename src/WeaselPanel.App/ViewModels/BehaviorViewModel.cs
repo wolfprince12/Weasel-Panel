@@ -80,7 +80,7 @@ public sealed class NamedOption : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
-public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware
+public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware, IPanelActions
 {
     /// <summary>
     /// ascii_composer/switch_key 的可选动作，取自 librime 的 SwitcherCommand。
@@ -368,6 +368,7 @@ public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware
             if (!ApplyRime()) return;
 
             StatusText = StatusFromKey("Behavior.Status.Written");
+            MarkLoaded();
         }
         catch (Exception ex)
         {

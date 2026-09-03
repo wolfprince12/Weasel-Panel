@@ -95,7 +95,7 @@ public sealed class DictionaryEntry : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
-public sealed class DictionaryViewModel : ViewModelBase, ILanguageAware
+public sealed class DictionaryViewModel : ViewModelBase, ILanguageAware, IPanelActions
 {
     /// <summary>可选的用户词典文件。db_name 必须与文件名一致（见 CustomPhraseFile.DefaultHeader）。</summary>
     private static readonly string[] FileNames =
@@ -264,7 +264,7 @@ public sealed class DictionaryViewModel : ViewModelBase, ILanguageAware
         }
     }
 
-    private async Task ReloadAsync()
+    public async Task ReloadAsync()
     {
         _hasLoaded = false;
         await LoadAsync();

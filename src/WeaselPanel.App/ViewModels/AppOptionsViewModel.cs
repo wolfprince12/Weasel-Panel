@@ -172,7 +172,7 @@ public sealed class AppOptionRow : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
-public sealed class AppOptionsViewModel : ViewModelBase, ILanguageAware
+public sealed class AppOptionsViewModel : ViewModelBase, ILanguageAware, IPanelActions
 {
     /// <summary>三态下拉三档的语言包键，下标即 <see cref="AppOptionRow"/> 的三个常量。</summary>
     private static readonly string[] InlineKeys =
@@ -370,7 +370,7 @@ public sealed class AppOptionsViewModel : ViewModelBase, ILanguageAware
         }
     }
 
-    private async Task ReloadAsync()
+    public async Task ReloadAsync()
     {
         if (IsDirty && !Confirm(L10n.Instance.T("AppOptions.DiscardTitle"),
                                 L10n.Instance.T("AppOptions.DiscardBody"))) return;
@@ -456,6 +456,9 @@ public sealed class AppOptionsViewModel : ViewModelBase, ILanguageAware
             RefreshDerived();
         }
     }
+
+    /// <summary>全局部署协调器入口：与本页「保存」共用同一段代码。</summary>
+    public Task ApplyAsync() => SaveAsync();
 
     /// <summary>清掉本面板在 weasel.custom.yaml 里写过的全部 app_options 键。
     /// 用户在同一节点下手写的其它键原样保留（Core 只认三个托管选项名）。</summary>

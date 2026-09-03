@@ -40,7 +40,7 @@ namespace WeaselPanel.App.ViewModels;
 //  所以归行为页独占，本页只留一行指向提示（Input.Switch.MovedToBehavior）。
 //
 
-public sealed class InputViewModel : ViewModelBase
+public sealed class InputViewModel : ViewModelBase, IPanelActions
 {
     private readonly WeaselEnvironment _environment;
     private bool _isBusy;
@@ -304,6 +304,7 @@ public sealed class InputViewModel : ViewModelBase
 
             custom.ApplyLineEdits(set);
             StatusText = L10n.Instance.T("Input.Status.Written", path);
+            MarkLoaded();
         }
         catch (Exception ex)
         {

@@ -204,7 +204,7 @@ public sealed class ChannelGroup : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 }
 
-public sealed class ColorSchemesViewModel : ViewModelBase, ILanguageAware
+public sealed class ColorSchemesViewModel : ViewModelBase, ILanguageAware, IPanelActions
 {
     private readonly WeaselEnvironment _environment;
     private UserColorSchemeStore _store;
@@ -874,6 +874,12 @@ public sealed class ColorSchemesViewModel : ViewModelBase, ILanguageAware
             IsBusy = false;
         }
     }
+
+    /// <summary>全局部署协调器入口：与本页「保存」共用同一段代码。</summary>
+    public Task ApplyAsync() => SaveAsync();
+
+    /// <summary>全局部署协调器入口：放弃本面板改动——回读磁盘、刷新 IsDirty。</summary>
+    public Task ReloadAsync() { Load(); return Task.CompletedTask; }
 
     private async Task DeployAsync()
     {

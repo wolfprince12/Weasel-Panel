@@ -53,7 +53,7 @@ public sealed class CorrectionRuleRow
     public string Rule { get; }
 }
 
-public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware
+public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelActions
 {
     private readonly WeaselEnvironment _environment;
     private RimeIceConfig _config;

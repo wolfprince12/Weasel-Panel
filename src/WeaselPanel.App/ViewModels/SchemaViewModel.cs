@@ -86,7 +86,7 @@ public sealed class SchemaRow : INotifyPropertyChanged
     }
 }
 
-public sealed class SchemaViewModel : ViewModelBase, ILanguageAware
+public sealed class SchemaViewModel : ViewModelBase, ILanguageAware, IPanelActions
 {
     private readonly WeaselEnvironment _environment;
     private SchemaCatalog _catalog = SchemaCatalog.Empty;
