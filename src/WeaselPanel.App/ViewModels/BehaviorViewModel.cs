@@ -122,7 +122,7 @@ public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware, IPanelAct
             .Select(id => new NamedOption(id, L10n.Instance.T(ActionNameKey(id))))
             .ToList();
 
-        StatusText = StatusFromKey("Behavior.Status.Ready");
+        _statusText = StatusFromKey("Behavior.Status.Ready");
     }
 
     public ICommand ApplyCommand { get; }
@@ -250,6 +250,10 @@ public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware, IPanelAct
             HasLoaded = true;
             StatusText = StatusFromKey("Behavior.Status.Loaded");
             RaiseAllChanged();
+            // ⚠️ Load() 末尾必须 MarkLoaded()：上方 HasLoaded=true 和 StatusText=...
+            // 都走 Set<T>，已经把 HasUnsavedChanges 翻成 true；Load 完应回到干净态。
+            // 故意不在 catch 分支调 —— 失败时内存态半新半旧 ≠ 磁盘，留 dirty 让用户能 Reload。
+            MarkLoaded();
         }
         catch (Exception ex)
         {

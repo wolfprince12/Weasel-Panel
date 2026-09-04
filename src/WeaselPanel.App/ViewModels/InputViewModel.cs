@@ -61,7 +61,10 @@ public sealed class InputViewModel : ViewModelBase, IPanelActions
         _environment = environment;
         ApplyCommand = new RelayCommand(ApplyAsync, () => !IsBusy);
         ReloadCommand = new DelegateCommand(Load);
-        StatusText = L10n.Instance.T("Input.Status.Ready");
+        // ⚠️ 直写字段而非 StatusText 属性 —— 后者会走 Set<T>，把 HasUnsavedChanges
+        // 翻成 true，让面板在 ctor 阶段（Load() 还未跑）就被部署栏误判为脏。
+        // ctor 是初始化，不应触发脏标记；Load() 末尾有 MarkLoaded() 兜底。
+        _statusText = L10n.Instance.T("Input.Status.Ready");
     }
 
     public ICommand ApplyCommand { get; }
@@ -179,6 +182,7 @@ public sealed class InputViewModel : ViewModelBase, IPanelActions
 
             RaiseAllChanged();
             RefreshPreview();
+            MarkLoaded();
         }
         catch (Exception ex)
         {
