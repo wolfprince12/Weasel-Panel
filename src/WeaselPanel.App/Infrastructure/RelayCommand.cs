@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Input;
 
 namespace WeaselPanel.App.Infrastructure;
@@ -57,7 +58,23 @@ public sealed class RelayCommand : ICommand
         }
     }
 
-    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    public void RaiseCanExecuteChanged()
+    {
+        // WPF 的 CanExecuteChanged 必须从 UI 线程触发 —— 底层
+        // CanExecuteChangedEventManager.HandlerSink 会 Dispatcher.VerifyAccess()，
+        // 非 UI 线程触发即抛 "调用线程无法访问此对象，因为另一个线程拥有该对象"。
+        // CorrectionViewModel.InstallLuaAsync 用了 ConfigureAwait(false)，
+        // finally 里的 IsBusy=false 会跑到线程池、继而走
+        // PropertyChanged → DeployCoordinator.RefreshCommands → RaiseCanExecuteChanged，
+        // 故必须 marshal 回 UI 线程（v0.2.9 真机栽过一次）。
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            dispatcher.BeginInvoke(new Action(RaiseCanExecuteChanged));
+            return;
+        }
+        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    }
 }
 
 /// <summary>同步版命令，用于无需等待的操作。</summary>
