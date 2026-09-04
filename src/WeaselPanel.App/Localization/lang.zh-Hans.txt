@@ -981,3 +981,4 @@ Correction.Lua.Err.Overwrite = 覆盖 rime.dll 失败（可能提权被拒绝）
 Correction.Lua.Err.Redeploy = 重新部署失败，请手动重新部署小狼毫。
 Correction.Lua.Err.Detect = 重新检测 Lua 运行时失败。
 Correction.Lua.Err.SevenZip = 面板暂不能直接安装 .7z。请先用 7-Zip / Bandizip 解压，再选择里面的 rime.dll。
+Correction.Lua.Err.ArchMismatch = 源架构（{0}）与系统不匹配（已装 rime.dll={1}，锚点 WeaselDeployer={2}）。已拒绝覆盖，原 rime.dll 未变动。若想恢复被覆盖前的版本，请以管理员身份打开命令提示符，cd 到「{3}」，再执行：copy /Y rime.dll.bak rime.dll。

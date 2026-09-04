@@ -26,6 +26,50 @@ namespace WeaselPanel.App.Services;
 public static class LuaInstaller
 {
     /// <summary>
+    /// 最近一次失败原因。安装流程把它当上下文抛出，调用方（如 InstallLuaAsync）
+    /// 决定是否把它翻译成 L10n 的具体错误文案（架构不匹配、提权拒绝、…）。
+    /// </summary>
+    public static string? LastError { get; private set; }
+
+    /// <summary>PE Machine 字段 → 架构名（用于错误文案）。</summary>
+    private static string ArchName(ushort machine) => machine switch
+    {
+        0x8664 => "x64",
+        0x014c => "x86",
+        0xaa64 => "ARM64",
+        0x01c0 => "ARM",
+        _ => $"0x{machine:X4}",
+    };
+
+    /// <summary>
+    /// 裸读 PE 头的 Machine 字段，不依赖 PEReader。
+    /// 用法：先读 e_lfanew（DOS 头 0x3C 起的 4 字节 LE int32），跳到 PE\0\0 ，
+    /// 再读 IMAGE_FILE_HEADER.Machine（PE 签名 + 4 字节起的 2 字节 LE ushort）。
+    /// 任何偏移越界或不匹配 PE\0\0 签名都返回 null（不是合法 PE）。
+    /// </summary>
+    private static ushort? PeMachine(string path)
+    {
+        try
+        {
+            using var fs = File.OpenRead(path);
+            Span<byte> dos = stackalloc byte[0x40];
+            if (fs.Read(dos) != dos.Length) return null;
+            var e_lfanew = BitConverter.ToInt32(dos.Slice(0x3C, 4));
+            if (e_lfanew < 0 || e_lfanew + 24 > fs.Length) return null;
+            fs.Seek(e_lfanew, SeekOrigin.Begin);
+            Span<byte> pe = stackalloc byte[24];
+            if (fs.Read(pe) != pe.Length) return null;
+            if (pe[0] != (byte)'P' || pe[1] != (byte)'E' || pe[2] != 0 || pe[3] != 0)
+                return null;
+            return BitConverter.ToUInt16(pe.Slice(4, 2));
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// 把用户选中的 rime.dll 覆盖到小狼毫安装目录。
     /// 内部流程（全部在提权 bat 内完成，用户只见一次 UAC）：
     ///   taskkill /f /im WeaselServer.exe  →  停算法服务（避免 rime.dll 被占用）
@@ -38,6 +82,59 @@ public static class LuaInstaller
     public static async Task<bool> OverwriteWithElevationAsync(
         string destDir, string srcDll, string? srcLua)
     {
+        // 每次调用重置 LastError，避免上一次失败原因污染下一次。
+        LastError = null;
+
+        // ── 新增：PE 架构校验 ────────────────────────────────────────
+        // 历史教训：hchunhui/librime-lua 的 rime.zip 把 32 位 rime.dll 和 64 位
+        // WeaselDeployer.exe 装在同一目录，x64 进程 LoadLibrary x86 dll 即抛
+        // 0xC000007B（STATUS_INVALID_IMAGE_FORMAT）。先把架构对齐后再考虑覆盖。
+        // 铁锚优先用 WeaselDeployer.exe（小狼毫安装时自带的不可变二进制）——
+        // 即使用户上次已被错覆盖，原版 .bak 也仍是锚点对应的架构。
+        var srcMachine = PeMachine(srcDll);
+        if (srcMachine is null)
+        {
+            LastError = "源文件不是有效的 PE 文件，无法读取 Machine 字段。";
+            return false;
+        }
+
+        // 寻找锚点：destDir 下的 WeaselDeployer.exe（根或 Win32 子目录）。
+        string? anchorPath = null;
+        foreach (var name in new[] { "WeaselDeployer.exe", Path.Combine("Win32", "WeaselDeployer.exe") })
+        {
+            var p = Path.Combine(destDir, name);
+            if (File.Exists(p)) { anchorPath = p; break; }
+        }
+        var anchorMachine = anchorPath is null ? null : PeMachine(anchorPath);
+
+        // 退化锚：若 destDir 没 WeaselDeployer.exe（异常布局），退回到目标 rime.dll。
+        string? existingDest = null;
+        if (anchorMachine is null)
+        {
+            foreach (var name in new[] { "rime.dll", Path.Combine("Win32", "rime.dll") })
+            {
+                var p = Path.Combine(destDir, name);
+                if (File.Exists(p)) { existingDest = p; break; }
+            }
+            if (existingDest is not null)
+                anchorMachine = PeMachine(existingDest);
+        }
+
+        if (anchorMachine is not null && anchorMachine.Value != srcMachine.Value)
+        {
+            // 架构不匹配，绝不覆盖，避免再次触发 0xC000007B。
+            // 占位：src / dest / anchor 三种架构与安装目录——调用方拼出详细文案。
+            var destMachine = PeMachine(Path.Combine(destDir, "rime.dll"));
+            LastError = string.Format(
+                "源架构={0}；已装 rime.dll 架构={1}；锚点架构={2}；destDir={3}",
+                ArchName(srcMachine.Value),
+                destMachine is null ? "未知" : ArchName(destMachine.Value),
+                ArchName(anchorMachine.Value),
+                destDir);
+            return false;
+        }
+        // ── 架构校验结束 ────────────────────────────────────────────
+
         var destDll = Path.Combine(destDir, "rime.dll");
         var destLua = Path.Combine(destDir, "lua54.dll");
 

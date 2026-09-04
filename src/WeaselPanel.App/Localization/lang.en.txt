@@ -998,3 +998,4 @@ Correction.Lua.Err.Overwrite = Failed to overwrite rime.dll (elevation may have 
 Correction.Lua.Err.Redeploy = Redeployment failed. Please redeploy Weasel manually.
 Correction.Lua.Err.Detect = Re-detection of the Lua runtime failed.
 Correction.Lua.Err.SevenZip = Panel cannot install .7z directly. Extract it with 7-Zip / Bandizip first, then select the rime.dll inside.
+Correction.Lua.Err.ArchMismatch = Source architecture ({0}) does not match your system (existing rime.dll = {1}, anchor WeaselDeployer = {2}). Overwrite was refused; the original rime.dll was not changed. To restore the previously-overwritten version, open an elevated command prompt, cd to "{3}", then run: copy /Y rime.dll.bak rime.dll.

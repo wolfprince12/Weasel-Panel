@@ -581,7 +581,23 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
                 _environment.ProgramDirectory!, srcDll, srcLua).ConfigureAwait(false);
             if (!ok)
             {
-                StatusText = StatusFromKey("Correction.Lua.Err.Overwrite");
+                // 区分架构错（PE Machine 不匹配）与普通提权错 —— 前者必须给详细诊断
+                // + 手动恢复指引，否则用户只会重试然后再炸 0xC000007B。
+                if (LuaInstaller.LastError is { } err && err.StartsWith("源架构="))
+                {
+                    // err 形如「源架构=X；已装 rime.dll 架构=Y；锚点架构=Z；destDir=W」
+                    var parts = err.Split('；', 4); // 中文全角分号作分隔
+                    StatusText = StatusFromKey(
+                        "Correction.Lua.Err.ArchMismatch",
+                        ValueAfter(parts, 0, "源架构="),
+                        ValueAfter(parts, 1, "已装 rime.dll 架构="),
+                        ValueAfter(parts, 2, "锚点架构="),
+                        ValueAfter(parts, 3, "destDir="));
+                }
+                else
+                {
+                    StatusText = StatusFromKey("Correction.Lua.Err.Overwrite");
+                }
                 return;
             }
 
@@ -610,6 +626,15 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
         {
             IsBusy = false;
         }
+    }
+
+    /// <summary>从 LastError 解析出的 4 段格式串里抠出某一段，去掉前缀。
+    /// 例：<c>ValueAfter(["源架构=x64","锚点架构=x64"], 0, "源架构=")</c> → "x64"。</summary>
+    private static string ValueAfter(string[] parts, int idx, string prefix)
+    {
+        if (idx >= parts.Length) return "";
+        var p = parts[idx];
+        return p.StartsWith(prefix, StringComparison.Ordinal) ? p[prefix.Length..] : p;
     }
 
     /// <summary>随语言切换重建 Lua 状态文案与分步指引。</summary>
