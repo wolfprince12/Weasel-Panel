@@ -110,12 +110,20 @@ public static class LuaInstaller
         }
     }
 
-    /// <summary>在解压目录里找 rime.dll（根 + 一层子目录，兜底全树），并找 lua54.dll。</summary>
+    /// <summary>在解压目录里找 rime.dll（根 + 一层子目录，兜底全树），并找 Lua 运行时 dll。</summary>
     private static (string? Dll, string? Lua) LocateRimeDll(string root)
     {
         string? dll = null;
         string? lua = null;
 
+        bool IsLuaMarker(string name)
+        {
+            if (name.Equals("librime-lua.dll", StringComparison.OrdinalIgnoreCase)) return true;
+            return name.StartsWith("lua", StringComparison.OrdinalIgnoreCase)
+                && name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // 先扫根 + 一层子目录（多数构建 rime.dll / lua54.dll 落在这两层）。
         var dirs = new List<string> { root };
         try { dirs.AddRange(Directory.EnumerateDirectories(root)); }
         catch { /* 无权限则只扫根 */ }
@@ -129,7 +137,7 @@ public static class LuaInstaller
                     var name = Path.GetFileName(f);
                     if (name.Equals("rime.dll", StringComparison.OrdinalIgnoreCase) && dll is null)
                         dll = f;
-                    else if (name.Equals("lua54.dll", StringComparison.OrdinalIgnoreCase) && lua is null)
+                    else if (IsLuaMarker(name) && lua is null)
                         lua = f;
                 }
             }
@@ -137,13 +145,20 @@ public static class LuaInstaller
             if (dll is not null && lua is not null) break;
         }
 
-        // 兜底：rime.dll 藏在更深目录时全树搜一次。
-        if (dll is null)
+        // 兜底：rime.dll / lua*.dll 藏在更深目录（如 dist/lib/）时全树再搜一次。
+        if (dll is null || lua is null)
         {
             try
             {
-                dll = Directory.EnumerateFiles(root, "rime.dll", SearchOption.AllDirectories)
-                    .FirstOrDefault();
+                foreach (var f in Directory.EnumerateFiles(root, "*.dll", SearchOption.AllDirectories))
+                {
+                    var name = Path.GetFileName(f);
+                    if (dll is null && name.Equals("rime.dll", StringComparison.OrdinalIgnoreCase))
+                        dll = f;
+                    else if (lua is null && IsLuaMarker(name))
+                        lua = f;
+                    if (dll is not null && lua is not null) break;
+                }
             }
             catch { /* 忽略 */ }
         }

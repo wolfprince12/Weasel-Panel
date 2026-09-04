@@ -28,6 +28,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using WeaselPanel.App.Infrastructure;
 using WeaselPanel.App.Localization;
@@ -212,10 +213,20 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
     /// GitHub Actions artifacts。安装引导流程要的就是这里的 dist/lib/rime.dll，故作为推荐源。</summary>
     public static readonly Uri LuaDownloadUrlRime = new("https://github.com/rime/librime/releases/");
 
-    /// <summary>判定 Lua 运行时是否在场的文件名特征（librime-lua 会随 rime.dll 一起带来这些）。</summary>
+    /// <summary>判定 Lua 运行时是否在场的文件名特征（动态链接版 librime-lua 会随 rime.dll 一起带来这些独立 dll）。</summary>
     private static readonly string[] LuaRuntimeMarkers =
     {
         "lua54.dll", "lua5.4.dll", "lua.dll", "librime-lua.dll",
+    };
+
+    /// <summary>
+    /// 「把 Lua 静态编进 rime.dll」的旧构建（如 hchunhui/librime-lua 的 lua-dev-build-17）
+    /// 不附带独立的 lua54.dll，Lua 组件名直接编进了 rime.dll 的二进制字符串里。
+    /// 这些组件名只有 Lua-enabled 的 rime.dll 才会出现，用作「无独立 dll 也能识别」的判据。
+    /// </summary>
+    private static readonly string[] LuaRimeDllSignatures =
+    {
+        "lua_translator", "lua_filter", "lua_segmentor", "lua_processor",
     };
 
     public LuaEngineState LuaState
@@ -432,16 +443,21 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
     }
 
     /// <summary>
-    /// 只读探测 librime-lua 是否在场。
-    /// 小狼毫未安装 → NotInstalled；已安装则在其安装目录（含 Win32 子目录）寻找
-    /// Lua 运行时特征文件（lua54.dll 等）。特征是 librime-lua 替换 rime.dll 时
-    /// 一并带来的，是「带 Lua 的 rime.dll」最可靠的信号；找不到即视为 Absent。
+    /// 只读探测 librime-lua 是否在场（两条路径，覆盖动态与静态两种链接方式）：
+    ///   ① 动态链接版：安装目录（含 Win32 子目录）存在独立的 Lua 运行时 dll
+    ///      （lua54.dll / lua5.4.dll / lua.dll / librime-lua.dll）—— librime-lua 替换
+    ///      rime.dll 时一并带来，是最直观的信号。
+    ///   ② 静态链接版：rime.dll 自身把 Lua 编进去了（如 hchunhui/librime-lua 旧构建），
+    ///      无独立 dll。此时扫 rime.dll 二进制里的 Lua 组件名字符串
+    ///      （lua_translator / lua_filter / lua_segmentor / lua_processor）来判定。
+    /// 小狼毫未安装 → NotInstalled；两条路径都查不到 → Absent。
     /// ⚠️ 不在此做任何写操作。
     /// </summary>
     private LuaEngineState DetectLuaEngine()
     {
         if (_environment.ProgramDirectory is null) return LuaEngineState.NotInstalled;
 
+        // 1) 动态链接版：ProgramDirectory / Win32 下能找到独立的 Lua 运行时 dll
         var candidates = new[]
         {
             _environment.ProgramDirectory,
@@ -453,7 +469,45 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
             if (LuaRuntimeMarkers.Any(m => File.Exists(Path.Combine(dir, m))))
                 return LuaEngineState.Present;
         }
+
+        // 2) 静态链接版：rime.dll 自身带 Lua（无独立 dll）。扫 rime.dll 二进制里的
+        //    Lua 组件名字符串来判断。hchunhui/librime-lua 旧构建即此情况——
+        //    装完若只按「有没有 lua54.dll」判定会误报「重新检测失败」。
+        var rimeDll = FindInstalledRimeDll(_environment.ProgramDirectory);
+        if (rimeDll is not null && RimeDllHasLua(rimeDll))
+            return LuaEngineState.Present;
+
         return LuaEngineState.Absent;
+    }
+
+    /// <summary>在程序目录（含子目录）递归找 rime.dll。</summary>
+    private static string? FindInstalledRimeDll(string programDir)
+    {
+        try
+        {
+            return Directory.EnumerateFiles(programDir, "rime.dll", SearchOption.AllDirectories)
+                .FirstOrDefault();
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>读 rime.dll 二进制，按 Latin1 译出字符串后找 Lua 组件名签名。
+    /// 非 ASCII 字节译成 '?' 不影响这几个纯 ASCII 签名。</summary>
+    private static bool RimeDllHasLua(string rimeDllPath)
+    {
+        try
+        {
+            var bytes = File.ReadAllBytes(rimeDllPath);
+            var text = Encoding.Latin1.GetString(bytes);
+            return LuaRimeDllSignatures.Any(sig => text.Contains(sig));
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     /// <summary>
