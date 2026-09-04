@@ -145,8 +145,11 @@ public partial class MainWindow : Window
         var v = App.ExecutableVersion;
         var version = $"{v.Major}.{v.Minor}.{v.Build}";
         var build = App.ExecutableBuildTime.ToString("MM-dd HH:mm");
-        Title = $"小狼毫控制面板 v{version} · {build}";
-        BrandVersion.Text = $"v{version} · {build}";
+        Title = $"小狼毫控制面板 v{version}";
+        // 侧栏品牌区只保留版本号，不再拼构建时间（v0.2.9 反馈）：
+        // 09-04 16:29 这种时间戳让品牌区看起来像调试日志，挤在 logo 与品牌名之间
+        // 也显得松散。构建时间已在窗口标题栏里给，需要时自己比对。
+        BrandVersion.Text = $"v{version}";
     }
 
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)

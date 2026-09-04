@@ -44,6 +44,11 @@ public sealed class DeployCoordinator : INotifyPropertyChanged
     private readonly RelayCommand _discardCommand;
     private readonly DelegateCommand _viewYamlCommand;
 
+    // ⚠️ 诊断用：最近一次「应用并重新部署」的失败信息（哪个面板抛了什么）。
+    // 原实现没有 try/catch，面板 ApplyAsync 抛异常会被 RelayCommand fire-and-forget
+    // 静默吞掉 → 用户点「应用」像没反应、脏标记也不清。这里把异常摆出来。
+    private string? _applyError;
+
     public DeployCoordinator(WeaselEnvironment environment)
     {
         _environment = environment;
@@ -96,11 +101,18 @@ public sealed class DeployCoordinator : INotifyPropertyChanged
         get
         {
             if (IsApplying) return L10n.Instance.T("Deploy.Status.Applying");
+            // 有新的未保存改动时优先显示「N 项待保存」—— 否则上一次部署失败的错误文案
+            // 会一直盖在脏标记上，用户改了东西却看不到「待保存」提示。
             if (AnyDirty)
             {
-                var count = _panels.Count(p => p.IsDirty);
-                return L10n.Instance.T("Deploy.Status.Dirty", count);
+                var dirty = _panels.Where(p => p.IsDirty).Select(p => p.GetType().Name).ToArray();
+                var count = dirty.Length;
+                // 诊断：附加具体是哪个/哪些面板脏，方便定位「启动即脏」的来源。
+                return L10n.Instance.T("Deploy.Status.Dirty", count)
+                    + "  [" + string.Join(", ", dirty) + "]";
             }
+            // 诊断：把上次 apply / 部署的异常或失败摆出来，否则会被静默吞掉。
+            if (_applyError is not null) return _applyError;
             return L10n.Instance.T("Deploy.Status.Clean");
         }
     }
@@ -153,14 +165,33 @@ public sealed class DeployCoordinator : INotifyPropertyChanged
     private async Task ApplyAllAsync()
     {
         IsApplying = true;
+        _applyError = null;
         try
         {
+            // ⚠️ 不再让单个面板 ApplyAsync 的异常静默吞掉整个流程：
+            // 原先没 try/catch，任一面板抛错 → RelayCommand fire-and-forget 吃掉 →
+            // 用户点「应用并重新部署」毫无反应、脏标记也不清。现在逐面板捕获并汇总。
+            var failures = new List<string>();
             foreach (var panel in _panels.Where(p => p.IsDirty))
             {
-                await panel.ApplyAsync();
+                try
+                {
+                    await panel.ApplyAsync();
+                }
+                catch (Exception ex)
+                {
+                    failures.Add($"[{panel.GetType().Name}] {ex.GetType().Name}: {ex.Message}");
+                }
             }
 
-            await DeployAsync();
+            if (failures.Count > 0)
+            {
+                _applyError = "应用失败：" + string.Join("；", failures);
+            }
+            else
+            {
+                await DeployAsync();
+            }
 
             // 各面板 ApplyAsync 内部可能用 MarkLoaded() 清零脏标记（不触发 PropertyChanged），
             // 这里强制让按钮的 CanExecute 重新求值，使「应用并重新部署」在写完後正确变灰。
@@ -169,23 +200,33 @@ public sealed class DeployCoordinator : INotifyPropertyChanged
         finally
         {
             IsApplying = false;
+            // 错误/脏标记变化都要让状态行重算（StatusMessage 依赖 _applyError 与 AnyDirty）。
+            OnPropertyChanged(nameof(StatusMessage));
+            OnPropertyChanged(nameof(StatusBrush));
         }
     }
 
     private async Task DiscardAllAsync()
     {
+        _applyError = null;
         foreach (var panel in _panels)
         {
             await panel.ReloadAsync();
         }
 
         CommandManager.InvalidateRequerySuggested();
+        OnPropertyChanged(nameof(StatusMessage));
+        OnPropertyChanged(nameof(StatusBrush));
     }
 
     private async Task DeployAsync()
     {
         if (_environment.DeployerPath is null) return;
-        await Task.Run(() => ProbeService.ProbeDeployer(_environment.DeployerPath));
+        var result = await Task.Run(() => ProbeService.ProbeDeployer(_environment.DeployerPath));
+        // 部署失败（非 Ok）：配置已写入磁盘，但小狼毫未重新加载 —— 必须明确告诉用户，
+        // 否则他会以为「点了没反应 / 改了不生效」。原实现把这个结果静默吞掉。
+        if (result.Status != ProbeStatus.Ok)
+            _applyError = "配置已写入磁盘，但部署失败（小狼毫未重新加载）：" + result.Summary;
     }
 
     private void ViewYaml()

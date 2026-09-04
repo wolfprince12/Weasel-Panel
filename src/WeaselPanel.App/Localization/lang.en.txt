@@ -736,37 +736,39 @@ Backup.NoBackups = No backups yet - consider creating one before you change anyt
 Backup.NoFiles = This backup contains no files.
 
 # ── About page ─────────────────────────────────────────────────────────────────────
-About.Tagline = Weasel Panel — the Windows sibling of macOS "Squirrel Panel"
-About.Version = Version
-About.VersionPreview = {0}.{1}.{2} preview
+# ── About: update checks (panel + Weasel IME) ──
+# Mirrors macOS Squirrel Panel's AboutPage updateCard / squirrelUpdateCard:
+# ReleaseUpdateChecker asynchronously pulls GitHub release tags and decides
+# Available vs UpToDate. State text below is reused by both cards.
+Update.State.Idle = Not checked
+Update.State.Checking = Checking…
+Update.State.UpToDate = You're up to date
+Update.State.Available = New version available
+Update.State.Failed = Check failed, please retry
+Update.Button.Check = Check for updates
+Update.Button.Retry = Retry
+Update.Button.Download = Go to download
+About.PanelUpdate.Title = Weasel Panel — Check for updates
+About.PanelUpdate.Hint = Local version: v{0}. Click "Check for updates" to compare against the latest GitHub Release.
+About.WeaselUpdate.Title = Weasel IME — Check for updates
+About.WeaselUpdate.Hint = Local version: {0}. Source: rime/weasel. Click "Check for updates" for the latest tag; installer is on the Releases page.
+About.WeaselUpdate.NotInstalled = Weasel IME is not detected; cannot check for updates.
+
 About.Language = Language
-About.Tech = Stack
-About.TechValue = C# / WPF / .NET 8
-About.License = Licence
-About.LicenseValue = GPL-3.0
 About.Repo = Repository
-About.HowItWorks = How it works
-About.HowItWorksBody = This panel does not link against librime. It follows the same route as the macOS version: write a *.custom.yaml patch → call WeaselDeployer.exe → read the deployed result. Every appearance value is derived with the same rules as upstream RimeWithWeasel.cpp, so what you see here is what the candidate window renders.
-About.Env = Current environment
-About.ProgramDir = Program directory
-About.SharedDir = Shared data
-About.UserDir = User directory
-About.RowFormat = {0}: {1}
-About.Deployer = Deployer
-About.DeployHint = Deploy to apply changes — run it from the Appearance page after editing.
 
 # ── About: developer ──
 About.Developer.Title = Developer
-About.Developer.Name = Da Lang (wolfprince)
-About.Developer.Role = Independent director · Software developer
-About.Developer.Bio = Yunheng (Beijing) Culture Media Co., Ltd. A cert-collecting slash director who uses AI to rebuild two decades of cross-domain skills into new things.
+About.Developer.Name = Mr. Dawolf
+About.Developer.Role = Director / Producer / AI Product Creator
+About.Developer.Bio = 20+ years in film, TV, and live production. Reconstructing cross-domain experience into AI-powered products.
 
 # ── About: more works ──
 About.Promo.Title = More works
 About.Promo.Visit = Visit
-About.Promo.Yaozhi.Title = Yaozhi Cloud
+About.Promo.Yaozhi.Title = 爻知云AI
 About.Promo.Yaozhi.Subtitle = WeChat service account
-About.Promo.Yaozhi.Desc = Follow the account to launch cyber-pai ancient-culture divination.
+About.Promo.Yaozhi.Desc = Follow for AI-powered creative assistant and workflow tips.
 About.Promo.Dealv.Title = DealV
 About.Promo.Dealv.Subtitle = AI contract SaaS
 About.Promo.Dealv.Desc = 8.8 RMB for 100 credits — contract generation and AI review in one place.
@@ -899,6 +901,7 @@ Correction.Status.NotInstalled = Rime Ice is not installed — options are read-
 Correction.Status.Writing = Writing configuration…
 Correction.Status.Saved = Saved. Press "Deploy" on the Appearance page for the change to take effect.
 Correction.Status.SavedOff = Correction disabled and its files cleaned up. Press "Deploy" on the Appearance page for the change to take effect.
+Correction.Status.SavedButNoLua = Saved, but no Lua runtime was detected on this machine, so Amethyst Correction will NOT take effect — install librime-lua first (see the guide below).
 Correction.Status.AssetFailed = Failed to deploy correction engine: {0}
 Correction.Status.WriteFailed = Write failed: {0}
 # ── Dictionary packages (install / update / remove whole packages) ────

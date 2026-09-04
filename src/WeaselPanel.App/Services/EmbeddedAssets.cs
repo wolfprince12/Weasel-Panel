@@ -27,6 +27,15 @@ public static class EmbeddedAssets
     }
 
     /// <summary>
+    /// 读爻知云公众号二维码（Resources 目录下，复用鼠须管面板同款推广图）。
+    /// 缺失或 IO 出错时返回 null，调用方负责保持推广区只显示文字。
+    /// </summary>
+    public static BitmapImage? TryLoadYaozhiQR()
+    {
+        return TryLoadBitmap($"{DefaultNamespace}.Resources.YaozhiQRCode.png");
+    }
+
+    /// <summary>
     /// 通用嵌入式 BitmapImage 读取。
     /// </summary>
     public static BitmapImage? TryLoadBitmap(string manifestResourceName)

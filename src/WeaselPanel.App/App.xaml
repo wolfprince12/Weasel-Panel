@@ -72,7 +72,7 @@
             <!-- 表面。page 是窗口底，card 是卡片，subtle 是卡片里的凹陷区
                  （状态条/代码块），hover 是所有可点元素的悬停底。 -->
             <SolidColorBrush x:Key="WindowBgBrush" Color="#FFF5F7F9"/>
-            <SolidColorBrush x:Key="SidebarBgBrush" Color="{StaticResource Gray50}"/>
+            <SolidColorBrush x:Key="SidebarBgBrush" Color="#FFF3F5F7"/>
             <SolidColorBrush x:Key="CardBgBrush" Color="#FFFFFFFF"/>
             <SolidColorBrush x:Key="BgSubtleBrush" Color="{StaticResource Gray100}"/>
             <SolidColorBrush x:Key="BgHoverBrush" Color="{StaticResource Gray100}"/>

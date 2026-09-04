@@ -13,7 +13,7 @@ public partial class AboutView : UserControl
     public AboutView()
     {
         InitializeComponent();
-        LoadLogo();
+        LoadYaozhiQR();
     }
 
     public AboutView(WeaselEnvironment environment) : this()
@@ -25,28 +25,19 @@ public partial class AboutView : UserControl
     public AboutViewModel? ViewModel => DataContext as AboutViewModel;
 
     /// <summary>
-    /// 从嵌入式资源加载 logo。失败时显示文字占位，不让 XAML 整块崩。
-    /// 为什么不用 pack://application:,,,/?见 EmbeddedAssets.cs 顶部注释。
+    /// 加载爻知云二维码（对齐鼠须管关于页 yaozhiCard：右半直接展示推广图）。
+    /// 缺失不致命 —— 推广区仍显示文字，不影响其余功能。
     /// </summary>
-    private void LoadLogo()
+    private void LoadYaozhiQR()
     {
         try
         {
-            var img = EmbeddedAssets.TryLoadLogo();
-            if (img is not null)
-            {
-                LogoImage.Source = img;
-            }
-            else
-            {
-                LogoImage.Visibility = Visibility.Collapsed;
-                FallbackText.Visibility = Visibility.Visible;
-            }
+            var img = EmbeddedAssets.TryLoadYaozhiQR();
+            if (img is not null) YaozhiQRImage.Source = img;
         }
         catch
         {
-            LogoImage.Visibility = Visibility.Collapsed;
-            FallbackText.Visibility = Visibility.Visible;
+            // 二维码缺失不致命
         }
     }
 

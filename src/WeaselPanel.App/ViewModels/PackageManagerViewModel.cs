@@ -130,7 +130,15 @@ public sealed class PackageRow : ViewModelBase
     public bool ShowManage => IsInstalled;
 
     public bool CanInstall => IsNotInstalled && !IsBusy && !_owner.IsBusy && _blockedKey is null;
-    public bool CanUpdate => IsInstalled && !IsBusy && !_owner.IsBusy && _blockedKey is null;
+
+    /// <summary>
+    /// 更新按钮只有在「确定有更新」或「无法确定版本（允许手动更新）」时才可点。
+    /// 已是最新(UpToDate)、未检查(NotApplicable)、检查中(Checking)、检查失败(Failed)
+    /// 一律禁用 —— 否则会出现「明明没更新，按钮还能点」的 bug。
+    /// </summary>
+    public bool CanUpdate => IsInstalled && !IsBusy && !_owner.IsBusy && _blockedKey is null
+        && (_update.Kind == PackageUpdateKind.Available || _update.Kind == PackageUpdateKind.Unknown);
+
     public bool CanCheck => IsInstalled && !IsBusy && !_owner.IsBusy;
 
     /// <summary>卸载有独立的阻塞条件（被别的包依赖时不许卸）。</summary>

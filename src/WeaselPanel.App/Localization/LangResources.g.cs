@@ -731,37 +731,38 @@ Backup.NoBackups = 还没有备份 —— 改动配置前建议先建一个。
 Backup.NoFiles = 这个备份里没有任何文件。
 
 # ── 关于页 ─────────────────────────────────────────────────────────────────────
-About.Tagline = Weasel Panel — macOS「鼠须管控制面板」的 Windows 姊妹项目
-About.Version = 版本
-About.VersionPreview = {0}.{1}.{2} 预览版
+# ── 关于：更新检查（自身 + 小狼毫输入法本体）──
+# 对齐 macOS 鼠须管面板 AboutPage 的 updateCard / squirrelUpdateCard：
+# ReleaseUpdateChecker 异步拉 GitHub release tag，自动判 Available / UpToDate。
+Update.State.Idle = 未检查
+Update.State.Checking = 正在检查…
+Update.State.UpToDate = 当前已是最新
+Update.State.Available = 发现新版本
+Update.State.Failed = 检查失败，请重试
+Update.Button.Check = 检查更新
+Update.Button.Retry = 重试
+Update.Button.Download = 前往下载
+About.PanelUpdate.Title = 小狼毫控制面板 — 检查更新
+About.PanelUpdate.Hint = 当前本机版本：v{0}。点击「检查更新」对比 GitHub 上的最新 Release。
+About.WeaselUpdate.Title = 小狼毫输入法 — 检查更新
+About.WeaselUpdate.Hint = 本机版本：{0}。官方源：rime/weasel。点击「检查更新」获取最新 tag，可在 Releases 页找到安装包。
+About.WeaselUpdate.NotInstalled = 未检测到小狼毫输入法本体，无法检查更新。
+
 About.Language = 界面语言
-About.Tech = 技术栈
-About.TechValue = C# / WPF / .NET 8
-About.License = 开源许可
-About.LicenseValue = GPL-3.0
 About.Repo = 仓库
-About.HowItWorks = 工作方式
-About.HowItWorksBody = 本面板不链接 librime，而是走与 macOS 版相同的路线：写入 *.custom.yaml 补丁 → 调用 WeaselDeployer.exe 部署 → 读取部署产物。所有外观数值均按上游 RimeWithWeasel.cpp 的派生规则计算，保证「面板所见」与「候选窗所得」一致。
-About.Env = 当前环境
-About.ProgramDir = 程序目录
-About.SharedDir = 共享数据
-About.UserDir = 用户目录
-About.RowFormat = {0}：{1}
-About.Deployer = 部署器
-About.DeployHint = 改动需部署后生效 —— 改完请到「外观」页点「部署」。
 
 # ── 关于：开发者 ──
 About.Developer.Title = 开发者
-About.Developer.Name = 大狼（wolfprince）
-About.Developer.Role = 独立导演 · 软件开发者
-About.Developer.Bio = 云珩（北京）文化传媒有限公司。一个考证上瘾的斜杠导演，用 AI 把二十年的跨界底子重新造物。
+About.Developer.Name = Mr大狼
+About.Developer.Role = 导演 / 制作人 / AI 产品创作者
+About.Developer.Bio = 20余年影视传媒与演出制作经验，现用AI把经验激烈跨界重构成产品。
 
 # ── 关于：更多作品 ──
 About.Promo.Title = 更多作品
 About.Promo.Visit = 访问
-About.Promo.Yaozhi.Title = 爻知云
+About.Promo.Yaozhi.Title = 爻知云AI
 About.Promo.Yaozhi.Subtitle = 微信服务号
-About.Promo.Yaozhi.Desc = 关注服务号，启动赛博派古文化占卜。
+About.Promo.Yaozhi.Desc = 关注获取 AI 创作助手、工作流技巧与项目动态。
 About.Promo.Dealv.Title = DealV
 About.Promo.Dealv.Subtitle = AI 合同 SaaS
 About.Promo.Dealv.Desc = 8.8 元得 100 积分，合同生成与 AI 审核一站完成。
@@ -894,6 +895,7 @@ Correction.Status.NotInstalled = 尚未安装雾凇拼音 —— 选项为只读
 Correction.Status.Writing = 正在写入配置……
 Correction.Status.Saved = 已保存。请到外观页点「部署」使改动生效。
 Correction.Status.SavedOff = 已关闭纠错并清理相关文件。请到外观页点「部署」使改动生效。
+Correction.Status.SavedButNoLua = 已保存，但本机未检测到 Lua 运行时，紫毫纠错不会生效 —— 请先按下方指引安装 librime-lua。
 Correction.Status.AssetFailed = 纠错引擎部署失败：{0}
 Correction.Status.WriteFailed = 写入失败：{0}
 # ── 词库包（词库与语法模型的整包安装 / 更新 / 卸载）──────────────────
@@ -1718,37 +1720,38 @@ Backup.NoBackups = 還沒有備份 —— 改動設定前建議先建一個。
 Backup.NoFiles = 這個備份裏沒有任何檔案。
 
 # ── 關於頁 ─────────────────────────────────────────────────────────────────────
-About.Tagline = Weasel Panel — macOS「鼠鬚管控制面板」的 Windows 姊妹專案
-About.Version = 版本
-About.VersionPreview = {0}.{1}.{2} 預覽版
+# ── 關於：更新檢查（自身 + 小狼毫輸入法本體）──
+# 對齊 macOS 鼠鬚管面板 AboutPage 的 updateCard / squirrelUpdateCard：
+# ReleaseUpdateChecker 異步拉 GitHub release tag，自動判 Available / UpToDate。
+Update.State.Idle = 尚未檢查
+Update.State.Checking = 正在檢查…
+Update.State.UpToDate = 目前已是最新
+Update.State.Available = 發現新版本
+Update.State.Failed = 檢查失敗，請重試
+Update.Button.Check = 檢查更新
+Update.Button.Retry = 重試
+Update.Button.Download = 前往下載
+About.PanelUpdate.Title = 小狼毫控制面板 — 檢查更新
+About.PanelUpdate.Hint = 目前本機版本：v{0}。按「檢查更新」對比 GitHub 上的最新 Release。
+About.WeaselUpdate.Title = 小狼毫輸入法 — 檢查更新
+About.WeaselUpdate.Hint = 本機版本：{0}。官方源：rime/weasel。按「檢查更新」取得最新 tag，可在 Releases 頁找到安裝包。
+About.WeaselUpdate.NotInstalled = 未偵測到小狼毫輸入法本體，無法檢查更新。
+
 About.Language = 介面語言
-About.Tech = 技術堆疊
-About.TechValue = C# / WPF / .NET 8
-About.License = 開源授權
-About.LicenseValue = GPL-3.0
 About.Repo = 儲存庫
-About.HowItWorks = 運作方式
-About.HowItWorksBody = 本面板不連結 librime，而是走與 macOS 版相同的路線：寫入 *.custom.yaml 修補檔 → 呼叫 WeaselDeployer.exe 部署 → 讀取部署產物。所有外觀數值均按上游 RimeWithWeasel.cpp 的衍生規則計算，保證「面板所見」與「候選窗所得」一致。
-About.Env = 目前環境
-About.ProgramDir = 程式目錄
-About.SharedDir = 共用資料
-About.UserDir = 使用者目錄
-About.RowFormat = {0}：{1}
-About.Deployer = 部署程式
-About.DeployHint = 改動需部署後生效 —— 改完請到「外觀」頁點「部署」。
 
 # ── 關於：開發者 ──
 About.Developer.Title = 開發者
-About.Developer.Name = 大狼（wolfprince）
-About.Developer.Role = 獨立導演 · 軟體開發者
-About.Developer.Bio = 雲珩（北京）文化傳媒有限公司。一個考證上癮的斜槓導演，用 AI 把二十年的跨界底子重新造物。
+About.Developer.Name = Mr大狼
+About.Developer.Role = 導演 / 製作人 / AI 產品創作者
+About.Developer.Bio = 20餘年影視傳媒與演出製作經驗，現用AI把經驗激烈跨界重構成產品。
 
 # ── 關於：更多作品 ──
 About.Promo.Title = 更多作品
 About.Promo.Visit = 訪問
-About.Promo.Yaozhi.Title = 爻知雲
+About.Promo.Yaozhi.Title = 爻知雲AI
 About.Promo.Yaozhi.Subtitle = 微信服務號
-About.Promo.Yaozhi.Desc = 關注服務號，啟動賽博派古文化占卜。
+About.Promo.Yaozhi.Desc = 關注取得 AI 創作助手、工作流技巧與專案動態。
 About.Promo.Dealv.Title = DealV
 About.Promo.Dealv.Subtitle = AI 合約 SaaS
 About.Promo.Dealv.Desc = 8.8 元得 100 積分，合約生成與 AI 審核一站完成。
@@ -1881,6 +1884,7 @@ Correction.Status.NotInstalled = 尚未安裝霧凇拼音 —— 選項為唯讀
 Correction.Status.Writing = 正在寫入配置……
 Correction.Status.Saved = 已儲存。請到外觀頁點「部署」使變更生效。
 Correction.Status.SavedOff = 已關閉糾錯並清理相關檔案。請到外觀頁點「部署」使變更生效。
+Correction.Status.SavedButNoLua = 已儲存，但本機未偵測到 Lua 執行期，紫毫糾錯不會生效 —— 請先按下方指引安裝 librime-lua。
 Correction.Status.AssetFailed = 糾錯引擎部署失敗：{0}
 Correction.Status.WriteFailed = 寫入失敗：{0}
 # ── 詞庫包（詞庫與語法模型的整包安裝 / 更新 / 卸載）──────────────────
@@ -2728,37 +2732,39 @@ Backup.NoBackups = No backups yet - consider creating one before you change anyt
 Backup.NoFiles = This backup contains no files.
 
 # ── About page ─────────────────────────────────────────────────────────────────────
-About.Tagline = Weasel Panel — the Windows sibling of macOS "Squirrel Panel"
-About.Version = Version
-About.VersionPreview = {0}.{1}.{2} preview
+# ── About: update checks (panel + Weasel IME) ──
+# Mirrors macOS Squirrel Panel's AboutPage updateCard / squirrelUpdateCard:
+# ReleaseUpdateChecker asynchronously pulls GitHub release tags and decides
+# Available vs UpToDate. State text below is reused by both cards.
+Update.State.Idle = Not checked
+Update.State.Checking = Checking…
+Update.State.UpToDate = You're up to date
+Update.State.Available = New version available
+Update.State.Failed = Check failed, please retry
+Update.Button.Check = Check for updates
+Update.Button.Retry = Retry
+Update.Button.Download = Go to download
+About.PanelUpdate.Title = Weasel Panel — Check for updates
+About.PanelUpdate.Hint = Local version: v{0}. Click "Check for updates" to compare against the latest GitHub Release.
+About.WeaselUpdate.Title = Weasel IME — Check for updates
+About.WeaselUpdate.Hint = Local version: {0}. Source: rime/weasel. Click "Check for updates" for the latest tag; installer is on the Releases page.
+About.WeaselUpdate.NotInstalled = Weasel IME is not detected; cannot check for updates.
+
 About.Language = Language
-About.Tech = Stack
-About.TechValue = C# / WPF / .NET 8
-About.License = Licence
-About.LicenseValue = GPL-3.0
 About.Repo = Repository
-About.HowItWorks = How it works
-About.HowItWorksBody = This panel does not link against librime. It follows the same route as the macOS version: write a *.custom.yaml patch → call WeaselDeployer.exe → read the deployed result. Every appearance value is derived with the same rules as upstream RimeWithWeasel.cpp, so what you see here is what the candidate window renders.
-About.Env = Current environment
-About.ProgramDir = Program directory
-About.SharedDir = Shared data
-About.UserDir = User directory
-About.RowFormat = {0}: {1}
-About.Deployer = Deployer
-About.DeployHint = Deploy to apply changes — run it from the Appearance page after editing.
 
 # ── About: developer ──
 About.Developer.Title = Developer
-About.Developer.Name = Da Lang (wolfprince)
-About.Developer.Role = Independent director · Software developer
-About.Developer.Bio = Yunheng (Beijing) Culture Media Co., Ltd. A cert-collecting slash director who uses AI to rebuild two decades of cross-domain skills into new things.
+About.Developer.Name = Mr. Dawolf
+About.Developer.Role = Director / Producer / AI Product Creator
+About.Developer.Bio = 20+ years in film, TV, and live production. Reconstructing cross-domain experience into AI-powered products.
 
 # ── About: more works ──
 About.Promo.Title = More works
 About.Promo.Visit = Visit
-About.Promo.Yaozhi.Title = Yaozhi Cloud
+About.Promo.Yaozhi.Title = 爻知云AI
 About.Promo.Yaozhi.Subtitle = WeChat service account
-About.Promo.Yaozhi.Desc = Follow the account to launch cyber-pai ancient-culture divination.
+About.Promo.Yaozhi.Desc = Follow for AI-powered creative assistant and workflow tips.
 About.Promo.Dealv.Title = DealV
 About.Promo.Dealv.Subtitle = AI contract SaaS
 About.Promo.Dealv.Desc = 8.8 RMB for 100 credits — contract generation and AI review in one place.
@@ -2891,6 +2897,7 @@ Correction.Status.NotInstalled = Rime Ice is not installed — options are read-
 Correction.Status.Writing = Writing configuration…
 Correction.Status.Saved = Saved. Press "Deploy" on the Appearance page for the change to take effect.
 Correction.Status.SavedOff = Correction disabled and its files cleaned up. Press "Deploy" on the Appearance page for the change to take effect.
+Correction.Status.SavedButNoLua = Saved, but no Lua runtime was detected on this machine, so Amethyst Correction will NOT take effect — install librime-lua first (see the guide below).
 Correction.Status.AssetFailed = Failed to deploy correction engine: {0}
 Correction.Status.WriteFailed = Write failed: {0}
 # ── Dictionary packages (install / update / remove whole packages) ────

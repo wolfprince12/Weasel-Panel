@@ -719,37 +719,38 @@ Backup.NoBackups = 还没有备份 —— 改动配置前建议先建一个。
 Backup.NoFiles = 这个备份里没有任何文件。
 
 # ── 关于页 ─────────────────────────────────────────────────────────────────────
-About.Tagline = Weasel Panel — macOS「鼠须管控制面板」的 Windows 姊妹项目
-About.Version = 版本
-About.VersionPreview = {0}.{1}.{2} 预览版
+# ── 关于：更新检查（自身 + 小狼毫输入法本体）──
+# 对齐 macOS 鼠须管面板 AboutPage 的 updateCard / squirrelUpdateCard：
+# ReleaseUpdateChecker 异步拉 GitHub release tag，自动判 Available / UpToDate。
+Update.State.Idle = 未检查
+Update.State.Checking = 正在检查…
+Update.State.UpToDate = 当前已是最新
+Update.State.Available = 发现新版本
+Update.State.Failed = 检查失败，请重试
+Update.Button.Check = 检查更新
+Update.Button.Retry = 重试
+Update.Button.Download = 前往下载
+About.PanelUpdate.Title = 小狼毫控制面板 — 检查更新
+About.PanelUpdate.Hint = 当前本机版本：v{0}。点击「检查更新」对比 GitHub 上的最新 Release。
+About.WeaselUpdate.Title = 小狼毫输入法 — 检查更新
+About.WeaselUpdate.Hint = 本机版本：{0}。官方源：rime/weasel。点击「检查更新」获取最新 tag，可在 Releases 页找到安装包。
+About.WeaselUpdate.NotInstalled = 未检测到小狼毫输入法本体，无法检查更新。
+
 About.Language = 界面语言
-About.Tech = 技术栈
-About.TechValue = C# / WPF / .NET 8
-About.License = 开源许可
-About.LicenseValue = GPL-3.0
 About.Repo = 仓库
-About.HowItWorks = 工作方式
-About.HowItWorksBody = 本面板不链接 librime，而是走与 macOS 版相同的路线：写入 *.custom.yaml 补丁 → 调用 WeaselDeployer.exe 部署 → 读取部署产物。所有外观数值均按上游 RimeWithWeasel.cpp 的派生规则计算，保证「面板所见」与「候选窗所得」一致。
-About.Env = 当前环境
-About.ProgramDir = 程序目录
-About.SharedDir = 共享数据
-About.UserDir = 用户目录
-About.RowFormat = {0}：{1}
-About.Deployer = 部署器
-About.DeployHint = 改动需部署后生效 —— 改完请到「外观」页点「部署」。
 
 # ── 关于：开发者 ──
 About.Developer.Title = 开发者
-About.Developer.Name = 大狼（wolfprince）
-About.Developer.Role = 独立导演 · 软件开发者
-About.Developer.Bio = 云珩（北京）文化传媒有限公司。一个考证上瘾的斜杠导演，用 AI 把二十年的跨界底子重新造物。
+About.Developer.Name = Mr大狼
+About.Developer.Role = 导演 / 制作人 / AI 产品创作者
+About.Developer.Bio = 20余年影视传媒与演出制作经验，现用AI把经验激烈跨界重构成产品。
 
 # ── 关于：更多作品 ──
 About.Promo.Title = 更多作品
 About.Promo.Visit = 访问
-About.Promo.Yaozhi.Title = 爻知云
+About.Promo.Yaozhi.Title = 爻知云AI
 About.Promo.Yaozhi.Subtitle = 微信服务号
-About.Promo.Yaozhi.Desc = 关注服务号，启动赛博派古文化占卜。
+About.Promo.Yaozhi.Desc = 关注获取 AI 创作助手、工作流技巧与项目动态。
 About.Promo.Dealv.Title = DealV
 About.Promo.Dealv.Subtitle = AI 合同 SaaS
 About.Promo.Dealv.Desc = 8.8 元得 100 积分，合同生成与 AI 审核一站完成。
@@ -882,6 +883,7 @@ Correction.Status.NotInstalled = 尚未安装雾凇拼音 —— 选项为只读
 Correction.Status.Writing = 正在写入配置……
 Correction.Status.Saved = 已保存。请到外观页点「部署」使改动生效。
 Correction.Status.SavedOff = 已关闭纠错并清理相关文件。请到外观页点「部署」使改动生效。
+Correction.Status.SavedButNoLua = 已保存，但本机未检测到 Lua 运行时，紫毫纠错不会生效 —— 请先按下方指引安装 librime-lua。
 Correction.Status.AssetFailed = 纠错引擎部署失败：{0}
 Correction.Status.WriteFailed = 写入失败：{0}
 # ── 词库包（词库与语法模型的整包安装 / 更新 / 卸载）──────────────────

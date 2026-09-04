@@ -393,9 +393,17 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
             OnPropertyChanged(nameof(IsDirty));
             OnPropertyChanged(nameof(EngineDeployed));
             RefreshEngineState();
-            StatusText = StatusFromKey(_enabled
-                ? "Correction.Status.Saved"
-                : "Correction.Status.SavedOff");
+
+            // ⚠️ 诚实状态，杜绝「紫毫假成功」：配置虽然落盘了，但若本机没有
+            // Lua 运行时（librime-lua），lua_filter@amethyst_corrector 跑不起来，
+            // 表现为「开了纠错却和没开一样」。绝不能只报「已保存」让用户误以为生效。
+            // 安装引导见下方 InstallLuaCommand（#59：绝不自动改写系统 rime.dll）。
+            if (_enabled && LuaState != LuaEngineState.Present)
+                StatusText = StatusFromKey("Correction.Status.SavedButNoLua");
+            else
+                StatusText = StatusFromKey(_enabled
+                    ? "Correction.Status.Saved"
+                    : "Correction.Status.SavedOff");
         }
         catch (Exception ex)
         {

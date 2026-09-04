@@ -33,9 +33,10 @@
                 </Grid.RowDefinitions>
 
                 <!-- 品牌区：居中，仿鼠须管侧栏顶部的 Logo + 产品名 + 版本。
-                     96×96 圆角方块（复用 About 页的嵌入式 logo.png），加载失败时
-                     降级为纯文字占位，不让整块崩。 -->
-                <StackPanel Grid.Row="0" Margin="0,6,0,18" HorizontalAlignment="Center">
+                     v0.2.9 反馈顺序：logo → 版本号 → 品牌名；只显示 v0.2.9（不再拼
+                     构建时间），品牌名换用 App.Name=小狼毫控制面板（之前误用
+                     App.NameShort=小狼毫，三字显得空）；整体 margin 收紧一档。 -->
+                <StackPanel Grid.Row="0" Margin="0,4,0,14" HorizontalAlignment="Center">
                     <Border Width="96" Height="96" CornerRadius="{StaticResource RadiusLg}"
                             Background="{StaticResource BgSubtleBrush}" SnapsToDevicePixels="True">
                         <Grid Margin="14">
@@ -49,12 +50,12 @@
                                        Visibility="Collapsed"/>
                         </Grid>
                     </Border>
-                    <TextBlock Text="{l10n:L App.NameShort}" FontSize="17" FontWeight="SemiBold"
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               HorizontalAlignment="Center" Margin="0,12,0,0"/>
                     <TextBlock x:Name="BrandVersion" FontSize="{StaticResource FontMicro}"
                                Foreground="{StaticResource TextSecondaryBrush}"
-                               HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                               HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    <TextBlock Text="{l10n:L App.Name}" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               HorizontalAlignment="Center" Margin="0,2,0,0"/>
                 </StackPanel>
 
                 <ListBox Grid.Row="1" x:Name="Nav" Background="Transparent" BorderThickness="0"
@@ -145,6 +146,7 @@
                         <TextBlock Grid.Column="1" Text="{Binding StatusMessage}"
                                    Foreground="{Binding StatusBrush}"
                                    FontSize="{StaticResource FontCaption}" TextWrapping="Wrap"
+                                   HorizontalAlignment="Center" TextAlignment="Center"
                                    VerticalAlignment="Center"/>
                     </Grid>
 
@@ -167,6 +169,7 @@
                                FontSize="{StaticResource FontMicro}"
                                Foreground="{StaticResource TextSecondaryBrush}"
                                Margin="0,8,0,0" TextWrapping="Wrap"
+                               TextAlignment="Center"
                                HorizontalAlignment="Center"/>
                 </StackPanel>
             </Grid>

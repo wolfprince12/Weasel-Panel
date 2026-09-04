@@ -689,4 +689,106 @@ patch:
         cfg.WritePatch();
         Assert.DoesNotContain("page_size", cfg.RawIceText());
     }
+
+    // ── patch 段兜底（v0.3.0） ────────────────────────────────────────
+
+    /// <summary>检测 yaml 文本顶层（0 缩进）是否存在 <c>patch:</c> 行。</summary>
+    private static bool HasTopLevelPatchLine(string path)
+    {
+        foreach (var raw in File.ReadAllText(path).Split('\n'))
+        {
+            var line = raw.TrimEnd();
+            if (line.Length == 0) continue;
+            var leading = 0;
+            while (leading < line.Length && (line[leading] == ' ' || line[leading] == '\t')) leading++;
+            var trimmed = line.TrimStart();
+            if (leading != 0) continue;                      // 顶层判据：必须是 0 缩进
+            if (trimmed.StartsWith("#", StringComparison.Ordinal)) continue;
+            if (trimmed.StartsWith("patch:", StringComparison.Ordinal))
+            {
+                var after = trimmed.Length > 6 ? trimmed[6] : '\0';
+                if (after == '\0' || char.IsWhiteSpace(after)) return true;
+            }
+            return false;
+        }
+        return false;
+    }
+
+    [Fact]
+    public void 顶层无patch段时写入自动注入空壳()
+    {
+        // 场景：从其他途径继承 / 手写出来的 rime_ice.custom.yaml 顶层只有零散键，
+        // 没有 patch: 段包裹。Rime 实际只读 patch 段下，所以用户原数据本就无效；
+        // 但本面板所有 ApplyPatchValue 都假设路径前缀是 "patch"，没壳就抛
+        // 「未找到块 patch/...」异常。EnsurePatchEnvelop 兜底注入。
+        var (tmp, env) = Fixture(iceCustom: """
+# 用户手写：没有 patch: 顶层
+engine:
+  filters:
+    - simplifier
+    - uniquifier
+""");
+        using var _ = tmp;
+
+        new RimeIceConfig(env).WritePatch();
+
+        var text = File.ReadAllText(Path.Combine(tmp.Root, "rime_ice.custom.yaml"));
+        Assert.True(HasTopLevelPatchLine(Path.Combine(tmp.Root, "rime_ice.custom.yaml")),
+            $"写入后必须存在顶层 'patch:' 行\n--- 原文 ---\n{text}");
+    }
+
+    [Fact]
+    public void 已有嵌套写法patch顶层时不再重复注入()
+    {
+        var (tmp, env) = Fixture(iceCustom: """
+patch:
+  engine:
+    filters:
+      - simplifier
+      - uniquifier
+""");
+        using var _ = tmp;
+        var customPath = Path.Combine(tmp.Root, "rime_ice.custom.yaml");
+
+        new RimeIceConfig(env).WritePatch();
+
+        // 不能因为兜底而把第二个 patch: 段插进去——面板的数据结构全靠单 patch 段承担。
+        var text = File.ReadAllText(customPath);
+        var patchCount = text.Split('\n')
+            .Count(l => l.Length > 0 && l[0] != ' ' && l[0] != '\t'
+                && l.TrimStart().StartsWith("patch:", StringComparison.Ordinal));
+        Assert.Equal(1, patchCount);
+    }
+
+    [Fact]
+    public void 已有扁平写法patch顶层时不再重复注入()
+    {
+        var (tmp, env) = Fixture(iceCustom: """
+patch:
+  switches: []
+""");
+        using var _ = tmp;
+        var customPath = Path.Combine(tmp.Root, "rime_ice.custom.yaml");
+
+        new RimeIceConfig(env).WritePatch();
+
+        var text = File.ReadAllText(customPath);
+        var patchCount = text.Split('\n')
+            .Count(l => l.Length > 0 && l[0] != ' ' && l[0] != '\t'
+                && l.TrimStart().StartsWith("patch:", StringComparison.Ordinal));
+        Assert.Equal(1, patchCount);
+    }
+
+    [Fact]
+    public void 文件不存在时兜底不凭空创建_yaml()
+    {
+        var (tmp, env) = Fixture();
+        using var _ = tmp;
+        Assert.False(File.Exists(Path.Combine(tmp.Root, "rime_ice.custom.yaml")));
+
+        new RimeIceConfig(env).WritePatch();
+
+        // 干净安装 + 没有改动 → 不写文件（与"凭空创建属垃圾文件"的铁律一致）
+        Assert.False(File.Exists(Path.Combine(tmp.Root, "rime_ice.custom.yaml")));
+    }
 }

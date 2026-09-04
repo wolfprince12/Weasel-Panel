@@ -66,6 +66,14 @@ public sealed class WeaselEnvironment
     /// <summary>程序安装目录（如 %PROGRAMFILES64%\Rime）；未安装为 null。</summary>
     public string? ProgramDirectory { get; init; }
 
+    /// <summary>
+    /// 小狼毫本体版本字符串（如 <c>0.17.4</c>），从 <see cref="ProgramDirectory"/>
+    /// 的 <c>weasel-&lt;版本&gt;</c> 子目录名解析得到。无法解析（如自定义安装根目录
+    /// 不带版本号后缀，或 weasel-dev 等命名版本）为 null —— 调用方应视作
+    /// "版本未知"并按安全侧处理（更新检查降级为 UpToDate，不报"有更新"）。
+    /// </summary>
+    public string? Version { get; init; }
+
     /// <summary>共享数据目录（程序目录\data），内置 weasel.yaml / default.yaml / 各输入方案；未安装为 null。</summary>
     public string? SharedDataDirectory { get; init; }
 
@@ -154,7 +162,20 @@ public static class WeaselPaths
             SharedDataDirectory = shared,
             DeployerPath = deployer,
             ServerPath = server,
+            Version = DetectVersion(programDirectory),
         };
+    }
+
+    /// <summary>
+    /// 从安装目录中提取小狼毫版本号。目录名形如 <c>weasel-0.17.4</c> 时返回
+    /// <c>0.17.4</c>；目录名不带版本号（如老版本直接装在根、或 weasel-dev）返回 null。
+    /// </summary>
+    public static string? DetectVersion(string? programDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(programDirectory)) return null;
+        var name = Path.GetFileName(programDirectory!);
+        var parts = ParseVersion(name);
+        return parts.Length == 0 ? null : string.Join('.', parts);
     }
 
     /// <summary>

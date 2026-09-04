@@ -344,7 +344,17 @@ public static class ProbeService
             Add(Path.GetDirectoryName(programDirectory));
         Add(userDirectory);
 
-        var found = new List<string>();
+        // librime-lua 运行时的真实判据：独立的 Lua 运行时 dll（lua54.dll / lua5.4.dll /
+        // lua.dll / librime-lua.dll），或 rime.dll 二进制内嵌了 lua 组件名。
+        // ⚠️ 关键点：用户目录下的 *.lua 脚本（如面板自己部署的 amethyst_corrector.lua）
+        // 只是引擎脚本，**不是**运行时 —— 它的存在不代表 lua54.dll 已就位。旧实现把任何
+        // *.lua 都当插件会误报「已安装」（重装原版小狼毫后脚本仍在用户目录，于是假性报装）。
+        // 故 .lua 脚本只进 found（信息展示），绝不参与 ok 判定。口径与 CorrectionViewModel
+        // 的 DetectLuaEngine 对齐，避免两处检测结果打架。
+        var runtimeMarkers = new[] { "lua54.dll", "lua5.4.dll", "lua.dll", "librime-lua.dll" };
+        var luaComponentSigs = new[] { "lua_translator", "lua_filter", "lua_segmentor", "lua_processor" };
+        var found = new List<string>();           // 信息展示：所有 lua 相关文件
+        var runtimeFound = new List<string>();     // 运行时判定：仅真实运行时 dll / 内嵌签名
         var scanned = new List<string>();
         foreach (var d in searchDirs.Distinct(StringComparer.OrdinalIgnoreCase))
         {
@@ -354,12 +364,41 @@ public static class ProbeService
             {
                 foreach (var f in Directory.GetFiles(d, "*lua*", SearchOption.TopDirectoryOnly))
                 {
-                    if (f.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ||
-                        f.EndsWith(".lua", StringComparison.OrdinalIgnoreCase))
-                        found.Add(L10n.Instance.T("Probe.Lua.FileAt", Path.GetFileName(f), d));
+                    var name = Path.GetFileName(f);
+                    if (!name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) &&
+                        !name.EndsWith(".lua", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    var label = L10n.Instance.T("Probe.Lua.FileAt", name, d);
+                    found.Add(label);
+                    if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) &&
+                        runtimeMarkers.Contains(name, StringComparer.OrdinalIgnoreCase))
+                        runtimeFound.Add(label);
                 }
             }
             catch { /* 无权限则跳过 */ }
+        }
+
+        // 另一种运行时：rime.dll 静态编进了 Lua 组件（无独立 lua54.dll，常见旧构建）。
+        // 与 DetectLuaEngine 同口径，避免诊断页和纠正页结论不一致。
+        var rimeHasLua = false;
+        if (programDirectory is not null)
+        {
+            foreach (var rimeDir in new[] { programDirectory, Path.Combine(programDirectory, "Win32") })
+            {
+                var rimeDll = Path.Combine(rimeDir, "rime.dll");
+                if (!File.Exists(rimeDll)) continue;
+                try
+                {
+                    var text = System.Text.Encoding.ASCII.GetString(File.ReadAllBytes(rimeDll));
+                    if (luaComponentSigs.Any(sig => text.Contains(sig)))
+                    {
+                        rimeHasLua = true;
+                        runtimeFound.Add(L10n.Instance.T("Probe.Lua.FileAt", "rime.dll (Lua 已内嵌)", rimeDir));
+                    }
+                }
+                catch { /* 读不了就跳过，不影响结论 */ }
+                break; // rime.dll 只会在一处存在，找到即停止
+            }
         }
 
         // 另一条证据：用户配置里是否已有 lua 引用（说明插件肯定装过）
@@ -403,7 +442,9 @@ public static class ProbeService
         // librime-lua 是可选插件，官方发行包并不必然内置（上游 rime/weasel 仓内
         // 根本没有 lua 相关文件，它由 librime 侧单独提供）。真正的故障只有一种 ——
         // 配置里引用了 lua（如 rime_ice 的 lua_filter）却找不到插件，那会导致部署失败。
-        var ok = found.Count > 0;
+        // 仅当发现真正的 Lua 运行时（独立 dll 或 rime.dll 内嵌）才判为「已安装」。
+        // .lua 引擎脚本的存在不再计入，彻底消除重装原版小狼毫后的假阳性。
+        var ok = runtimeFound.Count > 0;
         var configuredButMissing = !ok && luaRefs.Count > 0;
 
         if (ok)

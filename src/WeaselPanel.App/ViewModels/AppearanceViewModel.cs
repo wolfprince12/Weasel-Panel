@@ -46,7 +46,11 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
         ReloadCommand = new DelegateCommand(LoadAll);
         DeployCommand = new RelayCommand(DeployAsync, () => !IsBusy && environment.DeployerPath is not null);
 
-        StatusText = StatusFromKey("Appearance.Status.Ready");
+        // ⚠️ 直写字段而非 StatusText 属性 —— 后者走 Set<T>，会把 HasUnsavedChanges
+        // 翻成 true，让面板在 ctor 阶段（LoadAll 还没跑/或 MarkLoaded 尚未生效时）被部署栏
+        // 误判为脏。与 Input/Behavior 的 10d022d 修法一致：ctor 是初始化，不应触发脏标记；
+        // LoadAll 末尾已有 MarkLoaded() 兜底，这里再从源头避免瞬态置脏。
+        _statusText = StatusFromKey("Appearance.Status.Ready");
         LoadAll();
         _ = LoadFontFamiliesAsync();
     }
@@ -484,7 +488,12 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
         {
             Directory.CreateDirectory(_userDirectory);
             var path = Path.Combine(_userDirectory, "weasel.custom.yaml");
-            var custom = _custom ?? new CustomYamlFile(path);
+            // ⚠️ 必须用「磁盘最新态」重新读取，不能用 LoadAll 缓存的 _custom 旧快照做 Save()：
+            // weasel.custom.yaml 同时被本页（style/*）、行为页（show_notifications 等）、
+            // 配色页（preset_color_schemes/*）三个面板写。若用旧快照整文件重写，
+            // 会把其它面板已写入的键覆盖掉 —— 表现为「改了 A 功能、B 功能配置丢失」。
+            // 每次 apply 都重新读盘最稳（行为页、配色页本就如此，这里对齐）。
+            var custom = new CustomYamlFile(path);
             if (custom.State == CustomYamlLoadState.Absent) custom.Load();
 
             if (!custom.IsWritable)
@@ -514,6 +523,19 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
             custom.Set("style/layout/linespacing", Linespacing);
 
             custom.Save();
+
+            // ⚠️ 写盘后回读校验：确认 style/color_scheme 真的落到磁盘。
+            // 否则「点了应用、候选窗没变、以为没保存」类的静默失败会变成明确报错，
+            // 而不是让用户反复怀疑面板坏了。回读紧接 Save 之后、部署之前，
+            // 此时 Weasel 尚未触碰该文件，不会因锁文件产生误报。
+            var verify = new CustomYamlFile(path);
+            if (!verify.IsWritable ||
+                (SelectedScheme is not null && verify.StringForPath("style/color_scheme") != SelectedScheme))
+            {
+                StatusText = StatusFromKey("Appearance.Status.WriteFailed", "style/color_scheme 未落盘");
+                return;
+            }
+
             StatusText = StatusFromKey("Appearance.Status.Written", path);
 
             MarkLoaded();

@@ -960,31 +960,39 @@ public sealed class RimeIceConfig
     {
         WriteDoublePinyinPatch();
 
-        if (IsInstalled && _icePatch.IsWritable)
+        if (IsInstalled)
         {
-            if (CorrectionEnabled)
-                DeployCorrectionAssets(correctionAssetRoot);
-            else
-                RemoveCorrectionAssets();
+            // 提早于 IsWritable 判定调用：用户的 rime_ice.custom.yaml 顶层若没有 patch: 段，
+            // ApplyPatchValue 后续写补丁时会抛「未找到块 patch/...」。此处兜底注入空壳段，
+            // 幂等（已有 patch: 直接返回）。
+            EnsurePatchEnvelop();
 
-            var set = CompileIcePatch();
+            if (_icePatch.IsWritable)
+            {
+                if (CorrectionEnabled)
+                    DeployCorrectionAssets(correctionAssetRoot);
+                else
+                    RemoveCorrectionAssets();
 
-            // 干净安装 + 全部托管项都回落出厂 = 一个键都不用写。此时凭空创建一份只有
-            // 注释头、没有任何 patch 段的 rime_ice.custom.yaml 纯属垃圾文件。
-            //
-            // 文件**已存在**时必须照常写 —— 那是删除历史托管键的自愈路径（旧版本写进去
-            // 的 switches / menu_page_size 快照要靠这一步清掉），跳过就永远自愈不了。
-            var hasValueToWrite = set.Items.Values.Any(v => v is not null);
-            if (hasValueToWrite || File.Exists(IceCustomPath))
-            {
-                _icePatch.ApplyLineEdits(set);
-                _icePatch = new CustomYamlFile(IceCustomPath);
-                _icePatch.Load();
-                _baseline = CompileIcePatch();
-            }
-            else
-            {
-                _baseline = set;
+                var set = CompileIcePatch();
+
+                // 干净安装 + 全部托管项都回落出厂 = 一个键都不用写。此时凭空创建一份只有
+                // 注释头、没有任何 patch 段的 rime_ice.custom.yaml 纯属垃圾文件。
+                //
+                // 文件**已存在**时必须照常写 —— 那是删除历史托管键的自愈路径（旧版本写进去
+                // 的 switches / menu_page_size 快照要靠这一步清掉），跳过就永远自愈不了。
+                var hasValueToWrite = set.Items.Values.Any(v => v is not null);
+                if (hasValueToWrite || File.Exists(IceCustomPath))
+                {
+                    _icePatch.ApplyLineEdits(set);
+                    _icePatch = new CustomYamlFile(IceCustomPath);
+                    _icePatch.Load();
+                    _baseline = CompileIcePatch();
+                }
+                else
+                {
+                    _baseline = set;
+                }
             }
         }
 
@@ -1009,6 +1017,91 @@ public sealed class RimeIceConfig
         if (value is null) set.Remove("switcher/save_options");
         else set.Set("switcher/save_options", value);
         file.ApplyLineEdits(set);
+    }
+
+    /// <summary>
+    /// 确保 rime_ice.custom.yaml 顶层存在 <c>patch:</c> 段（v0.3.0 引入）。
+    ///
+    /// 根因：本类托管的 8 个键（switches / menu/page_size / traditionalize/... /
+    /// engine/translators / engine/filters / schema/dependencies / speller/algebra /
+    /// grammar）通过 <see cref="ApplyLineEdits"/> → <c>ApplyPatchValue</c> 落地时，
+    /// 底层 <see cref="YamlLineEditor.ReplaceBlockVerbatim"/> 会把所有路径前缀强制拼
+    /// 上 <c>patch</c>（即查找 <c>patch/engine/filters</c> 这条字面路径），并在父
+    /// 节点也找不到时抛 <c>YamlLineEditorException("未找到块 patch/...")</c>。
+    ///
+    /// 用户从其他途径继承或手写出 <c>rime_ice.custom.yaml</c> 时，顶层往往**只有
+    /// 零散的 engine/filters 等键、没有 patch: 段包裹**——这是初学者最常见的 yaml
+    /// 形式，但 Rime 实际只读 patch 段下的覆盖（顶层形式无效）。本类所有写入都
+    /// 假设顶层有 patch: 壳，没有就直接写入失败。
+    ///
+    /// 本方法检测顶层（0 缩进）是否已有 <c>patch:</c> 键，没有则在文件首段（保留
+    /// 开头的注释行）注入空壳 <c>patch:</c>，让后续 <c>ApplyPatchValue</c> 能找到
+    /// 父节点、自动在它下面插入子键；已存在则幂等返回。
+    ///
+    /// ⚠️ 不动用户原有顶层键：留在外面也不会被 Rime 应用（rime 的 custom.yaml 只
+    /// 合并 patch 段下），属于历史遗留，下一次面板写入会逐步把它们迁到 patch 下。
+    /// </summary>
+    private void EnsurePatchEnvelop()
+    {
+        if (!File.Exists(IceCustomPath)) return;
+
+        var text = File.ReadAllText(IceCustomPath);
+        if (HasTopLevelPatchKey(text)) return;
+
+        // 找第一个非空 / 非纯注释行（保留用户写在文件头部的版权说明等）
+        var lines = text.Replace("\r\n", "\n").Split('\n').ToList();
+        var insertAt = lines.Count;
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var s = lines[i];
+            if (string.IsNullOrWhiteSpace(s)) continue;
+            if (s.TrimStart().StartsWith("#", StringComparison.Ordinal)) continue;
+            insertAt = i;
+            break;
+        }
+
+        // 在它前面塞一行 "patch:"（0 缩进），后面留一个空行让 yaml 易读
+        lines.Insert(insertAt, "patch:");
+        if (insertAt + 1 < lines.Count && !string.IsNullOrWhiteSpace(lines[insertAt + 1]))
+            lines.Insert(insertAt + 1, "");
+
+        var body = string.Join("\n", lines);
+        if (!body.EndsWith("\n")) body += "\n";
+        File.WriteAllText(IceCustomPath, body);
+
+        // 同步重载 _icePatch 的内存视图，后续 ApplyLineEdits 看到的 lines 也是新结构
+        _icePatch = new CustomYamlFile(IceCustomPath);
+        _icePatch.Load();
+    }
+
+    /// <summary>检测 yaml 文本顶层（0 缩进）是否存在 <c>patch:</c> 键。</summary>
+    private static bool HasTopLevelPatchKey(string text)
+    {
+        foreach (var raw in text.Split('\n'))
+        {
+            var line = raw.TrimEnd();
+            if (line.Length == 0) continue;
+            var leading = 0;
+            while (leading < line.Length && (line[leading] == ' ' || line[leading] == '\t')) leading++;
+            var trimmed = line.TrimStart();
+
+            // 顶层只接受 0 缩进的真键行（注释或更深缩进都跳过）
+            if (leading != 0) continue;
+            if (trimmed.StartsWith("#", StringComparison.Ordinal)) continue;
+
+            // 形如 "patch:" / "patch: " / "patch:xxx"；冒号后可有 0 字符、空格或制表符
+            if (trimmed.StartsWith("patch:", StringComparison.Ordinal))
+            {
+                var after = trimmed.Length > 6 ? trimmed[6] : '\0';
+                if (after == '\0' || char.IsWhiteSpace(after)) return true;
+            }
+            // 顶层只扫到第一个非空非注释键："patch:" 必须是**位于顶层**的键才会被读
+            // —— 因为 yaml 里 0 缩进只可能是顶层节点；其他顶层键不影响 patch 段就位。
+            // 注意：即便首个顶层键是别的（比如第一个是 switches:），我们也已确认 patch:
+            // 不存在，调用方会注入。
+            return false;
+        }
+        return false;
     }
 
     /// <summary>本面板自身的脏值判断。</summary>
