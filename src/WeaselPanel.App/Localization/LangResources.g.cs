@@ -969,14 +969,14 @@ Correction.Lua.State = 运行状态
 Correction.Lua.Status.Present = 已检测到 Lua 运行时，可正常开启紫毫纠错。
 Correction.Lua.Status.Absent = 未检测到 Lua 运行时：开启纠错后方案编译会失败、候选框消失。请先按下方指引安装 librime-lua。
 Correction.Lua.Status.NotInstalled = 尚未安装小狼毫，无法检测 Lua 运行时。
-Correction.Lua.InstallDir = 小狼毫安装目录（覆盖目标）
-Correction.Lua.Download = 打开 librime-lua 下载页（备选）
-Correction.Lua.DownloadRime = 打开 rime/librime 官方下载页（推荐）
+Correction.Lua.InstallDir = 小狼毫安装目录（部署目标）
+Correction.Lua.Download = 查看小狼毫官方 Lua 安装说明（wiki）
+Correction.Lua.DownloadRime = 查看 plum 输入方案（含 Lua 脚本）
 Correction.Lua.GuideTitle = 安装指引
-Correction.Lua.Guide.1 = 1. 下载「带 Lua 的 rime.dll」（librime-lua 预编译版，通常含 rime.dll 与 lua54.dll）。
-Correction.Lua.Guide.2 = 2. 在任务栏右键小狼毫图标，退出「算法服务 / WeaselServer」，确保输入法进程已停止。
-Correction.Lua.Guide.3 = 3. 把下载的 rime.dll（及 lua54.dll）覆盖到上方「小狼毫安装目录」。版本必须与你的小狼毫版本匹配，否则整个输入法会失效。
-Correction.Lua.Guide.4 = 4. 重新部署小狼毫（任务栏图标 → 重新部署），回到本页即显示「已检测到 Lua 运行时」。
+Correction.Lua.Guide.1 = 1. 准备一份「匹配你小狼毫版本的 x64 lua54.dll」（Lua 5.4 运行时）。可从 plum 方案或社区获取。
+Correction.Lua.Guide.2 = 2. 点击「安装 Lua 引擎」，选择该 lua54.dll 文件（或含 lua54.dll 的 .zip）。
+Correction.Lua.Guide.3 = 3. 面板会校验其为 x64 后部署到上方「小狼毫安装目录」。此操作只写入 lua54.dll，绝不会覆盖核心 rime.dll。
+Correction.Lua.Guide.4 = 4. 部署后自动重新部署小狼毫，回到本页即显示「已检测到 Lua 运行时」。
 Correction.Lua.Guide.5 = 5. 最后在外观页点「部署」，即可开启紫毫纠错。
 
 Correction.Lua.Install = 安装 Lua 引擎
@@ -984,16 +984,16 @@ Correction.Lua.Installing = 正在安装 Lua 引擎……
 Correction.Lua.Installed = 已检测到 Lua 运行时，可正常开启紫毫纠错。
 Correction.Lua.InstallFailed = Lua 引擎安装失败
 Correction.Lua.ConfirmTitle = 安装 Lua 引擎？
-Correction.Lua.ConfirmBody = 此操作将停止小狼毫算法服务、备份当前 rime.dll（另存为 rime.dll.bak），再用你选择的文件覆盖它。所选 rime.dll 的版本必须与你的小狼毫版本匹配，否则整个输入法会失效。是否继续？
-Correction.Lua.PickFile = 选择从 librime-lua 下载的 rime.dll（或 .7z/.zip）
+Correction.Lua.ConfirmBody = 此操作将停止小狼毫算法服务，并把你选择的 lua54.dll 部署到小狼毫安装目录。面板只写入 lua54.dll，绝不会覆盖核心 rime.dll，因此不会影响输入法本身。是否继续？
+Correction.Lua.PickFile = 选择 lua54.dll（或含 lua54.dll 的 .zip）
 Correction.Lua.Err.NoFile = 未选择任何文件。
-Correction.Lua.Err.BadFile = 所选文件不是有效的 rime.dll / 压缩包。
+Correction.Lua.Err.BadFile = 所选文件不是有效的 lua54.dll / 压缩包。
 Correction.Lua.Err.Backup = 备份原 rime.dll 失败。
 Correction.Lua.Err.Overwrite = 覆盖 rime.dll 失败（可能提权被拒绝）。
 Correction.Lua.Err.Redeploy = 重新部署失败，请手动重新部署小狼毫。
 Correction.Lua.Err.Detect = 重新检测 Lua 运行时失败。
 Correction.Lua.Err.SevenZip = 面板暂不能直接安装 .7z。请先用 7-Zip / Bandizip 解压，再选择里面的 rime.dll。
-Correction.Lua.Err.ArchMismatch = 源架构（{0}）与系统不匹配（已装 rime.dll={1}，锚点 WeaselDeployer={2}）。已拒绝覆盖，原 rime.dll 未变动。若想恢复被覆盖前的版本，请以管理员身份打开命令提示符，cd 到「{3}」，再执行：copy /Y rime.dll.bak rime.dll。
+Correction.Lua.Err.ArchMismatch = 所选 lua54.dll 的架构与你的系统不匹配（需 x64），已拒绝部署。原文件未变动；请改用匹配你小狼毫版本的 x64 lua54.dll。
 
 """;
 
@@ -1961,14 +1961,14 @@ Correction.Lua.State = 執行狀態
 Correction.Lua.Status.Present = 已偵測到 Lua 執行期，可正常開啟紫毫糾錯。
 Correction.Lua.Status.Absent = 未偵測到 Lua 執行期：開啟糾錯後方案編譯會失敗、候選框消失。請先按下方指引安裝 librime-lua。
 Correction.Lua.Status.NotInstalled = 尚未安裝小狼毫，無法偵測 Lua 執行期。
-Correction.Lua.InstallDir = 小狼毫安裝目錄（覆蓋目標）
-Correction.Lua.Download = 開啟 librime-lua 下載頁（備選）
-Correction.Lua.DownloadRime = 開啟 rime/librime 官方下載頁（推薦）
+Correction.Lua.InstallDir = 小狼毫安裝目錄（部署目標）
+Correction.Lua.Download = 查看小狼毫官方 Lua 安裝說明（wiki）
+Correction.Lua.DownloadRime = 查看 plum 輸入方案（含 Lua 腳本）
 Correction.Lua.GuideTitle = 安裝指引
-Correction.Lua.Guide.1 = 1. 下載「帶 Lua 的 rime.dll」（librime-lua 預編譯版，通常含 rime.dll 與 lua54.dll）。
-Correction.Lua.Guide.2 = 2. 在工作列右鍵小狼毫圖示，退出「演算法服務 / WeaselServer」，確保輸入法程序已停止。
-Correction.Lua.Guide.3 = 3. 把下載的 rime.dll（及 lua54.dll）覆蓋到上方「小狼毫安裝目錄」。版本必須與你的小狼毫版本相符，否則整個輸入法會失效。
-Correction.Lua.Guide.4 = 4. 重新部署小狼毫（工作列圖示 → 重新部署），回到本頁即顯示「已偵測到 Lua 執行期」。
+Correction.Lua.Guide.1 = 1. 準備一份「符合你小狼毫版本的 x64 lua54.dll」（Lua 5.4 執行期）。可從 plum 方案或社群取得。
+Correction.Lua.Guide.2 = 2. 點擊「安裝 Lua 引擎」，選擇該 lua54.dll 檔案（或含 lua54.dll 的 .zip）。
+Correction.Lua.Guide.3 = 3. 面板會校驗其為 x64 後部署到上方「小狼毫安裝目錄」。此操作只寫入 lua54.dll，絕不會覆蓋核心 rime.dll。
+Correction.Lua.Guide.4 = 4. 部署後自動重新部署小狼毫，回到本頁即顯示「已偵測到 Lua 執行期」。
 Correction.Lua.Guide.5 = 5. 最後在外觀頁點「部署」，即可開啟紫毫糾錯。
 
 Correction.Lua.Install = 安裝 Lua 引擎
@@ -1976,16 +1976,16 @@ Correction.Lua.Installing = 正在安裝 Lua 引擎……
 Correction.Lua.Installed = 已偵測到 Lua 執行期，可正常開啟紫毫糾錯。
 Correction.Lua.InstallFailed = Lua 引擎安裝失敗
 Correction.Lua.ConfirmTitle = 安裝 Lua 引擎？
-Correction.Lua.ConfirmBody = 此操作將停止小狼毫演算法服務、備份目前 rime.dll（另存為 rime.dll.bak），再用你選擇的檔案覆蓋它。所選 rime.dll 的版本必須與你的小狼毫版本相符，否則整個輸入法會失效。是否繼續？
-Correction.Lua.PickFile = 選擇從 librime-lua 下載的 rime.dll（或 .7z/.zip）
+Correction.Lua.ConfirmBody = 此操作將停止小狼毫演算法服務，並把你選擇的 lua54.dll 部署到小狼毫安裝目錄。面板只寫入 lua54.dll，絕不會覆蓋核心 rime.dll，因此不會影響輸入法本身。是否繼續？
+Correction.Lua.PickFile = 選擇 lua54.dll（或含 lua54.dll 的 .zip）
 Correction.Lua.Err.NoFile = 未選擇任何檔案。
-Correction.Lua.Err.BadFile = 所選檔案不是有效的 rime.dll / 壓縮包。
+Correction.Lua.Err.BadFile = 所選檔案不是有效的 lua54.dll / 壓縮包。
 Correction.Lua.Err.Backup = 備份原 rime.dll 失敗。
-Correction.Lua.Err.Overwrite = 覆蓋 rime.dll 失敗（可能提權被拒絕）。
+Correction.Lua.Err.Overwrite = 部署 lua54.dll 失敗（可能提權被拒絕）。
 Correction.Lua.Err.Redeploy = 重新部署失敗，請手動重新部署小狼毫。
 Correction.Lua.Err.Detect = 重新偵測 Lua 執行期失敗。
 Correction.Lua.Err.SevenZip = 面板暫不能直接安裝 .7z。請先用 7-Zip / Bandizip 解壓，再選擇裡面的 rime.dll。
-Correction.Lua.Err.ArchMismatch = 來源架構（{0}）與系統不相符（已裝 rime.dll={1}，錨點 WeaselDeployer={2}）。已拒絕覆蓋，原 rime.dll 未更動。若想還原被覆蓋前的版本，請以系統管理員身分開啟命令提示字元，切換到「{3}」，再執行：copy /Y rime.dll.bak rime.dll。
+Correction.Lua.Err.ArchMismatch = 所選 lua54.dll 的架構與你的系統不相符（需 x64），已拒絕部署。原檔案未更動；請改用符合你小狼毫版本的 x64 lua54.dll。
 
 """;
 
@@ -2966,14 +2966,14 @@ Correction.Lua.State = Status
 Correction.Lua.Status.Present = Lua runtime detected. Amethyst Correction can be enabled normally.
 Correction.Lua.Status.Absent = Lua runtime not detected: enabling correction will make the schema fail to compile and the candidate window disappear. Install librime-lua first by following the steps below.
 Correction.Lua.Status.NotInstalled = Weasel is not installed, so the Lua runtime cannot be detected.
-Correction.Lua.InstallDir = Weasel install directory (overwrite target)
-Correction.Lua.Download = Open the librime-lua download page (alternative)
-Correction.Lua.DownloadRime = Open the rime/librime official downloads (recommended)
+Correction.Lua.InstallDir = Weasel install directory (deploy target)
+Correction.Lua.Download = View the official Weasel Lua install notes (wiki)
+Correction.Lua.DownloadRime = View the plum input schemes (with Lua scripts)
 Correction.Lua.GuideTitle = Installation guide
-Correction.Lua.Guide.1 = 1. Download the "rime.dll with Lua" (librime-lua prebuilt, usually rime.dll plus lua54.dll).
-Correction.Lua.Guide.2 = 2. Right-click the Weasel icon in the taskbar and exit "Algorithm Service / WeaselServer" so the input method process stops.
-Correction.Lua.Guide.3 = 3. Overwrite the downloaded rime.dll (and lua54.dll) into the "Weasel install directory" above. The version MUST match your Weasel version, or the whole input method breaks.
-Correction.Lua.Guide.4 = 4. Redeploy Weasel (taskbar icon → Redeploy); return here and it will show "Lua runtime detected".
+Correction.Lua.Guide.1 = 1. Prepare an x64 lua54.dll that matches your Weasel version (Lua 5.4 runtime). Get it from the plum schemes or the community.
+Correction.Lua.Guide.2 = 2. Click "Install Lua engine" and select that lua54.dll file (or a .zip containing lua54.dll).
+Correction.Lua.Guide.3 = 3. The panel verifies it is x64, then deploys it to the "Weasel install directory" above. This writes only lua54.dll and never overwrites the core rime.dll.
+Correction.Lua.Guide.4 = 4. After deployment Weasel redeploys automatically; return here and it will show "Lua runtime detected".
 Correction.Lua.Guide.5 = 5. Finally, press "Deploy" on the Appearance page to enable Amethyst Correction.
 
 Correction.Lua.Install = Install Lua engine
@@ -2981,16 +2981,16 @@ Correction.Lua.Installing = Installing Lua engine…
 Correction.Lua.Installed = Lua runtime detected. Amethyst Correction can be enabled normally.
 Correction.Lua.InstallFailed = Lua engine installation failed
 Correction.Lua.ConfirmTitle = Install Lua engine?
-Correction.Lua.ConfirmBody = This will stop the Weasel algorithm service, back up the current rime.dll (as rime.dll.bak), then overwrite it with the file you selected. The selected rime.dll version must match your Weasel version, otherwise the entire input method will break. Continue?
-Correction.Lua.PickFile = Select the rime.dll (or .7z/.zip) downloaded from librime-lua
+Correction.Lua.ConfirmBody = This will stop the Weasel algorithm service and deploy the lua54.dll you selected into the Weasel install directory. The panel only writes lua54.dll and never overwrites the core rime.dll, so it cannot break the input method itself. Continue?
+Correction.Lua.PickFile = Select lua54.dll (or a .zip containing lua54.dll)
 Correction.Lua.Err.NoFile = No file selected.
-Correction.Lua.Err.BadFile = The selected file is not a valid rime.dll / archive.
+Correction.Lua.Err.BadFile = The selected file is not a valid lua54.dll / archive.
 Correction.Lua.Err.Backup = Failed to back up the original rime.dll.
-Correction.Lua.Err.Overwrite = Failed to overwrite rime.dll (elevation may have been denied).
+Correction.Lua.Err.Overwrite = Failed to deploy lua54.dll (elevation may have been denied).
 Correction.Lua.Err.Redeploy = Redeployment failed. Please redeploy Weasel manually.
 Correction.Lua.Err.Detect = Re-detection of the Lua runtime failed.
 Correction.Lua.Err.SevenZip = Panel cannot install .7z directly. Extract it with 7-Zip / Bandizip first, then select the rime.dll inside.
-Correction.Lua.Err.ArchMismatch = Source architecture ({0}) does not match your system (existing rime.dll = {1}, anchor WeaselDeployer = {2}). Overwrite was refused; the original rime.dll was not changed. To restore the previously-overwritten version, open an elevated command prompt, cd to "{3}", then run: copy /Y rime.dll.bak rime.dll.
+Correction.Lua.Err.ArchMismatch = The selected lua54.dll's architecture does not match your system (x64 required). Deployment was refused; your files were not changed. Use an x64 lua54.dll that matches your Weasel version.
 
 """;
 

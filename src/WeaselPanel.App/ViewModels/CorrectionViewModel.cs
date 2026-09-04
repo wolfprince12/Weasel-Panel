@@ -206,12 +206,12 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
     /// 修法两步：① 改 VM 端 `public static readonly Uri Foo = new(...)`（Uri 不是 const 编译期常量）；
     /// ② XAML 端改 `NavigateUri="{x:Static vm:Class.Foo}"`。任意一步缺失 v0.2.5 真机启动即崩。
     /// 详见 docs/RELEASE_v0.2.5.md 第⑤类盲区。</summary>
-    public static readonly Uri LuaDownloadUrl = new("https://github.com/hchunhui/librime-lua/releases/");
+    public static readonly Uri LuaDownloadUrl = new("https://github.com/rime/weasel/wiki");
 
     /// <summary>librime 官方 Release 页（公开，含 lua / octagram / charcode 三插件的 dist/lib/rime.dll）。
     /// 社区现优先从这里取「带 Lua 的 rime.dll」——hchunhui/librime-lua 的预编译包已转到需登录的
     /// GitHub Actions artifacts。安装引导流程要的就是这里的 dist/lib/rime.dll，故作为推荐源。</summary>
-    public static readonly Uri LuaDownloadUrlRime = new("https://github.com/rime/librime/releases/");
+    public static readonly Uri LuaDownloadUrlRime = new("https://github.com/rime/plum");
 
     /// <summary>判定 Lua 运行时是否在场的文件名特征（动态链接版 librime-lua 会随 rime.dll 一起带来这些独立 dll）。</summary>
     private static readonly string[] LuaRuntimeMarkers =
@@ -511,24 +511,26 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
     }
 
     /// <summary>
-    /// 引导式安装 librime-lua：确认框 → 选文件 → 后台提权覆盖 → 重部署 → 重检测。
-    /// 危险动作（覆盖 Program Files 下的 rime.dll）全自动，但会先备份并停服务，
-    /// 且版本由用户下载的那一份决定——面板只负责「安全地把文件放到位」。
+    /// 引导式部署 librime-lua 的 Lua 运行时（lua54.dll）：确认框 → 选文件 →
+    /// 后台提权部署 → 重部署 → 重检测。
+    /// ⚠️ 只部署 lua54.dll，绝不覆盖核心 rime.dll——这是根治 0xC000007B 的关键
+    /// （覆盖 rime.dll 一旦位数错配会让整个输入法启动崩溃）。版本由用户准备的
+    /// 那份 lua54.dll 决定，面板只负责「安全地把文件放到位」+ 校验架构。
     /// </summary>
     private async Task InstallLuaAsync()
     {
-        // 1. 二次确认：覆盖 rime.dll 版本错配会让整个输入法失效、候选框消失。
+        // 1. 二次确认：部署 lua54.dll 到小狼毫目录（不碰核心 rime.dll，风险远低于覆盖）。
         var confirm = MessageBox.Show(
             L10n.Instance.T("Correction.Lua.ConfirmBody"),
             L10n.Instance.T("Correction.Lua.ConfirmTitle"),
             MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (confirm != MessageBoxResult.Yes) return;
 
-        // 2. 选文件：用户已手动从官网下好 rime.dll / .zip（.7z 请先解压）。
+        // 2. 选文件：用户已准备好 x64 lua54.dll（或 .zip 内含 lua54.dll）。
         var dialog = new OpenFileDialog
         {
             Title = L10n.Instance.T("Correction.Lua.PickFile"),
-            Filter = "rime.dll|*.dll|Zip 压缩包|*.zip|全部文件|*.*",
+            Filter = "lua54.dll|*.dll|Zip 压缩包|*.zip|全部文件|*.*",
             CheckFileExists = true,
             Multiselect = false,
         };
@@ -545,25 +547,20 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
         StatusText = StatusFromKey("Correction.Lua.Installing");
         try
         {
-            // 3. 解析出源 rime.dll（以及同包的 lua54.dll）。
-            string srcDll;
-            string? srcLua = null;
+            // 3. 解析出源 lua54.dll（.zip 内含则提取）。
+            string? srcLua;
             if (ext == ".dll")
             {
-                srcDll = picked;
-                var candLua = Path.Combine(Path.GetDirectoryName(picked)!, "lua54.dll");
-                if (File.Exists(candLua)) srcLua = candLua;
+                srcLua = picked;
             }
             else if (ext == ".zip")
             {
-                var (dll, lua) = await LuaInstaller.ExtractZipForRimeDllAsync(picked).ConfigureAwait(false);
-                if (dll is null)
+                srcLua = await LuaInstaller.ExtractZipForLuaAsync(picked).ConfigureAwait(false);
+                if (srcLua is null)
                 {
                     StatusText = StatusFromKey("Correction.Lua.Err.BadFile");
                     return;
                 }
-                srcDll = dll;
-                srcLua = lua;
             }
             else if (ext == ".7z")
             {
@@ -576,35 +573,23 @@ public sealed class CorrectionViewModel : ViewModelBase, ILanguageAware, IPanelA
                 return;
             }
 
-            // 4. 提权覆盖（备份 + 停服务内置在临时 bat 里，用户只见一次 UAC）。
-            var ok = await LuaInstaller.OverwriteWithElevationAsync(
-                _environment.ProgramDirectory!, srcDll, srcLua).ConfigureAwait(false);
+            // 4. 部署（只动 lua54.dll，绝不碰 rime.dll；bat 内含 PE 架构校验）。
+            var ok = await LuaInstaller.DeployLuaLibraryAsync(
+                _environment.ProgramDirectory!, srcLua).ConfigureAwait(false);
             if (!ok)
             {
-                // 区分架构错（PE Machine 不匹配）与普通提权错 —— 前者必须给详细诊断
-                // + 手动恢复指引，否则用户只会重试然后再炸 0xC000007B。
-                if (LuaInstaller.LastError is { } err && err.StartsWith("源架构="))
-                {
-                    // err 形如「源架构=X；已装 rime.dll 架构=Y；锚点架构=Z；destDir=W」
-                    var parts = err.Split('；', 4); // 中文全角分号作分隔
-                    StatusText = StatusFromKey(
-                        "Correction.Lua.Err.ArchMismatch",
-                        ValueAfter(parts, 0, "源架构="),
-                        ValueAfter(parts, 1, "已装 rime.dll 架构="),
-                        ValueAfter(parts, 2, "锚点架构="),
-                        ValueAfter(parts, 3, "destDir="));
-                }
+                // 区分架构错（PE Machine 不匹配）与普通提权错。
+                if (LuaInstaller.LastError is { } err && err.Contains("架构"))
+                    StatusText = StatusFromKey("Correction.Lua.Err.ArchMismatch");
                 else
-                {
                     StatusText = StatusFromKey("Correction.Lua.Err.Overwrite");
-                }
                 return;
             }
 
             // 5. 重部署（让 librime 重新加载），退出码负才视为失败（已运行=1 不算）。
             var deployCode = await WeaselDeployer.RunAsync(_environment, "/deploy").ConfigureAwait(false);
 
-            // 6. 重检测：覆盖后若特征文件就位，即为成功。
+            // 6. 重检测：lua54.dll 就位即为成功。
             LuaState = DetectLuaEngine();
             if (LuaState == LuaEngineState.Present)
             {

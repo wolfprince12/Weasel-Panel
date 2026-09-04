@@ -1,16 +1,13 @@
 //
-//  LuaInstaller.cs — librime-lua 的引导式安装（替换小狼毫安装目录的 rime.dll）
+//  LuaInstaller.cs — 部署 librime-lua 的「Lua 运行时」lua54.dll 到小狼毫安装目录
 //
-//  为什么是「引导式」而不是「全自动」：
-//  - librime-lua 本质是「带 Lua 的 rime.dll」，必须覆盖到小狼毫安装目录；
-//  - 版本必须与本机小狼毫完全匹配，否则整个输入法失效、候选框消失——
-//    面板无法替用户判断他下到的那一份版本对不对，所以下载那一步交回用户手动点链接；
-//  - 覆盖 Program Files 需要管理员权限，故用 runas 提权跑一段临时 bat
-//    （停 WeaselServer → 备份 rime.dll → 覆盖），用户只点一次 UAC。
-//
-//  下载源（GitHub Releases，公开无需登录）：
-//    https://github.com/rime/librime/releases  （含 lua / octagram / charcode 三插件的 dist/lib/rime.dll）
-//  或社区维护的 hchunhui/librime-lua（GitHub Actions artifacts 需登录，已不优先）。
+//  设计铁律（2026-09-04 推翻重做）：
+//  - 绝不直接覆盖核心 rime.dll。历史方案覆盖 rime.dll，一旦版本/位数错配，
+//    WeaselDeployer 启动必加载 rime.dll 即抛 0xC000007B，整个输入法崩溃。
+//  - 改为只部署「动态 lua54.dll」：rime.dll 始终是用户系统自带的正确版本，Lua 作为
+//    可选插件按需 LoadLibrary。即使 lua54.dll 版本微差，最坏只是紫毫不工作，
+//    绝不会让输入法启动失败——这是彻底消除 0xC000007B 的根治方案。
+//  - lua54.dll 必须与系统架构一致（x64），故部署前强制 PE 架构校验。
 //
 //  本类只在该 Windows 面板上被调用，故全程 [SupportedOSPlatform("windows")]。
 
@@ -70,86 +67,68 @@ public static class LuaInstaller
     }
 
     /// <summary>
-    /// 把用户选中的 rime.dll 覆盖到小狼毫安装目录。
+    /// 把用户选中的 lua54.dll 部署到小狼毫安装目录。
+    /// ⚠️ 只动 lua54.dll，绝不覆盖核心 rime.dll——这是根治 0xC000007B 的关键。
+    /// 部署前强制 PE 架构校验：lua54.dll 必须与系统架构一致（x64），否则拒绝并写 LastError。
     /// 内部流程（全部在提权 bat 内完成，用户只见一次 UAC）：
-    ///   taskkill /f /im WeaselServer.exe  →  停算法服务（避免 rime.dll 被占用）
-    ///   copy /Y 原rime.dll → rime.dll.bak  →  备份
-    ///   copy /Y 选中的dll → rime.dll        →  覆盖
-    ///   copy /Y 选中的lua54.dll → lua54.dll  →  一并带上 Lua 运行时（若有）
-    /// 返回 true 表示覆盖后目标 rime.dll 与源字节数一致（UAC 取消则文件不变，判失败）。
+    ///   taskkill /f /im WeaselServer.exe  →  停算法服务（避免 lua54.dll 被占用）
+    ///   copy /Y 选中的lua54.dll → lua54.dll  →  只部署 Lua 运行时
+    /// 返回 true 表示部署后目标 lua54.dll 与源字节数一致（UAC 取消则文件不变，判失败）。
     /// </summary>
     [SupportedOSPlatform("windows")]
-    public static async Task<bool> OverwriteWithElevationAsync(
-        string destDir, string srcDll, string? srcLua)
+    public static async Task<bool> DeployLuaLibraryAsync(
+        string destDir, string srcLua)
     {
         // 每次调用重置 LastError，避免上一次失败原因污染下一次。
         LastError = null;
 
-        // ── 新增：PE 架构校验 ────────────────────────────────────────
-        // 历史教训：hchunhui/librime-lua 的 rime.zip 把 32 位 rime.dll 和 64 位
-        // WeaselDeployer.exe 装在同一目录，x64 进程 LoadLibrary x86 dll 即抛
-        // 0xC000007B（STATUS_INVALID_IMAGE_FORMAT）。先把架构对齐后再考虑覆盖。
-        // 铁锚优先用 WeaselDeployer.exe（小狼毫安装时自带的不可变二进制）——
-        // 即使用户上次已被错覆盖，原版 .bak 也仍是锚点对应的架构。
-        var srcMachine = PeMachine(srcDll);
+        // ── PE 架构校验 ────────────────────────────────────────
+        // lua54.dll 一旦位数与系统（WeaselDeployer.exe / rime.dll）不匹配，
+        // LoadLibrary 会失败——但**不会**像覆盖 rime.dll 那样让整个输入法崩，
+        // 这里仍提前拦截，避免用户装了个根本加载不了的 dll。
+        var srcMachine = PeMachine(srcLua);
         if (srcMachine is null)
         {
             LastError = "源文件不是有效的 PE 文件，无法读取 Machine 字段。";
             return false;
         }
 
-        // 寻找锚点：destDir 下的 WeaselDeployer.exe（根或 Win32 子目录）。
+        // 锚点优先用 WeaselDeployer.exe（小狼毫安装时自带的不可变二进制），
+        // 退化用已装 rime.dll；两者都缺失则跳过架构校验（宽松，但极少见）。
         string? anchorPath = null;
-        foreach (var name in new[] { "WeaselDeployer.exe", Path.Combine("Win32", "WeaselDeployer.exe") })
+        foreach (var name in new[]
+        {
+            "WeaselDeployer.exe", Path.Combine("Win32", "WeaselDeployer.exe"),
+            "rime.dll", Path.Combine("Win32", "rime.dll"),
+        })
         {
             var p = Path.Combine(destDir, name);
             if (File.Exists(p)) { anchorPath = p; break; }
         }
         var anchorMachine = anchorPath is null ? null : PeMachine(anchorPath);
 
-        // 退化锚：若 destDir 没 WeaselDeployer.exe（异常布局），退回到目标 rime.dll。
-        string? existingDest = null;
-        if (anchorMachine is null)
-        {
-            foreach (var name in new[] { "rime.dll", Path.Combine("Win32", "rime.dll") })
-            {
-                var p = Path.Combine(destDir, name);
-                if (File.Exists(p)) { existingDest = p; break; }
-            }
-            if (existingDest is not null)
-                anchorMachine = PeMachine(existingDest);
-        }
-
         if (anchorMachine is not null && anchorMachine.Value != srcMachine.Value)
         {
-            // 架构不匹配，绝不覆盖，避免再次触发 0xC000007B。
-            // 占位：src / dest / anchor 三种架构与安装目录——调用方拼出详细文案。
-            var destMachine = PeMachine(Path.Combine(destDir, "rime.dll"));
+            // 架构不匹配，绝不部署，避免装了个加载不了的 dll。
             LastError = string.Format(
-                "源架构={0}；已装 rime.dll 架构={1}；锚点架构={2}；destDir={3}",
+                "源 lua54.dll 架构={0} 与系统（{1}）不匹配。",
                 ArchName(srcMachine.Value),
-                destMachine is null ? "未知" : ArchName(destMachine.Value),
-                ArchName(anchorMachine.Value),
-                destDir);
+                ArchName(anchorMachine.Value));
             return false;
         }
-        // ── 架构校验结束 ────────────────────────────────────────────
+        // ── 架构校验结束 ────────────────────────────────────────
 
-        var destDll = Path.Combine(destDir, "rime.dll");
         var destLua = Path.Combine(destDir, "lua54.dll");
 
         var sb = new StringBuilder();
         sb.AppendLine("@echo off");
-        // 先停服务：WeaselServer 常驻会锁住 rime.dll，不退出覆盖必失败（文件占用）。
+        // 先停服务：WeaselServer 常驻会锁住 lua54.dll，不退出覆盖必失败（文件占用）。
         sb.AppendLine("taskkill /f /im WeaselServer.exe >nul 2>&1");
         // 给进程退出留一点时间，避免立刻 copy 仍报占用。
         sb.AppendLine("ping -n 2 127.0.0.1 >nul 2>&1");
-        // 备份原 dll（踩过的坑：覆盖前不备份，一旦版本错配就再也回不去）。
-        sb.AppendLine($"copy /Y \"{destDll}\" \"{destDll}.bak\" >nul 2>&1");
-        // 覆盖（无论源文件名是什么，落点一律 rime.dll）。
-        sb.AppendLine($"copy /Y \"{srcDll}\" \"{destDll}\" >nul 2>&1");
-        if (!string.IsNullOrEmpty(srcLua))
-            sb.AppendLine($"copy /Y \"{srcLua}\" \"{destLua}\" >nul 2>&1");
+        // 只部署 Lua 运行时（无论源文件名是什么，落点一律 lua54.dll）。
+        // 注意：绝不碰 rime.dll。
+        sb.AppendLine($"copy /Y \"{srcLua}\" \"{destLua}\" >nul 2>&1");
 
         var bat = Path.Combine(Path.GetTempPath(), "weasel_install_lua.bat");
         await File.WriteAllTextAsync(bat, sb.ToString()).ConfigureAwait(false);
@@ -177,8 +156,8 @@ public static class LuaInstaller
         // 以「目标与源字节数一致」作为成功判据：UAC 取消时文件不会变，自然判失败。
         try
         {
-            if (File.Exists(destDll) && File.Exists(srcDll)
-                && new FileInfo(destDll).Length == new FileInfo(srcDll).Length)
+            if (File.Exists(destLua) && File.Exists(srcLua)
+                && new FileInfo(destLua).Length == new FileInfo(srcLua).Length)
                 return true;
         }
         catch { /* 权限/占用，当作失败 */ }
@@ -186,12 +165,11 @@ public static class LuaInstaller
     }
 
     /// <summary>
-    /// 从 .zip 里定位 rime.dll（librime 布局多为 dist/lib/rime.dll），
-    /// 并顺带收集同包内的 lua54.dll（若有）。找不到 rime.dll 返回 (null, null)。
-    /// .7z 本类不处理——交给调用方提示用户先解压（BCL 不支持 7z）。
+    /// 从 .zip 里定位 lua54.dll（librime 布局多为 dist/lib/lua54.dll），
+    /// 找不到返回 null。.7z 本类不处理——交给调用方提示用户先解压（BCL 不支持 7z）。
     /// </summary>
     [SupportedOSPlatform("windows")]
-    public static async Task<(string? Dll, string? Lua)> ExtractZipForRimeDllAsync(string zipPath)
+    public static async Task<string?> ExtractZipForLuaAsync(string zipPath)
     {
         var tmp = Path.Combine(Path.GetTempPath(), "weasel_lua_extract_" + Path.GetRandomFileName());
         Directory.CreateDirectory(tmp);
@@ -199,18 +177,18 @@ public static class LuaInstaller
         {
             await Task.Run(() => ZipFile.ExtractToDirectory(zipPath, tmp, overwriteFiles: true))
                 .ConfigureAwait(false);
-            return LocateRimeDll(tmp);
+            return LocateLuaDll(tmp);
         }
         catch
         {
-            return (null, null);
+            return null;
         }
     }
 
-    /// <summary>在解压目录里找 rime.dll（根 + 一层子目录，兜底全树），并找 Lua 运行时 dll。</summary>
-    private static (string? Dll, string? Lua) LocateRimeDll(string root)
+    /// <summary>在解压目录里找 Lua 运行时 dll（lua54.dll / lua5.4.dll / lua.dll / librime-lua.dll）。
+    /// 先扫根 + 一层子目录（多数构建落在这两层），找不到再全树兜底。</summary>
+    private static string? LocateLuaDll(string root)
     {
-        string? dll = null;
         string? lua = null;
 
         bool IsLuaMarker(string name)
@@ -220,7 +198,6 @@ public static class LuaInstaller
                 && name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
         }
 
-        // 先扫根 + 一层子目录（多数构建 rime.dll / lua54.dll 落在这两层）。
         var dirs = new List<string> { root };
         try { dirs.AddRange(Directory.EnumerateDirectories(root)); }
         catch { /* 无权限则只扫根 */ }
@@ -231,34 +208,24 @@ public static class LuaInstaller
             {
                 foreach (var f in Directory.EnumerateFiles(dir, "*.dll", SearchOption.TopDirectoryOnly))
                 {
-                    var name = Path.GetFileName(f);
-                    if (name.Equals("rime.dll", StringComparison.OrdinalIgnoreCase) && dll is null)
-                        dll = f;
-                    else if (IsLuaMarker(name) && lua is null)
-                        lua = f;
+                    if (IsLuaMarker(Path.GetFileName(f)) && lua is null) { lua = f; break; }
                 }
             }
             catch { /* 跳过无权限目录 */ }
-            if (dll is not null && lua is not null) break;
+            if (lua is not null) break;
         }
 
-        // 兜底：rime.dll / lua*.dll 藏在更深目录（如 dist/lib/）时全树再搜一次。
-        if (dll is null || lua is null)
+        if (lua is null)
         {
             try
             {
                 foreach (var f in Directory.EnumerateFiles(root, "*.dll", SearchOption.AllDirectories))
                 {
-                    var name = Path.GetFileName(f);
-                    if (dll is null && name.Equals("rime.dll", StringComparison.OrdinalIgnoreCase))
-                        dll = f;
-                    else if (lua is null && IsLuaMarker(name))
-                        lua = f;
-                    if (dll is not null && lua is not null) break;
+                    if (IsLuaMarker(Path.GetFileName(f))) { lua = f; break; }
                 }
             }
             catch { /* 忽略 */ }
         }
-        return (dll, lua);
+        return lua;
     }
 }
