@@ -204,7 +204,7 @@ public partial class App : Application
                 "\n" +
                 "If this file's mtime is OLD (not your just-clicked time), the new WeaselPanel.exe\n" +
                 "was NEVER executed — you are running a cached old copy somewhere on the VM.\n" +
-                "Open dist/BUILD_INFO.txt or dist/win-x64/*_v0.2.0_*.exe and run THAT instead.\n",
+                "Open dist/BUILD_INFO.txt or dist/win-x64/WeaselPanel_v*.exe and run THAT instead.\n",
                 Encoding.UTF8);
         }
         catch { /* 不能影响启动 */ }

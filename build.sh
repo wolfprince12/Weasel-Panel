@@ -168,16 +168,17 @@ echo "✅ 构建完成"
 ls -lh "$EXE"
 echo "   md5: $(md5 -q "$EXE")"
 
-# ── 把 dist 里的 exe 改名带版本号 + 哈希前 8 位 ─────────────────────────
+# ── 把 dist 里的 exe 改名带版本号 ──────────────────────────────────────
 # 历史教训：v0.1.15/v0.1.16/v0.2.0 三版用户都报"修复无效"，但字节搜索证明
 # 新 exe 里硬编码中文全在——根因是 VM 跑的旧副本（Start 菜单/任务栏/资源管理器
 # 缓存/快捷方式都可能）。本次构建后**彻底去掉 dist 里的纯名 WeaselPanel.exe**，
 # 强制用户只能打开带版本号的文件：任何旧快捷方式字符都匹配不上，
 # 双击必然「找不到文件」而不是静默跑旧版。
+# 注：早期曾在文件名里追加 sha256 前 8 位（如 _9675167a），用户反馈那串十六进制
+# 看着乱、像出错码，v0.2.9 起去掉，文件名只保留版本号（WeaselPanel_v0.2.9.exe）。
 EXE_DIR="$(dirname "$EXE")"
 VER="$(grep -oE '<Version>[^<]+' src/WeaselPanel.App/WeaselPanel.App.csproj | sed 's/<Version>//')"
-HASH8="$(shasum -a 256 "$EXE" | awk '{print $1}' | cut -c1-8)"
-VERSIONED_NAME="WeaselPanel_v${VER}_${HASH8}.exe"
+VERSIONED_NAME="WeaselPanel_v${VER}.exe"
 VERSIONED_PATH="${EXE_DIR}/${VERSIONED_NAME}"
 
 # 清掉 dist 里上一次构建留下的版本号副本（避免老副本和新副本同名冲突）
@@ -203,7 +204,7 @@ echo "   已重命名: WeaselPanel.exe -> ${VERSIONED_NAME}"
     echo "  1. Make sure you double-clicked ${VERSIONED_NAME}"
     echo "     (NOT a Start menu shortcut or pinned taskbar entry)"
     echo "  2. Title bar MUST show:"
-    echo "     小狼毫控制面板 v${VER} · MM-DD HH:MM · #${HASH8}"
+    echo "     小狼毫控制面板 v${VER} · MM-DD HH:MM"
     echo "  3. After run, ${EXE_DIR}/LAST_RUN.txt must have a mtime from 'just now'"
     echo "     (not the build time). If not, the new exe didn't run."
 } > "${EXE_DIR}/../BUILD_INFO.txt"

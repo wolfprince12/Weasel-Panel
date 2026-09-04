@@ -38,8 +38,8 @@
          0.2.8（2026-09-03）：紫毫纠错卡片下载源优化 —— 首选直达 rime/librime 官方
          Releases（公开、含 dist/lib/rime.dll，正是安装引导要的那一份）；原 hchunhui
          链接降为备选（其预编译包已转到需登录的 Actions artifacts）。三语包同步。 -->
-    <Version>0.2.8</Version>
-    <InformationalVersion>0.2.8</InformationalVersion>
+    <Version>0.2.9</Version>
+    <InformationalVersion>0.2.9</InformationalVersion>
     <Company>大狼导演工作室</Company>
     <Product>小狼毫控制面板</Product>
     <Copyright>GPL-3.0</Copyright>

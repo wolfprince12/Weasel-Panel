@@ -139,15 +139,14 @@ public partial class MainWindow : Window
     {
         // 标题栏不再依赖 L10n：
         // 程序名走硬编码常量（L10n 全死也只是错版本号，绝不会出现裸键）；
-        // 版本号 + 构建时间 + 哈希前 6 位都打印出来，让用户肉眼确认「这是哪次构建」——
-        // v0.1.15 / v0.1.16 两次修复都因为「VM 上跑的不是新 exe」而误判过，
-        // 现在把哈希写进标题栏，任何版本混用都能立刻看出来。
+        // 版本号 + 构建时间都打印出来，让用户肉眼确认「这是哪次构建」——
+        // 旧版曾把 sha256 前 6 位哈希（#{hash}）也拼进标题栏与 exe 文件名，
+        // 用户反馈那一串十六进制看着乱、像出错码，v0.2.9 起去掉。
         var v = App.ExecutableVersion;
         var version = $"{v.Major}.{v.Minor}.{v.Build}";
         var build = App.ExecutableBuildTime.ToString("MM-dd HH:mm");
-        var hash = App.ExecutableHashPrefix;
-        Title = $"小狼毫控制面板 v{version} · {build} · #{hash}";
-        BrandVersion.Text = $"v{version} · {build} · #{hash}";
+        Title = $"小狼毫控制面板 v{version} · {build}";
+        BrandVersion.Text = $"v{version} · {build}";
     }
 
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
