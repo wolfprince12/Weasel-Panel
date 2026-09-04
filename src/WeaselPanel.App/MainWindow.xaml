@@ -127,8 +127,10 @@
 
                 <!-- 底部统一部署栏（仿鼠须管侧栏「应用并重新部署」）：
                      上方状态行（应用进度圈 + 待保存/已保存文案），
-                     中间「查看 YAML / 放弃更改」次要操作，下方全宽主按钮，
-                     再下方一行脚注说明改动落点。只应用有未保存改动的面板，统一重部署一次。 -->
+                     中间「查看 YAML / 放弃更改」次要操作，下方主按钮，
+                     再下方一行脚注说明改动落点。只应用有未保存改动的面板，统一重部署一次。
+                     v0.2.9：两排按钮统一缩一号（FontCaption / MinHeight=28 / Padding 微缩），
+                     横向居中（主按钮不再 Stretch 全宽），整体视觉更紧凑。 -->
                 <StackPanel Grid.Row="2" x:Name="DeployBarHost" Margin="0,12,0,0">
                     <!-- 状态行：应用进行中显示进度条；有未保存改动文案用橙色（仿 squirrel footer.dirty），
                          否则用次文字色。绑 _deploy 的属性，DataContext 在 ctor 里已指向 _deploy。 -->
@@ -146,22 +148,26 @@
                                    VerticalAlignment="Center"/>
                     </Grid>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
                         <Button Style="{StaticResource SecondaryButton}"
                                 Command="{Binding ViewYamlCommand}"
-                                Content="{l10n:L Deploy.ViewYaml}" Margin="0,0,8,0"/>
+                                Content="{l10n:L Deploy.ViewYaml}" Margin="0,0,8,0"
+                                FontSize="{StaticResource FontCaption}" Padding="10,4" MinHeight="28"/>
                         <Button Style="{StaticResource SecondaryButton}"
                                 Command="{Binding DiscardCommand}"
-                                Content="{l10n:L Deploy.Discard}"/>
+                                Content="{l10n:L Deploy.Discard}"
+                                FontSize="{StaticResource FontCaption}" Padding="10,4" MinHeight="28"/>
                     </StackPanel>
                     <Button Style="{StaticResource PrimaryButton}"
                             Command="{Binding ApplyDeployCommand}"
                             Content="{l10n:L Deploy.Apply}"
-                            HorizontalAlignment="Stretch"/>
+                            HorizontalAlignment="Center"
+                            FontSize="{StaticResource FontCaption}" Padding="12,5" MinHeight="28"/>
                     <TextBlock Text="{l10n:L Deploy.Note}"
                                FontSize="{StaticResource FontMicro}"
                                Foreground="{StaticResource TextSecondaryBrush}"
-                               Margin="0,8,0,0" TextWrapping="Wrap"/>
+                               Margin="0,8,0,0" TextWrapping="Wrap"
+                               HorizontalAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>

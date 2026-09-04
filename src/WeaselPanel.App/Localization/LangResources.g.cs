@@ -955,7 +955,7 @@ Packages.Error.Unknown = 未知错误（{0}）
 Deploy.Apply = 应用并重新部署
 Deploy.ViewYaml = 查看 YAML
 Deploy.Discard = 放弃更改
-Deploy.Note = 所有改动写入补丁文件（*.custom.yaml）；仅应用有改动的面板，统一重新部署一次。
+Deploy.Note = 所有改动写入custom.yaml补丁\n不会覆盖你手写的配置
 
 Deploy.Status.Applying = 应用并重新部署中……
 Deploy.Status.Dirty = {0} 个面板有未保存改动
@@ -1914,7 +1914,7 @@ Appearance.SchemeGridNote = 點選卡片即可切換配色方案；帶「生效�
 Deploy.Apply = 應用並重新部署
 Deploy.ViewYaml = 檢視 YAML
 Deploy.Discard = 放棄變更
-Deploy.Note = 所有變動寫入修補檔（*.custom.yaml）；僅套用有變動的面板，統一重新部署一次。
+Deploy.Note = 所有變動寫入 custom.yaml 補丁\n不會覆蓋你手寫的設定
 Packages.Button.Install = 安裝
 Packages.Button.Update = 更新
 Packages.Button.Uninstall = 卸載
@@ -2950,7 +2950,7 @@ Packages.Error.Unknown = Unknown error ({0})
 Deploy.Apply = Apply and redeploy
 Deploy.ViewYaml = View YAML
 Deploy.Discard = Discard changes
-Deploy.Note = All changes are written to patch files (*.custom.yaml). Only modified panels are applied, then deployed once.
+Deploy.Note = All changes are written to custom.yaml patches\nYour hand-written config is never overwritten
 
 Deploy.Status.Applying = Applying…
 Deploy.Status.Dirty = {0} panel(s) have unsaved changes

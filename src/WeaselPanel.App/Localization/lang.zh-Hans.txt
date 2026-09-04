@@ -943,7 +943,7 @@ Packages.Error.Unknown = 未知错误（{0}）
 Deploy.Apply = 应用并重新部署
 Deploy.ViewYaml = 查看 YAML
 Deploy.Discard = 放弃更改
-Deploy.Note = 所有改动写入补丁文件（*.custom.yaml）；仅应用有改动的面板，统一重新部署一次。
+Deploy.Note = 所有改动写入custom.yaml补丁\n不会覆盖你手写的配置
 
 Deploy.Status.Applying = 应用并重新部署中……
 Deploy.Status.Dirty = {0} 个面板有未保存改动
