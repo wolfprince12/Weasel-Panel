@@ -220,16 +220,29 @@ public sealed class BehaviorViewModel : ViewModelBase, ILanguageAware, IPanelAct
         set => Set(ref _verticalAutoReverse, value);
     }
 
+    // ⚠️ IsBusy / StatusText 是纯 UI 状态，绝不走 Set<T>（会把 HasUnsavedChanges 翻脏）。
+    // 否则 ApplyAsync 末尾 finally { IsBusy = false; } 会在 MarkLoaded() 清零后再次翻脏，
+    // 导致「应用并重新部署」后该面板永远显示「有未保存改动」。
     public bool IsBusy
     {
         get => _isBusy;
-        private set => Set(ref _isBusy, value);
+        private set
+        {
+            if (_isBusy == value) return;
+            _isBusy = value;
+            OnPropertyChanged();
+        }
     }
 
     public string StatusText
     {
         get => _statusText;
-        private set => Set(ref _statusText, value);
+        private set
+        {
+            if (_statusText == value) return;
+            _statusText = value;
+            OnPropertyChanged();
+        }
     }
 
     public bool HasLoaded

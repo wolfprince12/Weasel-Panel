@@ -101,8 +101,10 @@ public sealed class WeaselStyle
     /// 序号格式（printf 风格，如 "%s."）。
     /// ⚠️ **配置键是 `style/label_format`，而非字段名 label_text_format**
     /// （RimeWithWeasel.cpp:1254）。面板若按字段名写键，配置会静默失效。
+    /// 默认值 "%s." 与小狼毫内置默认（WeaselIPCData.h:316）及 CreateInitial() 对齐：
+    /// 空串会让候选序号渲染成空、候选框「不显示数字」，绝不可作为默认值。
     /// </summary>
-    public string LabelTextFormat { get; set; } = "";
+    public string LabelTextFormat { get; set; } = "%s.";
 
     /// <summary>
     /// 高亮候选前的标记符。⚠️ 上游在使用处兜底：`mark_text.empty() ? L"*" : mark_text`

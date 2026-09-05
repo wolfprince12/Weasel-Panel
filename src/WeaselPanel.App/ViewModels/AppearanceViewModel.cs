@@ -257,16 +257,29 @@ public sealed class AppearanceViewModel : ViewModelBase, ILanguageAware, IPanelA
         set => Set(ref _linespacing, Math.Clamp(Math.Abs(value), 0, 24));
     }
 
+    // ⚠️ IsBusy / StatusText 是纯 UI 状态，绝不走 Set<T>（后者会把 HasUnsavedChanges
+    // 翻脏）。否则 ApplyAsync 末尾 finally { IsBusy = false; } 会在 MarkLoaded() 清零后
+    // 再次翻脏，导致「应用并重新部署」后该面板永远显示「有未保存改动」。
     public bool IsBusy
     {
         get => _isBusy;
-        private set => Set(ref _isBusy, value);
+        private set
+        {
+            if (_isBusy == value) return;
+            _isBusy = value;
+            OnPropertyChanged();
+        }
     }
 
     public string StatusText
     {
         get => _statusText;
-        private set => Set(ref _statusText, value);
+        private set
+        {
+            if (_statusText == value) return;
+            _statusText = value;
+            OnPropertyChanged();
+        }
     }
 
     public void RefreshTexts()
